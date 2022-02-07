@@ -1,0 +1,65 @@
+.landingPage{
+  margin: 2%;
+}
+
+.landingPage {
+  overflow: scroll;
+}
+
+#key_export_ta, #key_import_ta {
+  width: 80%;
+}
+
+.admin-button {
+  border: none;
+  color: white;
+  padding: 10px 22px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 14px 7px;
+  cursor: pointer;
+  box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+}
+
+.gray-btn {
+  background-color: gray;
+}
+
+.green-btn {
+  background-color: green;
+}
+
+input[type="text"] {
+  font-size: 16px;
+}
+
+textarea {
+  font-size: 16px;
+}
+
+#roomname_td_div {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: underline;
+  color: blue;
+  width: fit-content;
+  max-width: 100%;
+}
+
+#roomname_id {
+  height: 50px;
+}
+
+#roomList {
+  table-layout: fixed;
+  width: 100%;
+}
+
+#roomname_edit_td, #room_newTab_td {
+  width: 30px;
+  padding: 5px 10px;
+}
