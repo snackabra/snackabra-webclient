@@ -39,13 +39,25 @@ You need to copy the template ".env" file to the root:
 If you're connecting to public servers, you don't need to modify it;
 otherwise, see below.
 
+Besides that, just run the following:
+
 ::
 
    yarn install
    yarn build
    yarn start
 
+That should open snackabra client in your web browser (at ``http://localhost:3000/``).
 
+If you modify any of the strings / documentation, you'll also need
+to run:
+
+::
+
+   yarn extract
+   yarn compile
+
+   
 
 
 Private Servers
