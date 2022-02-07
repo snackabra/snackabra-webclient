@@ -49,6 +49,10 @@ Besides that, just run the following:
 
 That should open snackabra client in your web browser (at ``http://localhost:3000/``).
 
+*TODO: with some yarn / babel / etc tweaks, this should be buildable
+into a single static file that you can run locally without a server.*
+
+
 If you modify any of the strings / documentation, you'll also need
 to run:
 
