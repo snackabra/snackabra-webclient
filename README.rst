@@ -20,12 +20,11 @@ snackabra@protonmail.com
 Introduction
 ------------
 
-This react native web client can connect to any Snackabra server -
-public or private.
-
-To run your own private "room server", you can install:
-
-* https://github.com/snackabra/snackabra-roomserver
+The snackabra web (app) client is a fully featured web client for the
+snackabra set of communication and data sharing services. You can use
+it to connect to any rooms on public servers such as,
+https://privacy.app or you can configure it to connect to any
+snackabra server, including a personal server (see below).
 
 
 
@@ -37,9 +36,8 @@ You need to copy the template ".env" file to the root:
 ::
    cp setup/template.env .env
 
-You may want to make changes to it (see below).
-
-Once done, you can simply:
+If you're connecting to public servers, you don't need to modify it;
+otherwise, see below.
 
 ::
 
@@ -47,46 +45,36 @@ Once done, you can simply:
    yarn build
    yarn start
 
-And 
+
+
 
 Private Servers
 ---------------
 
-It will point your web app to the https://Privacy.App servers.
+Your template '.env" file will point to (public) https://Privacy.App
+servers. This gives you the ability to run a static local web app.
 
-If you are running your own snackabra room server, you will need to
-replace ``REACT_APP_ROOM_SERVER`` with the domain - it'll be something
-like ``r.example.workers.dev``.
+If you are running your own snackabra room server
+(github.com/snackabra/snackabra-roomserver), you will need to replace
+``REACT_APP_ROOM_SERVER`` with the domain - it'll be something like
+``r.example.workers.dev``.
 
 You can run a personal room server and still use public storage
-servers, but you will only be able to read files, not upload. If you
-want to be able to share photos and files, you will need your own
-storage server as well, and set ``REACT_APP_STORAGE_SERVER`` to point
-to it.
-
-With these setups, you can now try it out locally:
-
-::
+servers (github.com/snackabra/snackabra-storageserver), but you will
+only be able to read files, not upload. If you want to be able to
+share photos and files and manage storage yourself, you will need your
+own storage server as well, and set ``REACT_APP_STORAGE_SERVER`` to
+point to it.
 
 
 
 Notes
 -----
 
-The snackabra web (app) client is a reference fully featured
-web client for the snackabra set of communication and data
-sharing services. You can use it to connect to any rooms
-on https://privacy.app or you can configure it to connect
-to any snackabra server, including personal server.
-
 The app is written in (mostly) React Native and based on the
-(exellent) Gifted Chat code [1].
+(exellent) Gifted Chat code
+https://github.com/FaridSafi/react-native-gifted-chat
 
-
-References
-----------
-
-[1] https://github.com/FaridSafi/react-native-gifted-chat)
 
 
 Directory
