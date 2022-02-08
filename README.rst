@@ -10,7 +10,6 @@
 For general documentation on Snackabra see:
 
 * https://snackabra.io
-* https://snackabra.github.org
 
 If you would like to contribute or help out with the snackabra
 project, please feel free to reach out to us at snackabra@gmail.com or
