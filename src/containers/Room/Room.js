@@ -971,12 +971,6 @@ class Room extends React.Component {
       const previewHash = await this.generateImageHash(previewImage);
       const fullImage = image.size > 15728640 ? this.padImage(await (await this.restrictPhoto(image, 15360, "image/jpeg", 0.92)).arrayBuffer()) : this.padImage(await image.arrayBuffer());
       const fullHash = await this.generateImageHash(fullImage);
-      // const previewSalt = window.crypto.getRandomValues(new Uint8Array(16));
-      // const previewKey = await this.getImageKey(previewHash.key, previewSalt);
-      // const fullSalt = window.crypto.getRandomValues(new Uint8Array(16));
-      // const fullKey = await this.getImageKey(fullHash.key, fullSalt);
-      // this.storeImage(previewImage, previewHash.id, { key: previewKey, salt: previewSalt }, 'p');
-      // this.storeImage(fullImage, fullHash.id, { key: fullKey, salt: fullSalt }, 'f');
       const previewStorePromise = this.storeImage(previewImage, previewHash.id, previewHash.key, 'p');
       const fullStorePromise = this.storeImage(fullImage, fullHash.id, fullHash.key, 'f');
 
