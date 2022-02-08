@@ -1,23 +1,4 @@
-/* 
-   Copyright (C) 2019-2021 Magnusson Institute, All Rights Reserved
-
-   "Snackabra" is a registered trademark
-
-   This program is free software: you can redistribute it and/or
-   modify it under the terms of the GNU Affero General Public License
-   as published by the Free Software Foundation, either version 3 of
-   the License, or (at your option) any later version.
-
-   This program is distributed in the hope that it will be useful, but
-   WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   Affero General Public License for more details.
-
-   You should have received a copy of the GNU Affero General Public
-   License along with this program.  If not, see www.gnu.org/licenses/
-
-*/
-
+/* Copyright (c) 2021 Magnusson Institute, All Rights Reserved */
 
 import React from 'react';
 import PropTypes from 'prop-types';
@@ -29,11 +10,10 @@ const propTypes = {
 class JwModal extends React.Component {
   static modals = [];
 
-  static open = (id) => {
-
+  static open = (id, msg = null) => {
     // open modal specified by id
     let modal = JwModal.modals.find(x => x.props.id === id);
-    modal.setState({ isOpen: true });
+    modal.setState({ isOpen: true, msg: msg });
     document.body.classList.add('jw-modal-open');
   }
 
@@ -47,9 +27,7 @@ class JwModal extends React.Component {
 
   constructor(props) {
     super(props);
-
-    this.state = { isOpen: false };
-
+    this.state = { isOpen: false, msg: null };
     this.handleClick = this.handleClick.bind(this);
   }
 
@@ -79,7 +57,7 @@ class JwModal extends React.Component {
       <div style={{ display: + this.state.isOpen ? '' : 'none' }} onClick={this.handleClick} ref={el => this.element = el}>
         <div className="jw-modal">
           <div className="jw-modal-body">
-            {this.props.children}
+            { this.state.msg ? (<div> <div> {this.state.msg} </div> <br/> {this.props.children} </div>) : this.props.children }
           </div>
         </div>
         <div className="jw-modal-background"></div>

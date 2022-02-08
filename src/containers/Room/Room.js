@@ -1,22 +1,4 @@
-/* 
-   Copyright (C) 2019-2021 Magnusson Institute, All Rights Reserved
-
-   "Snackabra" is a registered trademark
-
-   This program is free software: you can redistribute it and/or
-   modify it under the terms of the GNU Affero General Public License
-   as published by the Free Software Foundation, either version 3 of
-   the License, or (at your option) any later version.
-
-   This program is distributed in the hope that it will be useful, but
-   WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   Affero General Public License for more details.
-
-   You should have received a copy of the GNU Affero General Public
-   License along with this program.  If not, see www.gnu.org/licenses/
-
-*/
+/* Copyright (c) 2021 Magnusson Institute, All Rights Reserved */
 
 import React from 'react';
 import { GiftedChat, Bubble } from 'react-native-gifted-chat';
@@ -26,10 +8,11 @@ import { JwModal } from '../Modal/Modal';
 import './Room.css';
 import Admin from '../../components/Admin/Admin';
 import attach_img from '../../static/attach.png';
-import lock_icon from '../../static/icons8-lock-64.png';
-import secure_lock from '../../static/lock_secure.png';
+// import lock_icon from '../../static/icons8-lock-64.png';
+// import secure_lock from '../../static/lock_secure.png';
 import { Trans } from '@lingui/macro';
 import * as utils from '../../utils/utils';
+
 
 
 // these are set in '.env' file at root of project
@@ -56,13 +39,12 @@ class Room extends React.Component {
       locked: false,
       adminError: false,
       motd: '',
+      roomCapacity: 2, // this will get loaded from server (if it's in the server), current system default is 20
       joinRequests: [],
     }
   }
 
-
   // ##############################  FUNCTIONS TO GET ALL RELEVANT KEYS FROM KV/DO  ###############################
-
 
   async loadPersonalKeys() {
     try {
@@ -457,6 +439,7 @@ class Room extends React.Component {
       }
 
       if (!whisper && this.state.keys.locked_key == null && this.state.locked) {
+
         this.sendSystemInfo('This room is restricted. A request to the Owner has already been sent. Until you are accepted you cannot chat in the room. You can still whisper the owner by pressing the user icon in the top right corner.')
         return;
       }
@@ -530,7 +513,7 @@ class Room extends React.Component {
 
         // this.currentWebSocket.send(JSON.stringify(contents));      Version before doing E2EE
         this.currentWebSocket.send(JSON.stringify(msg));
-        //  console.log(fullStorePromise, previewStorePromise)
+        console.log(fullStorePromise, previewStorePromise);
         if (fullStorePromise !== '') {
           fullStorePromise.then(async (controlData) => {
             // console.log(controlData);
@@ -549,14 +532,19 @@ class Room extends React.Component {
         this.sendSystemMessage("Error: Lost connection")
       }
 
+    } catch (error) {
+      // console.log(e);
+      this.sendSystemInfo('Could not send message');
+      JwModal.open('room-response', 'Sending message failed, error from server: ' + error.message);
+    }
 
-      // Reset the 'reply_to' data once message is sent
+    // Reset the 'reply_to' data once message is sent
+    try {
       delete this.state.reply_to;
       delete this.state.reply_encryptionKey;
       this.removeInputFiles();
-    } catch (e) {
-      console.log(e);
-      this.sendSystemInfo('Could not send message');
+    } catch {
+      // we ignore problems
     }
   }
 
@@ -806,7 +794,7 @@ class Room extends React.Component {
 
 
   updateRoomCapacity(roomCapacity) {
-    fetch(ROOM_SERVER + this.roomId + "/updateRoomCapacity?capacity=" + roomCapacity, { credentials: 'include' })
+    fetch(ROOM_SERVER + this.roomId + "/updateRoomCapacity?capacity=" + roomCapacity, { credentials: 'include' }).then(data => JwModal.open('admin-response', 'this worked!'));
   }
 
 
@@ -966,57 +954,53 @@ class Room extends React.Component {
 
   // TODO - can be optimized (asynchronized more) to return the hashes once calculated and then do all the encryption stuff.
   async saveImage(image) {
-    try {
-      const previewImage = this.padImage(await (await this.restrictPhoto(image, 4096, "image/jpeg", 0.92)).arrayBuffer());
-      const previewHash = await this.generateImageHash(previewImage);
-      const fullImage = image.size > 15728640 ? this.padImage(await (await this.restrictPhoto(image, 15360, "image/jpeg", 0.92)).arrayBuffer()) : this.padImage(await image.arrayBuffer());
-      const fullHash = await this.generateImageHash(fullImage);
-      const previewStorePromise = this.storeImage(previewImage, previewHash.id, previewHash.key, 'p');
-      const fullStorePromise = this.storeImage(fullImage, fullHash.id, fullHash.key, 'f');
+    const previewImage = this.padImage(await (await this.restrictPhoto(image, 4096, "image/jpeg", 0.92)).arrayBuffer());
+    const previewHash = await this.generateImageHash(previewImage);
+    const fullImage = image.size > 15728640 ? this.padImage(await (await this.restrictPhoto(image, 15360, "image/jpeg", 0.92)).arrayBuffer()) : this.padImage(await image.arrayBuffer());
+    const fullHash = await this.generateImageHash(fullImage);
+    const previewStorePromise = this.storeImage(previewImage, previewHash.id, previewHash.key, 'p').then(_x => { if (_x.hasOwnProperty('error'))  this.sendSystemMessage('Could not store preview: ' + _x['error']); return _x; });
+    const fullStorePromise = this.storeImage(fullImage, fullHash.id, fullHash.key, 'f').then(_x => { if (_x.hasOwnProperty('error'))  this.sendSystemMessage('Could not store full image: ' + _x['error']); return _x; });
 
-      // return { full: { id: fullHash.id, key: fullHash.key }, preview: { id: previewHash.id, key: previewHash.key } }
-      return { full: fullHash.id, preview: previewHash.id, fullKey: fullHash.key, previewKey: previewHash.key, fullStorePromise: fullStorePromise, previewStorePromise: previewStorePromise };
-    } catch (e) {
-      console.log(e);
-      this.sendSystemInfo('Could not store full image');
-      return { full: {}, preview: {} };
-    }
+    // return { full: { id: fullHash.id, key: fullHash.key }, preview: { id: previewHash.id, key: previewHash.key } }
+    return { full: fullHash.id, preview: previewHash.id, fullKey: fullHash.key, previewKey: previewHash.key, fullStorePromise: fullStorePromise, previewStorePromise: previewStorePromise };
   }
 
 
   async storeImage(image, image_id, keyData, type) {
 
-    try {
-      const storeReqResp = await (await fetch(STORAGE_SERVER + "/storeRequest?name=" + image_id)).arrayBuffer();
-      const encrypt_data = utils.extractPayload(storeReqResp);
-      // console.log(encrypt_data)
-      const key = await this.getImageKey(keyData, encrypt_data.salt);
-      let storageToken, verificationToken;
-      const data = await this.encrypt(image, key, "arrayBuffer", encrypt_data.iv);
-      // console.log(data)
-      const storageTokenReq = await (await fetch(ROOM_SERVER + this.roomId + '/storageRequest?size=' + data.content.byteLength)).json();
-      if (storageTokenReq.hasOwnProperty('error')) {
-        return { error: storageTokenReq.error }
-      }
-      // storageToken = new TextEncoder().encode(storageTokenReq.token);
-      storageToken = JSON.stringify(storageTokenReq);
-      const resp = await fetch(STORAGE_SERVER + "/storeData?type=" + type + "&key=" + encodeURIComponent(image_id),
-        {
-          method: "POST",
-          body: utils.assemblePayload({
-            iv: encrypt_data.iv, salt: encrypt_data.salt, image: data.content, storageToken: (new TextEncoder).encode(storageToken), vid: window.crypto.getRandomValues(new Uint8Array(48))
-          })
-        });
-      const resp_json = await resp.json();
-      console.log("Response for " + type + ": ", resp_json)
-      if (resp_json.hasOwnProperty('error')) {
-        return { error: resp_json.error };
-      }
-      verificationToken = resp_json.verification_token;
-      return { verificationToken: verificationToken, id: resp_json.image_id };
-    } catch (e) {
-      console.log(e);
+    const storeReqResp = await (await fetch(STORAGE_SERVER + "/storeRequest?name=" + image_id)).arrayBuffer();
+    const encrypt_data = utils.extractPayload(storeReqResp);
+    // console.log(encrypt_data)
+    const key = await this.getImageKey(keyData, encrypt_data.salt);
+    let storageToken, verificationToken;
+    const data = await this.encrypt(image, key, "arrayBuffer", encrypt_data.iv);
+    // console.log(data)
+    const storageTokenReq = await (await fetch(ROOM_SERVER + this.roomId + '/storageRequest?size=' + data.content.byteLength)).json();
+    if (storageTokenReq.hasOwnProperty('error')) {
+      return { error: storageTokenReq.error }
     }
+    // storageToken = new TextEncoder().encode(storageTokenReq.token);
+    storageToken = JSON.stringify(storageTokenReq);
+    const resp = await fetch(STORAGE_SERVER + "/storeData?type=" + type + "&key=" + encodeURIComponent(image_id),
+      {
+	method: "POST",
+	body: utils.assemblePayload({
+	  iv: encrypt_data.iv,
+	  salt: encrypt_data.salt,
+	  image: data.content,
+	  storageToken: (new TextEncoder()).encode(storageToken),
+	  vid: window.crypto.getRandomValues(new Uint8Array(48))
+	})
+      });
+    const resp_json = await resp.json();
+    // console.log("Response for " + type + ": ", resp_json)
+    if (resp_json.hasOwnProperty('error')) {
+      // TODO - why can't we throw exceptions?
+      // Promise.reject(new Error('Server error on storing image (' + resp_json.error + ')'));
+      return { error: 'Error: storeImage() failed (' + resp_json.error + ')' };
+    }
+    verificationToken = resp_json.verification_token;
+    return { verificationToken: verificationToken, id: resp_json.image_id };
   }
 
 
@@ -1059,32 +1043,31 @@ class Room extends React.Component {
 
 
   async retrieveData(msgId) {
-    try {
-      // console.log(this.state.controlMessages)
-      const imageMetaData = this.state.messages.find(msg => msg._id === msgId).imageMetaData;
-      // console.log(imageHash)
-      const image_id = imageMetaData.previewId;
-      const control_msg = this.state.controlMessages.find(msg => msg.hasOwnProperty('id') && msg.id.startsWith(image_id));
-      //console.log(control_msg)
-      const imageFetch = await (await fetch(STORAGE_SERVER + "/fetchData?id=" + encodeURIComponent(control_msg.id) + '&verification_token=' + control_msg.verificationToken)).arrayBuffer();
-      const data = utils.extractPayload(imageFetch);
-      console.log(data);
-      const iv = data.iv;
-      const salt = data.salt;
-      const image_key = await this.getImageKey(imageMetaData.previewKey, salt);
-      const encrypted_image = data.image;
-      const padded_img = await this.decrypt(image_key, { content: encrypted_image, iv: iv }, "arrayBuffer");
-      const img = this.unpadData(padded_img.plaintext);
-      //console.log(img)
-      //console.log("data:image/jpeg;base64,"+this.arrayBufferToBase64(img.plaintext))
-      if (!img.error) {
-        return "data:image/jpeg;base64," + utils.arrayBufferToBase64(img);
-      }
-      return null;
-    } catch (e) {
-      console.log(e);
-      return null;
+    // console.log(this.state.controlMessages)
+    const imageMetaData = this.state.messages.find(msg => msg._id === msgId).imageMetaData;
+    // console.log(imageHash)
+    const image_id = imageMetaData.previewId;
+    const control_msg = this.state.controlMessages.find(msg => msg.hasOwnProperty('id') && msg.id.startsWith(image_id));
+    console.log(imageMetaData, image_id, control_msg, this.state.controlMessages);
+    if (!control_msg) {
+      return {'error': 'Failed to fetch data - missing control message for that image'};
     }
+    const imageFetch = await (await fetch(STORAGE_SERVER + "/fetchData?id=" + encodeURIComponent(control_msg.id) + '&verification_token=' + control_msg.verificationToken)).arrayBuffer();
+    const data = utils.extractPayload(imageFetch);
+    console.log(data);
+    const iv = data.iv;
+    const salt = data.salt;
+    const image_key = await this.getImageKey(imageMetaData.previewKey, salt);
+    const encrypted_image = data.image;
+    const padded_img = await this.decrypt(image_key, { content: encrypted_image, iv: iv }, "arrayBuffer");
+    const img = this.unpadData(padded_img.plaintext);
+    //console.log(img)
+    //console.log("data:image/jpeg;base64,"+this.arrayBufferToBase64(img.plaintext))
+    if (img.error) {
+      console.log('(Image error: ' + img.error + ')');
+      throw new Error('Failed to fetch data - authentication or formatting error');
+    }
+    return {'url' : "data:image/jpeg;base64," + utils.arrayBufferToBase64(img) };
   }
 
 
@@ -1114,7 +1097,7 @@ class Room extends React.Component {
     // qualityArgument should be 0.92 for jpeg and 0.8 for png (MDN default)
     maxSize = maxSize * 1024; // KB
     // console.log(`Target size is ${maxSize} bytes`);
-    var _c = await this.readPhoto(photo);
+    let _c = await this.readPhoto(photo);
     var _b1 = await new Promise((resolve) => {
       _c.toBlob(resolve, imageType, qualityArgument);
     });
@@ -1436,13 +1419,20 @@ class Room extends React.Component {
     try {
       document.getElementById('image_overlay').style.display = 'block';
       // this.retrieveImagePreview(msgId).then((url) => {
-      this.retrieveData(msgId).then((url) => {
-        document.getElementById('preview_img').classList.remove('center')
-        document.getElementById('preview_img').innerHTML = '<img src=url style="position: absolute; display: block; left: 0; right :0; top: 0; bottom: 0; margin: auto; max-height:80%; max-width: 100%; z-index:2; object-fit: contain"></img>'.replace('url', url)
+      this.retrieveData(msgId).then((data) => {
+	if (data.hasOwnProperty('error')) {
+	  this.sendSystemMessage('Could not open image: ' + data['error']);
+	  document.getElementById('image_overlay').style.display = 'none';
+	} else {
+	  let url = data['url'];
+          document.getElementById('preview_img').classList.remove('center');
+          document.getElementById('preview_img').innerHTML = '<img src=url style="position: absolute; display: block; left: 0; right :0; top: 0; bottom: 0; margin: auto; max-height:80%; max-width: 100%; z-index:2; object-fit: contain"></img>'.replace('url', url);
+	}
       })
     } catch (error) {
+      console.log('openPreview() exception: ' + error.message);
+      this.sendSystemMessage('Could not open image (' + error.message + ')');
       document.getElementById('image_overlay').style.display = 'none';
-      console.log(error);
     }
   }
 
@@ -1576,6 +1566,9 @@ class Room extends React.Component {
     return (this.state.keys.exportable_pubKey || this.state.error || localStorage.getItem(this.roomId) === null ? (
       <View style={{ width: "100%", height: "100%", flex: 1, display: this.props.className === 'hidden' && window.location.pathname !== '/' + this.props.roomId + '/admin' ? 'none' : null }}>
         <View style={{ width: "100%", height: "100%", flex: 1, display: this.props.className === 'hidden' ? 'none' : null }}>
+        <JwModal id="room-response">
+          <button className='admin-button gray-btn' onClick={JwModal.close('admin-response')}>Close</button>
+        </JwModal>
           <JwModal id="change-username">
             <label htmlFor="username-input" style={{ fontSize: "16px" }}><Trans id='change username label'>Change Username</Trans></label>
             <br />
@@ -1586,7 +1579,7 @@ class Room extends React.Component {
             <button className='admin-button green-btn' id='change-username-me-btn' onClick={() => {
               document.getElementById('username-input').value = 'Me';
               this.saveUsername();
-            }}><Trans id='change username me button text'>Me</Trans></button>
+	     }}><Trans id='change username me button text'>Me</Trans></button>
           </JwModal>
           <JwModal id='whisper-user'>
             {this.state.reply_to ?

@@ -3,9 +3,9 @@
    :align: center
    :alt: The 'michat' Pet Logo
 
-====================
-Snackabra Web Client
-====================
+======================
+ Snackabra Web Client
+======================
 
 For general documentation on Snackabra see:
 
@@ -18,28 +18,28 @@ snackabra@protonmail.com
 
 
 Introduction
-------------
+============
 
-The snackabra web (app) client is a fully featured web client for the
-snackabra set of communication and data sharing services. You can use
-it to connect to any rooms on public servers such as,
-https://privacy.app or you can configure it to connect to any
-snackabra server, including a personal server (see below).
+This react native web client can connect to any Snackabra server -
+public or private.
+
+To run your own private "room server", you can install:
+
+* https://github.com/snackabra/snackabra-roomserver
 
 
 
 Setup
------
+=====
 
 You need to copy the template ".env" file to the root:
 
 ::
    cp setup/template.env .env
 
-If you're connecting to public servers, you don't need to modify it;
-otherwise, see below.
+You may want to make changes to it (see below).
 
-Besides that, just run the following:
+Once done, you can simply:
 
 ::
 
@@ -47,63 +47,86 @@ Besides that, just run the following:
    yarn build
    yarn start
 
-That should open snackabra client in your web browser (at ``http://localhost:3000/``).
 
-*TODO: with some yarn / babel / etc tweaks, this should be buildable
-into a single static file that you can run locally without a server.*
-
-
-If you modify any of the strings / documentation, you'll also need
-to run:
-
-::
-
-   yarn extract
-   yarn compile
-
-   
 
 
 Private Servers
----------------
+===============
 
-Your template '.env" file will point to (public) https://Privacy.App
-servers. This gives you the ability to run a static local web app.
+It will point your web app to the https://Privacy.App servers.
 
-If you are running your own snackabra room server
-(github.com/snackabra/snackabra-roomserver), you will need to replace
-``REACT_APP_ROOM_SERVER`` with the domain - it'll be something like
-``r.example.workers.dev``.
+If you are running your own snackabra room server, you will need to
+replace ``REACT_APP_ROOM_SERVER`` with the domain - it'll be something
+like ``r.example.workers.dev``.
 
 You can run a personal room server and still use public storage
-servers (github.com/snackabra/snackabra-storageserver), but you will
-only be able to read files, not upload. If you want to be able to
-share photos and files and manage storage yourself, you will need your
-own storage server as well, and set ``REACT_APP_STORAGE_SERVER`` to
-point to it.
+servers, but you will only be able to read files, not upload. If you
+want to be able to share photos and files, you will need your own
+storage server as well, and set ``REACT_APP_STORAGE_SERVER`` to point
+to it.
+
+
+Hosting your Client
+===================
+
+After ``yarn build``, you will have a set of static images (in the
+'build' directory), that you can host in various ways. If you're
+setting up the storage and room servers on Cloudflare, then
+it might be simplest if you use Cloudflare "Pages". Detailed
+documentation of how to do that is beyond the scope, but
+it's pretty straightforward:
+
+* First fork a copy for yourself of 'snackabra-webclient'
+
+* On Cloudflare, select connecting to GitHub and authorizing
+  it to you your forked repository.
+
+* Select "React" as your choice of type of app / build.
+
+* Change the default (which uses ``npm``) to be just
+  ``yarn build``
+
+Then build and deploy. If you are running your own
+servers, you will also have to override the defaults in
+the ".env" file.
+
+It'll take a few minutes for most of the steps, in total it should
+take less than 10-15 minutes.
+
 
 
 
 Notes
------
+=====
+
+The snackabra web (app) client is a reference fully featured
+web client for the snackabra set of communication and data
+sharing services. You can use it to connect to any rooms
+on https://privacy.app or you can configure it to connect
+to any snackabra server, including personal server.
 
 The app is written in (mostly) React Native and based on the
-(exellent) Gifted Chat code
-https://github.com/FaridSafi/react-native-gifted-chat
+(exellent) Gifted Chat code [1]. For a few reasons, we are
+currently using a slightly modified fork [2].
+
+
+References
+==========
+
+[1] https://github.com/FaridSafi/react-native-gifted-chat)
+[2] https://github.com/Magnusson-Institute/react-native-gifted-chat
 
 
 
 Directory
----------
+=========
 
-Following files should be in your directory:
+Following files should be in the git::
 
-  
-::
-   
     .
-    ├── LICENSE.md
+    ├── LICENSE.rst
     ├── README.rst
+    ├── build
     ├── config-overrides.js
     ├── package.json
     ├── public
@@ -112,8 +135,6 @@ Following files should be in your directory:
     │   ├── index.html
     │   ├── manifest.json
     │   └── robots.txt
-    ├── setup
-    │   └── template.env
     ├── snackabra.svg
     ├── src
     │   ├── App.css
@@ -137,7 +158,7 @@ Following files should be in your directory:
     │   │   │   └── Room.js
     │   │   └── Snackabra
     │   │       ├── Snackabra.css
-    │   │       └── snackabra.js
+    │   │       └── Snackabra.js
     │   ├── index.css
     │   ├── index.tsx
     │   ├── locales
@@ -147,7 +168,6 @@ Following files should be in your directory:
     │   ├── react-app-env.d.ts
     │   ├── static
     │   │   ├── attach.png
-    │   │   ├── download-file-square-line.png
     │   │   ├── icons8-edit-24.png
     │   │   ├── icons8-lock-64.png
     │   │   ├── icons8-menu-48.png
@@ -163,43 +183,31 @@ Following files should be in your directory:
 
 
 
-
 LICENSE
--------
+=======
 
 Copyright (c) 2016-2021 Magnusson Institute, All Rights Reserved.
 
 "Snackabra" is a registered trademark
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as
-published by the Free Software Foundation, either version 3 of the
-License, or (at your option) any later version.
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
 
-This program is distributed in the hope that it will be useful, but
-WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Affero General Public License for more details.
+The above copyright notice, the above trademark notice, and this
+permission notice shall be included in all copies or substantial
+portions of the Software.
 
-Licensed under GNU Affero General Public License
-https://www.gnu.org/licenses/agpl-3.0.html
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NON-INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-Cryptography Notice
--------------------
-
-This distribution includes cryptographic software. The country in
-which you currently reside may have restrictions on the import,
-possession, use, and/or re-export to another country, of encryption
-software. Before using any encryption software, please check your
-country's laws, regulations and policies concerning the import,
-possession, or use, and re-export of encryption software, to see if
-this is permitted. See http://www.wassenaar.org/ for more information.
-
-United States: This distribution employs only "standard cryptography"
-under BIS definitions, and falls under the Technology Software
-Unrestricted (TSU) exception.  Futher, per the March 29, 2021,
-amendment by the Bureau of Industry & Security (BIS) amendment of the
-Export Administration Regulations (EAR), this "mass market"
-distribution does not require reporting (see
-https://www.govinfo.gov/content/pkg/FR-2021-03-29/pdf/2021-05481.pdf ).

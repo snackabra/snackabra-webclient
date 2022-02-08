@@ -1,12 +1,12 @@
 /* Copyright (c) 2021 Magnusson Institute, All Rights Reserved */
 
 import React from 'react'
-import Snackabra from './containers/Snackabra/Snackabra'
+import Snackabra from './containers/Snackabra/snackabra'
 import './App.css'
 import { i18n } from '@lingui/core'
 import { I18nProvider } from '@lingui/react'
 import { messages } from './locales/en/messages'
-import { en, cs } from 'make-plural/plurals'
+import { en } from 'make-plural/plurals'
 
 i18n.loadLocaleData({
   en: { plurals: en },

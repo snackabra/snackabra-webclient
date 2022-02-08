@@ -1,22 +1,24 @@
-function assemblePayloadV1(data) {
-  try {
-    let metadata = {}
-    for (const key in data) {
-      metadata[key] = data[key].byteLength;
-    }
-    let encoder = new TextEncoder();
-    const metadataBuffer = encoder.encode(JSON.stringify(metadata));
-    const metadataSize = new Uint32Array([metadataBuffer.byteLength]);
-    let payload = _appendBuffer(metadataSize.buffer, metadataBuffer);
-    for (const key in data) {
-      payload = _appendBuffer(payload, data[key]);
-    }
-    return payload;
-  } catch (e) {
-    console.log(e);
-    return {};
-  }
-}
+/* Copyright (c) 2021 Magnusson Institute, All Rights Reserved */
+
+// function assemblePayloadV1(data) {
+//   try {
+//     let metadata = {}
+//     for (const key in data) {
+//       metadata[key] = data[key].byteLength;
+//     }
+//     let encoder = new TextEncoder();
+//     const metadataBuffer = encoder.encode(JSON.stringify(metadata));
+//     const metadataSize = new Uint32Array([metadataBuffer.byteLength]);
+//     let payload = _appendBuffer(metadataSize.buffer, metadataBuffer);
+//     for (const key in data) {
+//       payload = _appendBuffer(payload, data[key]);
+//     }
+//     return payload;
+//   } catch (e) {
+//     console.log(e);
+//     return {};
+//   }
+// }
 
 
 function extractPayloadV1(payload) {
@@ -146,25 +148,27 @@ export function extractPayload(payload) {
     }
     console.log(_metadata["version"])
     switch (_metadata["version"]) {
-      case "001":
-        return extractPayloadV1(payload);
-      case "002":
-        let data = {};
-        for (let i = 1; i < Object.keys(_metadata).length; i++) {
-          let _index = i.toString();
-          if (_metadata.hasOwnProperty(_index)) {
-            let propertyStartIndex = _metadata[_index]["start"]
-            console.log(propertyStartIndex);
-            let size = _metadata[_index]["size"]
-            data[_metadata[_index]["name"]] = payload.slice(startIndex + propertyStartIndex, startIndex + propertyStartIndex + size);
-          }
+    case "001":
+      return extractPayloadV1(payload);
+    case "002":
+      let data = {};
+      for (let i = 1; i < Object.keys(_metadata).length; i++) {
+        let _index = i.toString();
+        if (_metadata.hasOwnProperty(_index)) {
+          let propertyStartIndex = _metadata[_index]["start"]
+          console.log(propertyStartIndex);
+          let size = _metadata[_index]["size"]
+          data[_metadata[_index]["name"]] = payload.slice(startIndex + propertyStartIndex, startIndex + propertyStartIndex + size);
         }
-        return data;
+      }
+      return data;
+    default:
+      throw new Error('Unsupported payload version (' + _metadata["version"] + ') - fatal')
     }
   }
   catch (e) {
-    console.log("HIGH LEVEL ERROR", e.message);
-    return {};
+    // console.log("HIGH LEVEL ERROR", e.message);
+    throw new Error('extractPayload() exception (' + e.message + ')')
   }
 }
 
@@ -173,7 +177,7 @@ export function encodeB64Url(input) {
 }
 
 export function decodeB64Url(input) {
-  input = input.replaceAll('-', '+').replace('_', '/');
+  input = input.replaceAll('-', '+').replaceAll('_', '/');
 
   // Pad out with standard base64 required padding characters
   var pad = input.length % 4;

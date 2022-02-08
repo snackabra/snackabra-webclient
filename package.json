@@ -3,9 +3,9 @@
     "author": "Magnusson Institute",
     "email" : "snackabra@gmail.com",
     "description": "Web app (react native) client for the Snackabra system",
-    "homepage": "https://github.com/snackabra/snackabra-webclient",
-    "version": "0.4.0",
-    "license": "SEE LICENSE IN LICENSE.RST",
+    "homepage": "",
+    "version": "0.4.2",
+    "license": "GPL-3.0-only",
     "private": true,
     "dependencies": {
 	"@babel/core": "^7.15.8",

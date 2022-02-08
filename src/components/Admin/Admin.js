@@ -1,22 +1,4 @@
-/* 
-   Copyright (C) 2019-2021 Magnusson Institute, All Rights Reserved
-
-   "Snackabra" is a registered trademark
-
-   This program is free software: you can redistribute it and/or
-   modify it under the terms of the GNU Affero General Public License
-   as published by the Free Software Foundation, either version 3 of
-   the License, or (at your option) any later version.
-
-   This program is distributed in the hope that it will be useful, but
-   WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   Affero General Public License for more details.
-
-   You should have received a copy of the GNU Affero General Public
-   License along with this program.  If not, see www.gnu.org/licenses/
-
-*/
+/* Copyright (c) 2021 Magnusson Institute, All Rights Reserved */
 
 import React, { useState } from 'react';
 import { JwModal } from '../../containers/Modal/Modal'
@@ -45,6 +27,9 @@ const Admin = (props) => {
   ) :
     (
       <div className={"admin " + props.className}>
+        <JwModal id="admin-response">
+          <button className='admin-button gray-btn' onClick={JwModal.close('admin-response')}>Close</button>
+        </JwModal>
         <JwModal id="confirm-lockdown">
           <Trans id='confirm restriction message'>Restriction will cause new encryption keys to be generated, and will only be shared to participants that you as Owner explicitly approve. New participants can still whisper to you, but not send or receive messages from anybody else.</Trans>
           <br />

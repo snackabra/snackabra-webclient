@@ -13,15 +13,15 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/components/LandingPage/LandingPage.js:270
+#: src/components/LandingPage/LandingPage.js:361
 msgid "Cancel Button Text"
 msgstr "Cancel"
 
-#: src/components/LandingPage/LandingPage.js:307
+#: src/components/LandingPage/LandingPage.js:398
 msgid "Convert to PEM button"
 msgstr "Convert to PEM"
 
-#: src/components/LandingPage/LandingPage.js:306
+#: src/components/LandingPage/LandingPage.js:397
 msgid "Download LS data button"
 msgstr "Download Data"
 
@@ -49,9 +49,9 @@ msgstr "Please join again from your membership page to access the admin features
 msgid "admin header"
 msgstr "Admin Controls"
 
-#: src/containers/Room/Room.js:1573
-#: src/containers/Room/Room.js:1596
-#: src/containers/Room/Room.js:1639
+#: src/containers/Room/Room.js:1571
+#: src/containers/Room/Room.js:1594
+#: src/containers/Room/Room.js:1637
 msgid "cancel button text"
 msgstr "Cancel"
 
@@ -59,11 +59,11 @@ msgstr "Cancel"
 msgid "change room capacity label"
 msgstr "Change Room Capacity"
 
-#: src/containers/Room/Room.js:1568
+#: src/containers/Room/Room.js:1566
 msgid "change username label"
 msgstr "Change Username"
 
-#: src/containers/Room/Room.js:1577
+#: src/containers/Room/Room.js:1575
 msgid "change username me button text"
 msgstr "Me"
 
@@ -75,11 +75,11 @@ msgstr "Restriction will cause new encryption keys to be generated, and will onl
 msgid "confirm room restriction button text"
 msgstr "Confirm Room Restriction"
 
-#: src/components/LandingPage/LandingPage.js:308
+#: src/components/LandingPage/LandingPage.js:399
 msgid "copy paste ls message"
 msgstr "You can also copy-paste the following:"
 
-#: src/containers/Room/Room.js:1627
+#: src/containers/Room/Room.js:1625
 msgid "first visit modal message"
 msgstr "Welcome! If this is the first time you’ve been to this room, enter your username for this room and press ‘Ok’ and we we will generate fresh cryptographic keys that are unique to you and to this room. If you have already been here, then you might want to load your keys from your backup - press ‘Cancel’ and we’ll take you to the ‘Home’ tab."
 
@@ -95,24 +95,24 @@ msgstr "You are probably here because you scanned a social card that someone gav
 msgid "join requests header"
 msgstr "Join Requests"
 
-#: src/components/LandingPage/LandingPage.js:304
+#: src/components/LandingPage/LandingPage.js:395
 msgid "key export filename label"
 msgstr "Enter filename you want to save as:"
 
-#: src/components/LandingPage/LandingPage.js:302
+#: src/components/LandingPage/LandingPage.js:393
 msgid "key export header"
 msgstr "Export Keys"
 
-#: src/components/LandingPage/LandingPage.js:310
+#: src/components/LandingPage/LandingPage.js:401
 msgid "key export ls empty message"
 msgstr "Your localstorage does not have any data to export!"
 
-#: src/components/LandingPage/LandingPage.js:313
-#: src/components/LandingPage/LandingPage.js:325
+#: src/components/LandingPage/LandingPage.js:404
+#: src/components/LandingPage/LandingPage.js:416
 msgid "key import header"
 msgstr "Import Keys"
 
-#: src/components/LandingPage/LandingPage.js:322
+#: src/components/LandingPage/LandingPage.js:413
 msgid "key import paste message"
 msgstr "Or paste the keys you want to import"
 
@@ -120,11 +120,11 @@ msgstr "Or paste the keys you want to import"
 #~ msgid "key ops message"
 #~ msgstr "You can import/export your keys by clicking on the button below or select the room you would like to enter."
 
-#: src/containers/Room/Room.js:1687
+#: src/containers/Room/Room.js:1685
 msgid "loading room text"
 msgstr "Loading room...{0}"
 
-#: src/components/LandingPage/LandingPage.js:273
+#: src/components/LandingPage/LandingPage.js:364
 msgid "member message"
 msgstr "If you are a <0>Member</0>, you can log in on your membership page, which will automatically initialize your “social card” rooms in the browser."
 
@@ -132,11 +132,11 @@ msgstr "If you are a <0>Member</0>, you can log in on your membership page, whic
 msgid "motd label"
 msgstr "Enter the Message of the Day below:"
 
-#: src/containers/Room/Room.js:1602
+#: src/containers/Room/Room.js:1600
 msgid "motd text"
 msgstr "Message of the day: {0}"
 
-#: src/components/LandingPage/LandingPage.js:340
+#: src/components/LandingPage/LandingPage.js:431
 msgid "new room button"
 msgstr "Create New Room"
 
@@ -148,7 +148,7 @@ msgstr "Create New Room"
 msgid "no join requests text"
 msgstr "No new join requests for this room!"
 
-#: src/containers/Room/Room.js:1636
+#: src/containers/Room/Room.js:1634
 msgid "ok button text"
 msgstr "Ok"
 
@@ -156,57 +156,69 @@ msgstr "Ok"
 msgid "restrict button text"
 msgstr "Restrict"
 
-#: src/components/LandingPage/LandingPage.js:355
+#: src/components/LandingPage/LandingPage.js:457
 msgid "room authorize button"
 msgstr "Authorize Room"
 
-#: src/components/LandingPage/LandingPage.js:343
+#: src/components/LandingPage/LandingPage.js:445
 msgid "room authorize header"
 msgstr "Authorize Room"
 
-#: src/components/LandingPage/LandingPage.js:344
+#: src/components/LandingPage/LandingPage.js:446
 msgid "room authorize message"
 msgstr "You can authorize a room to be made available on your server. To do that, enter the roomId, the public key of the room owner and your server secret and press Authorize Room."
 
-#: src/components/LandingPage/LandingPage.js:276
+#: src/components/LandingPage/LandingPage.js:367
 msgid "room list header"
 msgstr "Rooms"
 
-#: src/components/LandingPage/LandingPage.js:260
+#: src/components/LandingPage/LandingPage.js:351
 msgid "room rename header modal"
 msgstr "Rename Room"
 
-#: src/components/LandingPage/LandingPage.js:339
+#: src/components/LandingPage/LandingPage.js:430
 msgid "room upload button"
 msgstr "Upload Room Data"
 
-#: src/components/LandingPage/LandingPage.js:331
+#: src/components/LandingPage/LandingPage.js:422
 msgid "room upload header"
 msgstr "Upload/Create Room"
 
-#: src/components/LandingPage/LandingPage.js:332
+#: src/components/LandingPage/LandingPage.js:423
 msgid "room upload message"
 msgstr "You can upload room data for a previously generated room or create a new room by entering your server secret and pressing the button below. Creating a new room will generate the necessary keys for the new room and initialize the room for you on your server."
 
 #: src/components/Admin/Admin.js:44
-#: src/components/LandingPage/LandingPage.js:269
-#: src/containers/Room/Room.js:1572
+#: src/components/LandingPage/LandingPage.js:360
+#: src/containers/Room/Room.js:1570
 msgid "save button text"
 msgstr "Save"
 
-#: src/containers/Room/Room.js:1590
+#: src/containers/Room/Room.js:1588
 msgid "send button text"
 msgstr "Send"
+
+#: src/components/LandingPage/LandingPage.js:442
+msgid "storage upload button"
+msgstr "Upload Storage Data"
+
+#: src/components/LandingPage/LandingPage.js:434
+msgid "storage upload header"
+msgstr "Upload Storage Data"
+
+#: src/components/LandingPage/LandingPage.js:435
+msgid "storage upload message"
+msgstr "You can upload storage data for a previously generated room by entering your storage server secret and pressing the button below."
 
 #: src/components/Admin/Admin.js:51
 msgid "update button text"
 msgstr "Update"
 
 #: src/components/Guide/Guide.js:15
-#: src/components/LandingPage/LandingPage.js:272
+#: src/components/LandingPage/LandingPage.js:363
 msgid "welcome header"
 msgstr "Welcome to Snackabra"
 
-#: src/containers/Room/Room.js:1582
+#: src/containers/Room/Room.js:1580
 msgid "whisper header"
 msgstr "Whisper to {0}"
