@@ -3,9 +3,9 @@
    :align: center
    :alt: The 'michat' Pet Logo
 
-======================
- Snackabra Web Client
-======================
+====================
+Snackabra Web Client
+====================
 
 For general documentation on Snackabra see:
 
