@@ -208,7 +208,7 @@ const LandingPage = (props) => {
           // console.log(_json_msg)
           if (_json_msg.hasOwnProperty('control')) {
             console.log(_json_msg)
-            unwrapped_messages[_json_msg["id"]] = _json_msg['verificationToken'];
+            unwrapped_messages[_json_msg["id"] + "."  + (_json_msg.hasOwnProperty("type") ? _json_msg["type"] : "")] = _json_msg['verificationToken'];
           }
         }
       } catch (e) {

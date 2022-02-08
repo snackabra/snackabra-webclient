@@ -1000,7 +1000,7 @@ class Room extends React.Component {
       return { error: 'Error: storeImage() failed (' + resp_json.error + ')' };
     }
     verificationToken = resp_json.verification_token;
-    return { verificationToken: verificationToken, id: resp_json.image_id };
+    return { verificationToken: verificationToken, id: resp_json.image_id, type: type };
   }
 
 
