@@ -1566,9 +1566,9 @@ class Room extends React.Component {
     return (this.state.keys.exportable_pubKey || this.state.error || localStorage.getItem(this.roomId) === null ? (
       <View style={{ width: "100%", height: "100%", flex: 1, display: this.props.className === 'hidden' && window.location.pathname !== '/' + this.props.roomId + '/admin' ? 'none' : null }}>
         <View style={{ width: "100%", height: "100%", flex: 1, display: this.props.className === 'hidden' ? 'none' : null }}>
-        <JwModal id="room-response">
-          <button className='admin-button gray-btn' onClick={JwModal.close('admin-response')}>Close</button>
-        </JwModal>
+          <JwModal id="room-response">
+            <button className='admin-button gray-btn' onClick={JwModal.close('admin-response')}>Close</button>
+          </JwModal>
           <JwModal id="change-username">
             <label htmlFor="username-input" style={{ fontSize: "16px" }}><Trans id='change username label'>Change Username</Trans></label>
             <br />

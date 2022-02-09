@@ -199,9 +199,11 @@ const LandingPage = (props) => {
       try {
         let message = JSON.parse(messages[id]);
         if (message.hasOwnProperty("encrypted_contents")) {
-          let msg = await decrypt(decKey, message.encrypted_contents)
+	  let _contents = message.encrypted_contents;
+	  // let _contents = JSON.parse(message.encrypted_contents);
+          let msg = await decrypt(decKey, _contents)
           if (msg.error && lockedKey !== null) {
-            msg = await decrypt(lockedKey, message.encrypted_contents)
+            msg = await decrypt(lockedKey, _contents)
           }
           // console.log(msg)
           const _json_msg = JSON.parse(msg.plaintext);
@@ -221,6 +223,7 @@ const LandingPage = (props) => {
 
   const uploadRoomData = async () => {
     const reader = new FileReader()
+    let roomId = null;
     reader.onload = async event => {
       try {
         const dataJSON = JSON.parse(event.target.result);
@@ -228,17 +231,20 @@ const LandingPage = (props) => {
           dataJSON["SERVER_SECRET"] = document.getElementById("serverSecretInput").value;
         }
         if (dataJSON.hasOwnProperty("roomId")) {
-          let roomId = dataJSON["roomId"];
+          roomId = dataJSON["roomId"];
+	  console.log(roomId);
           let data = new TextEncoder().encode(JSON.stringify(dataJSON));
           let req = await fetch(ROOM_SERVER + roomId + "/uploadRoom", {
             method: "POST",
             body: data
           });
+	  req.json().then((j) => { if (j.hasOwnProperty('error')) JwModal.open('landing-response', 'Error from room server: ' + j['error']);
+				   else JwModal.open('landing-response', 'Room has been imported! Room <id> is ' + roomId); } );
         } else {
-          console.log("Room id not present in the file")
+	  JwModal.open('landing-response', 'That room id is not present in the file');
         }
       } catch (error) {
-        console.log(error)
+	JwModal.open('landing-response', 'Error loading room (' + error.message + ')');
       }
     }// desired file content
     reader.onerror = error => { console.log(error) }
@@ -347,6 +353,9 @@ const LandingPage = (props) => {
   }, 0);
   return (
     <div className={"landingPage " + props.className}>
+      <JwModal id="landing-response">
+        <button className='admin-button gray-btn' onClick={JwModal.close('landing-response')}>Close</button>
+      </JwModal>
       <JwModal id="rename-room">
         <label htmlFor="roomname-input"><h2><Trans id='room rename header modal'>Rename Room</Trans></h2></label>
         <br />
