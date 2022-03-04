@@ -27,7 +27,6 @@ To run your own private "room server", you can install:
 * https://github.com/snackabra/snackabra-roomserver
 
 
-
 Setup
 =====
 
