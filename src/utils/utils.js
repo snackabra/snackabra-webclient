@@ -1,5 +1,7 @@
 /* Copyright (c) 2021 Magnusson Institute, All Rights Reserved */
 
+/* snackabra-webclient/src/utils/utils.js */
+
 // function assemblePayloadV1(data) {
 //   try {
 //     let metadata = {}

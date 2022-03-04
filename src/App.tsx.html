@@ -1,0 +1,31 @@
+<!-- Generator: GNU source-highlight 3.1.9
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt><i><font color="#9A1900">/* Copyright (c) 2021 Magnusson Institute, All Rights Reserved */</font></i>
+
+import React from <font color="#FF0000">'react'</font>
+import Snackabra from <font color="#FF0000">'./containers/Snackabra/Snackabra'</font>
+import <font color="#FF0000">'./App.css'</font>
+import <font color="#FF0000">{</font> i18n <font color="#FF0000">}</font> from <font color="#FF0000">'@lingui/core'</font>
+import <font color="#FF0000">{</font> I18nProvider <font color="#FF0000">}</font> from <font color="#FF0000">'@lingui/react'</font>
+import <font color="#FF0000">{</font> messages <font color="#FF0000">}</font> from <font color="#FF0000">'./locales/en/messages'</font>
+import <font color="#FF0000">{</font> en <font color="#FF0000">}</font> from <font color="#FF0000">'make-plural/plurals'</font>
+
+i18n<font color="#990000">.</font><b><font color="#000000">loadLocaleData</font></b><font color="#990000">(</font><font color="#FF0000">{</font>
+  en<font color="#990000">:</font> <font color="#FF0000">{</font> plurals<font color="#990000">:</font> en <font color="#FF0000">}</font><font color="#990000">,</font>
+<font color="#FF0000">}</font><font color="#990000">)</font>
+i18n<font color="#990000">.</font><b><font color="#000000">load</font></b><font color="#990000">(</font><font color="#FF0000">'en'</font><font color="#990000">,</font> messages<font color="#990000">)</font>
+i18n<font color="#990000">.</font><b><font color="#000000">activate</font></b><font color="#990000">(</font><font color="#FF0000">'en'</font><font color="#990000">)</font>
+
+
+<b><font color="#0000FF">const</font></b> App<font color="#990000">:</font> React<font color="#990000">.</font>FC <font color="#990000">=</font> <font color="#990000">()</font> <font color="#990000">=&gt;</font> <font color="#FF0000">{</font>
+  <b><font color="#0000FF">return</font></b> <font color="#990000">(</font>
+    <font color="#990000">&lt;</font>I18nProvider i18n<font color="#990000">=</font><font color="#FF0000">{</font>i18n<font color="#FF0000">}</font><font color="#990000">&gt;</font>
+      <font color="#990000">&lt;</font>Snackabra <font color="#990000">/&gt;</font>
+    <font color="#990000">&lt;/</font>I18nProvider<font color="#990000">&gt;</font>
+  <font color="#990000">)</font>
+<font color="#FF0000">}</font>
+
+<b><font color="#0000FF">export</font></b> <b><font color="#0000FF">default</font></b> App
+</tt></pre>

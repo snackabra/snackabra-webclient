@@ -552,7 +552,7 @@ class Room extends React.Component {
   // ##########################   FUNCTIONS TO HANDLE ANY AND ALL CRYPTO  ####################################
 
 
-  extractPubKey(privateKey) {
+  function extractPubKey(privateKey) {
     try {
       let pubKey = { ...privateKey }
       delete pubKey.d;
@@ -569,7 +569,7 @@ class Room extends React.Component {
   }
 
 
-  async generateKeys() {
+  async function generateKeys() {
     try {
       let keyPair = await window.crypto.subtle.generateKey(
         {
@@ -589,7 +589,7 @@ class Room extends React.Component {
   }
 
 
-  async importKey(format, key, type, extractable, keyUsages) {
+  async function importKey(format, key, type, extractable, keyUsages) {
     const keyAlgorithms = {
       ECDH: {
         name: "ECDH",
@@ -616,7 +616,7 @@ class Room extends React.Component {
   }
 
 
-  async deriveKey(privateKey, publicKey, type, extractable, keyUsages) {
+  async function deriveKey(privateKey, publicKey, type, extractable, keyUsages) {
     const keyAlgorithms = {
       AES: {
         name: "AES-GCM",
@@ -646,7 +646,7 @@ class Room extends React.Component {
   }
 
 
-  async getImageKey(imageHash, _salt) {
+  async function getImageKey(imageHash, _salt) {
 
     try {
       let keyMaterial = await this.importKey("raw", utils.base64ToArrayBuffer(decodeURIComponent(imageHash)), "PBKDF2", false, ["deriveBits", "deriveKey"]);
@@ -676,7 +676,7 @@ class Room extends React.Component {
   }
 
 
-  async encrypt(contents, secret_key = null, outputType = "string", _iv = null) {
+  async function encrypt(contents, secret_key = null, outputType = "string", _iv = null) {
     try {
       if (contents === null) {
         return;
@@ -708,7 +708,7 @@ class Room extends React.Component {
   }
 
 
-  async decrypt(secretKey, contents, outputType = "string") {
+  async function decrypt(secretKey, contents, outputType = "string") {
     try {
       const ciphertext = typeof contents.content === 'string' ? utils.base64ToArrayBuffer(decodeURIComponent(contents.content)) : contents.content;
       const iv = typeof contents.iv === 'string' ? utils.base64ToArrayBuffer(decodeURIComponent(contents.iv)) : contents.iv;
@@ -731,7 +731,7 @@ class Room extends React.Component {
   }
 
 
-  async sign(secretKey, contents) {
+  async function sign(secretKey, contents) {
     try {
       const encoder = new TextEncoder();
       const encoded = encoder.encode(contents);
@@ -754,7 +754,7 @@ class Room extends React.Component {
   }
 
 
-  async verify(secretKey, sign, contents) {
+  async function verify(secretKey, sign, contents) {
     try {
       const _sign = utils.base64ToArrayBuffer(decodeURIComponent(sign));
       const encoder = new TextEncoder();
@@ -953,7 +953,7 @@ class Room extends React.Component {
 
 
   // TODO - can be optimized (asynchronized more) to return the hashes once calculated and then do all the encryption stuff.
-  async saveImage(image) {
+  async function saveImage(image) {
     const previewImage = this.padImage(await (await this.restrictPhoto(image, 4096, "image/jpeg", 0.92)).arrayBuffer());
     const previewHash = await this.generateImageHash(previewImage);
     const fullImage = image.size > 15728640 ? this.padImage(await (await this.restrictPhoto(image, 15360, "image/jpeg", 0.92)).arrayBuffer()) : this.padImage(await image.arrayBuffer());
@@ -966,7 +966,7 @@ class Room extends React.Component {
   }
 
 
-  async storeImage(image, image_id, keyData, type) {
+  async function storeImage(image, image_id, keyData, type) {
 
     const storeReqResp = await (await fetch(STORAGE_SERVER + "/storeRequest?name=" + image_id)).arrayBuffer();
     const encrypt_data = utils.extractPayload(storeReqResp);
@@ -1004,7 +1004,7 @@ class Room extends React.Component {
   }
 
 
-  async generateImageHash(image) {
+  async function generateImageHash(image) {
     try {
       const digest = await crypto.subtle.digest('SHA-512', image);
       const _id = digest.slice(0, 32);
@@ -1017,7 +1017,7 @@ class Room extends React.Component {
   }
 
 
-  async retrieveImagePreview(msgId) {
+  async function retrieveImagePreview(msgId) {
     try {
       const imageHash = this.state.messages.find(msg => msg._id === msgId).imageMetaData;
       // console.log(imageHash)
@@ -1042,7 +1042,7 @@ class Room extends React.Component {
   }
 
 
-  async retrieveData(msgId) {
+  async function retrieveData(msgId) {
     // console.log(this.state.controlMessages)
     const imageMetaData = this.state.messages.find(msg => msg._id === msgId).imageMetaData;
     // console.log(imageHash)
@@ -1071,7 +1071,7 @@ class Room extends React.Component {
   }
 
 
-  async getFileData(file, outputType) {
+  async function getFileData(file, outputType) {
     try {
       let reader = new FileReader();
       if(file.size === 0){
@@ -1092,7 +1092,7 @@ class Room extends React.Component {
   }
 
 
-  async restrictPhoto(photo, maxSize, imageType, qualityArgument) {
+  async function restrictPhoto(photo, maxSize, imageType, qualityArgument) {
     // imageType default should be 'image/jpeg'
     // qualityArgument should be 0.92 for jpeg and 0.8 for png (MDN default)
     maxSize = maxSize * 1024; // KB
@@ -1149,7 +1149,7 @@ class Room extends React.Component {
   }
 
 
-  async readPhoto(photo) {
+  async function readPhoto(photo) {
     const canvas = document.createElement('canvas');
     const img = document.createElement('img');
 
@@ -1176,7 +1176,7 @@ class Room extends React.Component {
   };
 
 
-  scaleCanvas(canvas, scale) {
+  function scaleCanvas(canvas, scale) {
     const scaledCanvas = document.createElement('canvas');
     scaledCanvas.width = canvas.width * scale;
     scaledCanvas.height = canvas.height * scale;
@@ -1189,7 +1189,7 @@ class Room extends React.Component {
   };
 
 
-  padImage(image_buffer) {
+  function padImage(image_buffer) {
     let _sizes = [128, 256, 512, 1024, 2048, 4096];   // in KB
     _sizes = _sizes.map((size) => size * 1024);
     const image_size = image_buffer.byteLength;
@@ -1227,7 +1227,7 @@ class Room extends React.Component {
   }
 
 
-  unpadData(data_buffer) {
+  function unpadData(data_buffer) {
     // console.log(data_buffer, typeof data_buffer)
     const _size = new Uint32Array(data_buffer.slice(-4))[0];
     return data_buffer.slice(0, _size);
@@ -1241,7 +1241,7 @@ class Room extends React.Component {
   TODO - Have all styles in a separate file and import here to make it easier to experiment and make changes
   */
 
-  renderBubble(props) {
+  function renderBubble(props) {
     let newProps = {}
     let current_user_key;
     try {
