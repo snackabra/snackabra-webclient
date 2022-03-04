@@ -9,4 +9,5 @@ nogit.*
 node_modules
 build
 
+# this is local copy from the setup director
 .env

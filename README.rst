@@ -34,9 +34,11 @@ Setup
 You need to copy the template ".env" file to the root:
 
 ::
+
    cp setup/template.env .env
 
-You may want to make changes to it (see below).
+See below (Private Servers) for details: this file points your
+webclient to your preferred ``snackabra`` servers (room and storage).
 
 Once done, you can simply:
 
@@ -46,13 +48,29 @@ Once done, you can simply:
    yarn build
    yarn start
 
+If you're changing messages in the UI, you will occasionally need:
+
+::
+
+   yarn extract
+   yarn compile
+
+To maintain the internationalization setup (though currently we
+only support the ``en`` locale).
+
+For development, one suggestion is to install the React Native Chrome
+Extension [#f01]_ and then open developer tools. When running the
+extension against your local version (``yarn start``), you get the
+"developer" build, and against your server you'll get "production"
+build (which can also be tested locally).
 
 
 
 Private Servers
 ===============
 
-It will point your web app to the https://Privacy.App servers.
+By default this build will point your web app to the
+https://Privacy.App servers, you can change this in the env file:
 
 If you are running your own snackabra room server, you will need to
 replace ``REACT_APP_ROOM_SERVER`` with the domain - it'll be something
@@ -63,6 +81,8 @@ servers, but you will only be able to read files, not upload. If you
 want to be able to share photos and files, you will need your own
 storage server as well, and set ``REACT_APP_STORAGE_SERVER`` to point
 to it.
+
+Of course you can also point it to any other public host as well. [#f02]_
 
 
 Hosting your Client
@@ -92,7 +112,14 @@ the ".env" file.
 It'll take a few minutes for most of the steps, in total it should
 take less than 10-15 minutes.
 
+Reminder: if you are setting up your own domain ("acme.com"), then
+you should end up with something like this:
 
+::
+
+   acme.com    -> will server the static pages of this (web) client
+   r.acme.com  -> this runs your snackabra-roomserver
+   s.acme.com  -> this runs your snackabra-storageserver
 
 
 Notes
@@ -105,15 +132,9 @@ on https://privacy.app or you can configure it to connect
 to any snackabra server, including personal server.
 
 The app is written in (mostly) React Native and based on the
-(exellent) Gifted Chat code [1]. For a few reasons, we are
-currently using a slightly modified fork [2].
+(exellent) Gifted Chat code. [#f03]_ For a few reasons, we are
+currently using a slightly modified fork. [#f04]_
 
-
-References
-==========
-
-[1] https://github.com/FaridSafi/react-native-gifted-chat)
-[2] https://github.com/Magnusson-Institute/react-native-gifted-chat
 
 
 
@@ -122,6 +143,8 @@ Directory
 
 Following files should be in the git::
 
+
+  
     .
     ├── LICENSE.rst
     ├── README.rst
@@ -209,4 +232,18 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+|
+|
+
+
+.. rubric:: Footnotes
+
+.. [#f01] https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi?hl=en 
+
+.. [#f02] Future improvement will support having a list of snackabara servers that the client
+	  can query for any room, "DNS-style".
+
+.. [#f03] https://github.com/FaridSafi/react-native-gifted-chat)
+
+.. [#f04] https://github.com/Magnusson-Institute/react-native-gifted-chat
 

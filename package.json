@@ -1,7 +1,7 @@
 {
   "name": "snackabra-webclient",
   "author": "Magnusson Institute",
-  "email" : "snackabra@gmail.com",
+  "email": "snackabra@gmail.com",
   "description": "Snackabra web app (React Native)",
   "version": "0.4.3",
   "bugs": "https://github.com/snackabra/snackabra-webclient/issues",
@@ -24,7 +24,7 @@
     "react-native-gifted-chat": "https://github.com/Magnusson-Institute/react-native-gifted-chat",
     "react-native-web": "0.11.7",
     "react-router-dom": "^5.2.0",
-    "react-scripts": "3.1.1",
+    "react-scripts": "^5.0.0",
     "typescript": "^4.4.3"
   },
   "scripts": {

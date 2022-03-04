@@ -426,10 +426,12 @@ const LandingPage = (props) => {
           </div>
         </div>
       </div>
+      <hr/>
       <div id="server_admin">
         <div id="uploadRoom">
-          <h3><Trans id='room upload header'>Upload/Create Room</Trans></h3>
-          <p><Trans id='room upload message'>You can upload room data for a previously generated room or create a new room by entering your room server secret and pressing the button below. Creating a new room will generate the necessary keys for the new room and initialize the room for you on your server.</Trans></p>
+          <h3><Trans id='room upload header'>Upload Room</Trans></h3>
+          <p><Trans id='room upload message'>You can upload room data for a previously generated room by selecting a file to upload and then  entering your room server secret and pressing the button below. </Trans></p>
+
           <br /> <br />
           <input type="file" id="uploadRoomFile" name="file-input" />
           <br /> <br />
@@ -437,8 +439,18 @@ const LandingPage = (props) => {
           <input type="text" id="serverSecretInput"></input>
           <br />
           <button className='admin-button gray-btn' onClick={uploadRoomData}><Trans id='room upload button'>Upload Room Data</Trans></button>
+	</div>
+	<hr/>
+        <div id="newRoom">
+          <h3><Trans id='new room header'>Create New Room</Trans></h3>
+          <p><Trans id='new room message'>Create a new room by entering your room server secret and pressing 'Create'. This will generate the necessary keys for the new room and initialize the room for you on your server.</Trans></p>
+          <br /> <br />
+          <label htmlFor='serverSecretInput'>Enter Room Server Secret: </label>
+          <input type="text" id="serverSecretInput"></input>
+          <br />
           <button className='admin-button gray-btn' onClick={createNewRoom}><Trans id='new room button'>Create New Room</Trans></button>
         </div>
+	<hr/>
         <div id="uploadStorage">
           <h3><Trans id='storage upload header'>Upload Storage Data</Trans></h3>
           <p><Trans id='storage upload message'>You can upload storage data for a previously generated room by entering your storage server secret and pressing the button below.</Trans></p>
