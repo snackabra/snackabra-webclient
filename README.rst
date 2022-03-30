@@ -99,10 +99,12 @@ it's pretty straightforward:
 * On Cloudflare, select connecting to GitHub and authorizing
   it to you your forked repository.
 
-* Select "React" as your choice of type of app / build.
+* A Framework Preset, select "Create React App" as your choice.
 
-* Change the default (which uses ``npm``) to be just
+* Change the Build command (which uses ``npm`` by default) to be just
   ``yarn build``
+  
+* In the Enviroment Variables, add ``NODE_VERSION`` with value ``16``.
 
 Then build and deploy. If you are running your own
 servers, you will also have to override the defaults in
