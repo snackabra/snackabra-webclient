@@ -15,6 +15,9 @@ const LandingPage = (props) => {
   let ROOM_SERVER = "https://" + process.env.REACT_APP_ROOM_SERVER + "/api/room/"
   let STORAGE_SERVER = "https://" + process.env.REACT_APP_STORAGE_SERVER + "/api/v1/"
 
+  console.log(`room server: ${ROOM_SERVER}`);
+  console.log(`room server: ${STORAGE_SERVER}`);
+
   const [rooms, setRooms] = useState({ ...props.rooms });
   const [renameRoom, setRenameRoom] = useState('');
   const history = useHistory();
