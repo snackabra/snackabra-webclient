@@ -300,6 +300,8 @@ const LandingPage = (props) => {
     let resp = await req.json();
     if (resp.hasOwnProperty("success") && resp["success"] === true) {
       localStorage.setItem(roomId, JSON.stringify(exportable_privateKey));
+    } else {
+      console.log(resp);
     }
   }
 
