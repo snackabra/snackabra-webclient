@@ -110,15 +110,16 @@ const ChatRoom = (props) => {
     Notifications.setOpen(true)
   }
 
-  const openImageOverlay = (msgId) => {
+  const openImageOverlay = (message) => {
+    setImg(message.image);
+    setOpenPreview(true)
     try {
 
-      retrieveData(msgId, messages, controlMessages).then((data) => {
+      retrieveData(message, controlMessages).then((data) => {
         if (data.hasOwnProperty('error')) {
           activeChatContext.sendSystemMessage('Could not open image: ' + data['error']);
         } else {
           setImg(data['url']);
-          setOpenPreview(true)
         }
       })
     } catch (error) {

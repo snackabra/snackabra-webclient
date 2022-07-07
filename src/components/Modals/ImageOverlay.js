@@ -15,10 +15,15 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 
 export default function ImageOverlay(props) {
   const [open, setOpen] = React.useState(props.open);
+  const [img, setImage] = React.useState(props.img);
 
   React.useEffect(() => {
     setOpen(props.open)
   }, [props.open])
+
+  React.useEffect(() => {
+    setImage(props.img)
+  }, [props.img])
 
   return (
     <div>
@@ -42,7 +47,7 @@ export default function ImageOverlay(props) {
         </AppBar>
         <DialogContent sx={{ p: 0 }}>
           <Image
-            src={props.img}
+            src={img}
             height="100%"
             width="100%"
             fit="contain"

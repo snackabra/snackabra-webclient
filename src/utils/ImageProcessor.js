@@ -112,9 +112,9 @@ export async function retrieveImagePreview(msgId, messages) {
 }
 
 
-export async function retrieveData(msgId, messages, controlMessages) {
+export async function retrieveData(message, controlMessages) {
   // console.log(state.controlMessages)
-  const imageMetaData = messages.find(msg => msg._id === msgId).imageMetaData;
+  const imageMetaData = message.imageMetaData;
   // console.log(imageHash)
   const image_id = imageMetaData.previewId;
   const control_msg = controlMessages.find(msg => msg.hasOwnProperty('id') && msg.id.startsWith(image_id));
