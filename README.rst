@@ -143,7 +143,7 @@ Directory
 Following files should be in the git::
 
 
-  
+
     .
     ├── LICENSE.rst
     ├── README.rst
@@ -161,9 +161,9 @@ Following files should be in the git::
     │   ├── App.css
     │   ├── App.tsx
     │   ├── components
-    │   │   ├── Admin
-    │   │   │   ├── Admin.css
-    │   │   │   └── Admin.js
+    │   │   ├── AdminDialog
+    │   │   │   ├── AdminDialog.css
+    │   │   │   └── AdminDialog.js
     │   │   ├── Guide
     │   │   │   ├── Guide.css
     │   │   │   └── Guide.js
@@ -176,7 +176,7 @@ Following files should be in the git::
     │   │   │   └── Modal.jsx
     │   │   ├── Room
     │   │   │   ├── Room.css
-    │   │   │   └── Room.js
+    │   │   │   └── Rooms.js
     │   │   └── Snackabra
     │   │       ├── Snackabra.css
     │   │       └── Snackabra.js
@@ -237,7 +237,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 .. rubric:: Footnotes
 
-.. [#f01] https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi?hl=en 
+.. [#f01] https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi?hl=en
 
 .. [#f02] Future improvement will support having a list of snackabara servers that the client
 	  can query for any room, "DNS-style".

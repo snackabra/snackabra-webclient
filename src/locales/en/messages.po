@@ -25,41 +25,41 @@ msgstr "Convert to PEM"
 msgid "Download LS data button"
 msgstr "Download Data"
 
-#: src/components/Admin/Admin.js:75
+#: src/components/AdminDialog/AdminDialog.js:75
 msgid "accept button text"
 msgstr "ACCEPT"
 
-#: src/components/Admin/Admin.js:25
+#: src/components/AdminDialog/AdminDialog.js:25
 msgid "admin error header"
 msgstr "Please join again from your membership page to access the admin features"
 
-#: src/components/Admin/Admin.js:41
+#: src/components/AdminDialog/AdminDialog.js:41
 msgid "admin header"
-msgstr "Admin Controls"
+msgstr "AdminDialog Controls"
 
-#: src/containers/Room/Room.js:1578
-#: src/containers/Room/Room.js:1601
-#: src/containers/Room/Room.js:1644
+#: src/containers/Room/Rooms.js:1578
+#: src/containers/Room/Rooms.js:1601
+#: src/containers/Room/Rooms.js:1644
 msgid "cancel button text"
 msgstr "Cancel"
 
-#: src/components/Admin/Admin.js:50
+#: src/components/AdminDialog/AdminDialog.js:50
 msgid "change room capacity label"
 msgstr "Change Room Capacity"
 
-#: src/containers/Room/Room.js:1573
+#: src/containers/Room/Rooms.js:1573
 msgid "change username label"
 msgstr "Change Username"
 
-#: src/containers/Room/Room.js:1582
+#: src/containers/Room/Rooms.js:1582
 msgid "change username me button text"
 msgstr "Me"
 
-#: src/components/Admin/Admin.js:34
+#: src/components/AdminDialog/AdminDialog.js:34
 msgid "confirm restriction message"
 msgstr "Restriction will cause new encryption keys to be generated, and will only be shared to participants that you as Owner explicitly approve. New participants can still whisper to you, but not send or receive messages from anybody else."
 
-#: src/components/Admin/Admin.js:39
+#: src/components/AdminDialog/AdminDialog.js:39
 msgid "confirm room restriction button text"
 msgstr "Confirm Room Restriction"
 
@@ -67,7 +67,7 @@ msgstr "Confirm Room Restriction"
 msgid "copy paste ls message"
 msgstr "You can also copy-paste the following:"
 
-#: src/containers/Room/Room.js:1632
+#: src/containers/Room/Rooms.js:1632
 msgid "first visit modal message"
 msgstr "Welcome! If this is the first time you’ve been to this room, enter your username for this room and press ‘Ok’ and we we will generate fresh cryptographic keys that are unique to you and to this room. If you have already been here, then you might want to load your keys from your backup - press ‘Cancel’ and we’ll take you to the ‘Home’ tab."
 
@@ -79,7 +79,7 @@ msgstr "<0>The first time you join a room, a cryptographic public/private key pa
 msgid "guide introduction"
 msgstr "You are probably here because you scanned a social card that someone gave you or received a url for this room from someone. Here are some general guidelines about the chat application to help you get familiar."
 
-#: src/components/Admin/Admin.js:60
+#: src/components/AdminDialog/AdminDialog.js:60
 msgid "join requests header"
 msgstr "Join Requests"
 
@@ -104,7 +104,7 @@ msgstr "Import Keys"
 msgid "key import paste message"
 msgstr "Or paste the keys you want to import"
 
-#: src/containers/Room/Room.js:1692
+#: src/containers/Room/Rooms.js:1692
 msgid "loading room text"
 msgstr "Loading room...{0}"
 
@@ -112,11 +112,11 @@ msgstr "Loading room...{0}"
 msgid "member message"
 msgstr "If you are a <0>Member</0>, you can log in on your membership page, which will automatically initialize your “social card” rooms in the browser."
 
-#: src/components/Admin/Admin.js:43
+#: src/components/AdminDialog/AdminDialog.js:43
 msgid "motd label"
 msgstr "Enter the Message of the Day below:"
 
-#: src/containers/Room/Room.js:1607
+#: src/containers/Room/Rooms.js:1607
 msgid "motd text"
 msgstr "Message of the day: {0}"
 
@@ -132,15 +132,15 @@ msgstr "Create New Room"
 msgid "new room message"
 msgstr "Create a new room by entering your room server secret and pressing 'Create'. This will generate the necessary keys for the new room and initialize the room for you on your server."
 
-#: src/components/Admin/Admin.js:78
+#: src/components/AdminDialog/AdminDialog.js:78
 msgid "no join requests text"
 msgstr "No new join requests for this room!"
 
-#: src/containers/Room/Room.js:1641
+#: src/containers/Room/Rooms.js:1641
 msgid "ok button text"
 msgstr "Ok"
 
-#: src/components/Admin/Admin.js:86
+#: src/components/AdminDialog/AdminDialog.js:86
 msgid "restrict button text"
 msgstr "Restrict"
 
@@ -176,13 +176,13 @@ msgstr "Upload/Create Room"
 msgid "room upload message"
 msgstr "You can upload room data for a previously generated room or create a new room by entering your server secret and pressing the button below. Creating a new room will generate the necessary keys for the new room and initialize the room for you on your server."
 
-#: src/components/Admin/Admin.js:47
+#: src/components/AdminDialog/AdminDialog.js:47
 #: src/components/LandingPage/LandingPage.js:369
-#: src/containers/Room/Room.js:1577
+#: src/containers/Room/Rooms.js:1577
 msgid "save button text"
 msgstr "Save"
 
-#: src/containers/Room/Room.js:1595
+#: src/containers/Room/Rooms.js:1595
 msgid "send button text"
 msgstr "Send"
 
@@ -198,7 +198,7 @@ msgstr "Upload Storage Data"
 msgid "storage upload message"
 msgstr "You can upload storage data for a previously generated room by entering your storage server secret and pressing the button below."
 
-#: src/components/Admin/Admin.js:54
+#: src/components/AdminDialog/AdminDialog.js:54
 msgid "update button text"
 msgstr "Update"
 
@@ -207,6 +207,6 @@ msgstr "Update"
 msgid "welcome header"
 msgstr "Welcome to Snackabra"
 
-#: src/containers/Room/Room.js:1587
+#: src/containers/Room/Rooms.js:1587
 msgid "whisper header"
 msgstr "Whisper to {0}"
