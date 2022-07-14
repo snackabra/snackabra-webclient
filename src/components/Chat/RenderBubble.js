@@ -30,7 +30,6 @@ const RenderBubble = (props) => {
       currentMessage.user &&
       diffMessage.user._id === currentMessage.user._id);
   }
-
   try {
     if (props.currentMessage.whispered) {
       newProps = {
@@ -135,7 +134,7 @@ const RenderBubble = (props) => {
           backgroundColor: 'transparent',
           color: '#aaa'
         }}>
-          {props.currentMessage.user.name}
+          {typeof props.currentMessage.user.name === 'string' ? props.currentMessage.user.name : ''}
         </Typography>}
       <Bubble
         {...props}

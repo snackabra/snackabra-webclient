@@ -7,7 +7,7 @@ import NotificationContext from "../../contexts/NotificationContext";
 import RoomContext from "../../contexts/RoomContext";
 
 
-const ImportRoomKeys = (props) => {
+const CreateRoom = (props) => {
   const Notifications = useContext(NotificationContext)
   const Room = useContext(RoomContext)
   const [secret, setSecret] = useState('');
@@ -65,4 +65,4 @@ const ImportRoomKeys = (props) => {
   )
 }
 
-export default ImportRoomKeys
+export default CreateRoom

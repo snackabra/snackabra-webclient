@@ -11,7 +11,7 @@ export default function CreateRoomDialog(props){
   }, [props.open])
 
   return (
-    <ResponsiveDialog title={'Create Room'} open={open} onClose={props.onClose}>
+    <ResponsiveDialog title={'Create Room'} open={open} onClose={props.onClose} showActions>
       <CreateRoom onClose={props.onClose}/>
     </ResponsiveDialog>
   )

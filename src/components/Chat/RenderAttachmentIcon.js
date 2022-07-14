@@ -5,7 +5,7 @@ import ActiveChatContext from "../../contexts/ActiveChatContext";
 
 function RenderAttachmentIcon(props) {
   const activeChatContext = React.useContext(ActiveChatContext)
-  const [file, setFile] = React.useState('No file selected');
+  const [file, setFile] = React.useState('');
 
   let fileReader;
 
@@ -16,7 +16,10 @@ function RenderAttachmentIcon(props) {
       fileReader.onloadend = handleFileRead;
       fileReader.readAsText(photo);
       activeChatContext.previewImage(photo, e.target.files[0])
-      props.handleClose()
+      if(typeof props.handleClose === 'function'){
+        props.handleClose()
+      }
+      setFile('')
     } catch (e) {
       console.log(e)
     }

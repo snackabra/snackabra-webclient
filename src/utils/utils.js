@@ -343,3 +343,7 @@ export async function decrypt(secretKey, contents, outputType = "string") {
     return { error: true, plaintext: "(whispered)" };
   }
 }
+
+export function onlyUnique(value, index, self) {
+  return self.indexOf(value) === index;
+}

@@ -17,6 +17,10 @@ export default function NavAppBar() {
     setValue(newValue);
   };
 
+  const closeWhisper = () =>{
+    setOpenWhisper(false)
+  }
+
   React.useEffect(() => {
     switch (location.pathname) {
       case '/':
@@ -34,7 +38,7 @@ export default function NavAppBar() {
 
   return (
     <Box sx={{ flexGrow: 1 }}>
-      <WhisperUserDialog open={openWhisper} />
+      <WhisperUserDialog open={openWhisper} onClose={closeWhisper} />
       <AppBar position="fixed" sx={{ backgroundColor: 'black', textTransform: 'none' }}>
         <Grid
           container

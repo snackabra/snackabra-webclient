@@ -33,22 +33,8 @@ export async function saveImage(image, roomId, sendSystemMessage) {
 }
 
 
-export async function storeImage(image, image_id, keyData, type, roomId) {
-
-  const storeReqResp = await (await fetch(config.STORAGE_SERVER + "/storeRequest?name=" + image_id)).arrayBuffer();
-  const encrypt_data = utils.extractPayload(storeReqResp);
-  // console.log(encrypt_data)
-  const key = await getImageKey(keyData, encrypt_data.salt);
-  let storageToken, verificationToken;
-  const data = await encrypt(image, key, "arrayBuffer", encrypt_data.iv);
-  console.log(data)
-  const storageTokenReq = await (await fetch(config.ROOM_SERVER + roomId + '/storageRequest?size=' + data.content.byteLength)).json();
-  if (storageTokenReq.hasOwnProperty('error')) {
-    return { error: storageTokenReq.error }
-  }
-  // storageToken = new TextEncoder().encode(storageTokenReq.token);
-  storageToken = JSON.stringify(storageTokenReq);
-  const resp = await fetch(config.STORAGE_SERVER + "/storeData?type=" + type + "&key=" + encodeURIComponent(image_id),
+async function uploadImage(storageToken, encrypt_data, type, image_id, data) {
+  return await fetch(config.STORAGE_SERVER + "/storeData?type=" + type + "&key=" + encodeURIComponent(image_id),
     {
       method: "POST",
       body: utils.assemblePayload({
@@ -59,15 +45,37 @@ export async function storeImage(image, image_id, keyData, type, roomId) {
         vid: window.crypto.getRandomValues(new Uint8Array(48))
       })
     });
-  const resp_json = await resp.json();
-  // console.log("Response for " + type + ": ", resp_json)
-  if (resp_json.hasOwnProperty('error')) {
-    // TODO - why can't we throw exceptions?
-    // Promise.reject(new Error('Server error on storing image (' + resp_json.error + ')'));
-    return { error: 'Error: storeImage() failed (' + resp_json.error + ')' };
+}
+
+export async function storeImage(image, image_id, keyData, type, roomId) {
+  try {
+    const storeReqResp = await (await fetch(config.STORAGE_SERVER + "/storeRequest?name=" + image_id)).arrayBuffer();
+    const encrypt_data = utils.extractPayload(storeReqResp);
+    const key = await getImageKey(keyData, encrypt_data.salt);
+    let storageToken, verificationToken;
+    const data = await encrypt(image, key, "arrayBuffer", encrypt_data.iv);
+    const storageTokenReq = await (await fetch(config.ROOM_SERVER + roomId + '/storageRequest?size=' + data.content.byteLength)).json();
+    if (storageTokenReq.hasOwnProperty('error')) {
+      return { error: storageTokenReq.error }
+    }
+    storageToken = JSON.stringify(storageTokenReq);
+
+    const resp = await uploadImage(storageToken, encrypt_data, type, image_id, data)
+    const status = resp.status;
+    const resp_json = await resp.json();
+    
+    if (status !== 200) {
+      return { error: 'Error: storeImage() failed (' + resp_json.error + ')' };
+    }
+
+    verificationToken = resp_json.verification_token;
+    return { verificationToken: verificationToken, id: resp_json.image_id, type: type };
+  } catch (e) {
+    console.error(e)
+    return image_id;
+
   }
-  verificationToken = resp_json.verification_token;
-  return { verificationToken: verificationToken, id: resp_json.image_id, type: type };
+
 }
 
 
@@ -86,53 +94,35 @@ export async function generateImageHash(image) {
   }
 }
 
-
-export async function retrieveImagePreview(msgId, messages) {
-  try {
-    const imageHash = messages.find(msg => msg._id === msgId).imageMetaData;
-    // console.log(imageHash)
-    const image_id = imageHash.previewId;
-    const imageFetch = await (await fetch(config.STORAGE_SERVER + "/fetchImage?id=" + encodeURIComponent(image_id))).arrayBuffer();
-    const data = utils.extractPayload(imageFetch);
-    const iv = data.iv;
-    const salt = data.salt;
-    const image_key = await getImageKey(imageHash.previewKey, salt);
-    const encrypted_image = data.image;
-    const img = await decrypt(image_key, { content: encrypted_image, iv: iv }, "arrayBuffer");
-    //console.log(img)
-    //console.log("data:image/jpeg;base64,"+arrayBufferToBase64(img.plaintext))
-    if (!img.error) {
-      return "data:image/jpeg;base64," + utils.arrayBufferToBase64(img.plaintext);
-    }
-    return null;
-  } catch (e) {
-    console.log(e);
-    return null;
-  }
+async function downloadImage(control_msg, image_id, cache) {
+  const imageFetch = await (await fetch(config.STORAGE_SERVER + "/fetchData?id=" + encodeURIComponent(control_msg.id) + '&verification_token=' + control_msg.verificationToken)).arrayBuffer();
+  let data = utils.extractPayload(imageFetch);
+  document.cacheDb.setItem(`${image_id}_cache`, data)
+  return data;
 }
 
 
-export async function retrieveData(message, controlMessages) {
-  // console.log(state.controlMessages)
+export async function retrieveData(message, controlMessages, cache) {
   const imageMetaData = message.imageMetaData;
-  // console.log(imageHash)
   const image_id = imageMetaData.previewId;
   const control_msg = controlMessages.find(msg => msg.hasOwnProperty('id') && msg.id.startsWith(image_id));
-  console.log(imageMetaData, image_id, control_msg, controlMessages);
   if (!control_msg) {
     return { 'error': 'Failed to fetch data - missing control message for that image' };
   }
-  const imageFetch = await (await fetch(config.STORAGE_SERVER + "/fetchData?id=" + encodeURIComponent(control_msg.id) + '&verification_token=' + control_msg.verificationToken)).arrayBuffer();
-  const data = utils.extractPayload(imageFetch);
-  console.log(data);
+  const cached = await document.cacheDb.getItem(`${image_id}_cache`);
+  let data;
+  if (cached === null) {
+    data = await downloadImage(control_msg, image_id, cache);
+  } else {
+    console.log('Loading image data from cache')
+    data = cached;
+  }
   const iv = data.iv;
   const salt = data.salt;
   const image_key = await getImageKey(imageMetaData.previewKey, salt);
   const encrypted_image = data.image;
   const padded_img = await decrypt(image_key, { content: encrypted_image, iv: iv }, "arrayBuffer");
   const img = unpadData(padded_img.plaintext);
-  //console.log(img)
-  //console.log("data:image/jpeg;base64,"+arrayBufferToBase64(img.plaintext))
   if (img.error) {
     console.log('(Image error: ' + img.error + ')');
     throw new Error('Failed to fetch data - authentication or formatting error');

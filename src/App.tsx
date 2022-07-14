@@ -25,13 +25,13 @@ const App: React.FC = () => {
     <I18nProvider i18n={i18n}>
       <ThemeProvider theme={theme}>
         <NotificationProvider>
-          <ServiceWorkerProvider>
-            <RoomProvider>
-              <ActiveRoomProvider>
+          <RoomProvider>
+            <ActiveRoomProvider>
+              <ServiceWorkerProvider>
                 <AppRoutes />
-              </ActiveRoomProvider>
-            </RoomProvider>
-          </ServiceWorkerProvider>
+              </ServiceWorkerProvider>
+            </ActiveRoomProvider>
+          </RoomProvider>
           <NotificationBar />
         </NotificationProvider>
       </ThemeProvider>

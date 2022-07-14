@@ -104,7 +104,6 @@ export async function getImageKey(imageHash, _salt) {
     let keyMaterial = await importKey("raw", utils.base64ToArrayBuffer(decodeURIComponent(imageHash)), "PBKDF2", false, ["deriveBits", "deriveKey"]);
 
     // TODO - Support deriving from PBKDF2 in deriveKey function
-    console.log(_salt)
     let key = await window.crypto.subtle.deriveKey(
       {
         "name": "PBKDF2",

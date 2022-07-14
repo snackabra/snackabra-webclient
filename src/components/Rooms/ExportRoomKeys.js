@@ -17,6 +17,7 @@ const ExportRoomKeys = (props) => {
 
   const exportPemKeys = async () => {
     const _rooms = {};
+    console.log(localStorage)
     for (let key of Object.keys(localStorage)) {
       if (key !== 'rooms' && key !== 'contacts') {
         const _roomName = key.slice(0, 64);

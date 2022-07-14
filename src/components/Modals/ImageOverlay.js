@@ -16,6 +16,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 export default function ImageOverlay(props) {
   const [open, setOpen] = React.useState(props.open);
   const [img, setImage] = React.useState(props.img);
+  const [imgLoaded, setImageLoaded] = React.useState(props.imgLoaded);
 
   React.useEffect(() => {
     setOpen(props.open)
@@ -25,6 +26,9 @@ export default function ImageOverlay(props) {
     setImage(props.img)
   }, [props.img])
 
+  React.useEffect(() => {
+    setImageLoaded(props.imgLoaded)
+  }, [props.imgLoaded])
   return (
     <div>
       <Dialog
@@ -46,20 +50,22 @@ export default function ImageOverlay(props) {
           </Toolbar>
         </AppBar>
         <DialogContent sx={{ p: 0 }}>
-          <Image
-            src={img}
-            height="100%"
-            width="100%"
-            fit="contain"
-            duration={3000}
-            easing="cubic-bezier(0.7, 0, 0.6, 1)"
-            showLoading={true}
-            errorIcon={true}
-            shift={null}
-            distance="100px "
-            shiftDuration={900}
-            bgColor="inherit"
-          />
+            <Image
+              src={img}
+              height="100%"
+              width="100%"
+              fit="contain"
+              duration={imgLoaded ? 0 : 1000}
+              easing="cubic-bezier(0.7, 0, 0.6, 1)"
+              showLoading={true}
+              errorIcon={true}
+              shift={null}
+              distance="100px "
+              shiftDuration={imgLoaded ? 0 : 1000}
+              bgColor="inherit"
+            />
+
+
         </DialogContent>
       </Dialog>
     </div>

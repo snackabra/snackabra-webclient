@@ -7,9 +7,8 @@ import { Typography } from "@mui/material";
 
 const ServiceWorkerContext = React.createContext(undefined);
 
-let registration;
+let registration, queue = {};
 export const ServiceWorkerProvider = ({ children }) => {
-
   const Notifications = React.useContext(NotificationContext);
 
   React.useEffect(() => {

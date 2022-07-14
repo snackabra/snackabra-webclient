@@ -3,15 +3,13 @@
 import * as React from 'react';
 import { GiftedChat } from 'react-native-gifted-chat';
 import RenderBubble from "./RenderBubble";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import ActiveChatContext from "../../contexts/ActiveChatContext";
 import RenderAttachmentIcon from "./RenderAttachmentIcon";
-import { Grid } from "@mui/material";
 import ImageOverlay from "../Modals/ImageOverlay";
 import RenderImage from "./RenderImage";
 import { retrieveData } from "../../utils/ImageProcessor";
 import ChangeNameDialog from "../Modals/ChangeNameDialog";
-import WhisperUserDialog from "../Modals/WhisperUserDialog";
 import MotdDialog from "../Modals/MotdDialog";
 import NotificationContext from "../../contexts/NotificationContext";
 import { deriveKey, importKey } from "../../utils/crypto";
@@ -22,10 +20,7 @@ import AttachMenu from "./AttachMenu";
 import RoomContext from "../../contexts/RoomContext";
 import config from "../../config";
 import FirstVisitDialog from "../Modals/FirstVisitDialog";
-
-function onlyUnique(value, index, self) {
-  return self.indexOf(value) === index;
-}
+import { orderBy, uniqBy } from "lodash";
 
 const ChatRoom = (props) => {
   const activeChatContext = useContext(ActiveChatContext)
@@ -34,12 +29,12 @@ const ChatRoom = (props) => {
 
   const [openPreview, setOpenPreview] = useState(false);
   const [openChangeName, setOpenChangeName] = useState(false);
-  const [openWhisper, setOpenWhisperDialog] = useState(false);
   const [openFirstVisit, setOpenFirstVisit] = useState(false);
   const [openMotd, setMotdDialog] = useState(false);
   const [anchorEl, setAnchorEl] = React.useState(null);
   const attachMenu = Boolean(anchorEl);
   const [img, setImg] = useState('');
+  const [imgLoaded, setImgLoaded] = useState(false);
   const [messages, setMessages] = useState([]);
   const [controlMessages, setControlMessages] = useState([]);
 
@@ -52,19 +47,17 @@ const ChatRoom = (props) => {
   }, [])
 
   React.useEffect(() => {
-    if (messages.length === 0) {
-      setMessages([...messages, ...activeChatContext.messages])
-    } else {
-      setMessages([...messages, ...activeChatContext.messages].filter(onlyUnique))
-    }
+
+    const mergedMesssages = orderBy(
+      uniqBy([...messages, ...activeChatContext.messages], '_id'),
+      ['_id'],
+      ['asc']);
+    setMessages(mergedMesssages)
   }, [activeChatContext.messages]);
 
   React.useEffect(() => {
-    if (controlMessages.length === 0) {
-      setControlMessages([...controlMessages, ...activeChatContext.controlMessages])
-    } else {
-      setControlMessages([...controlMessages, ...activeChatContext.controlMessages].filter(onlyUnique))
-    }
+    const updatedControlMessages = [...controlMessages, ...activeChatContext.controlMessages];
+    setControlMessages(updatedControlMessages)
   }, [activeChatContext.controlMessages]);
 
   React.useEffect(() => {
@@ -119,6 +112,7 @@ const ChatRoom = (props) => {
         if (data.hasOwnProperty('error')) {
           activeChatContext.sendSystemMessage('Could not open image: ' + data['error']);
         } else {
+          setImgLoaded(true);
           setImg(data['url']);
         }
       })
@@ -131,6 +125,7 @@ const ChatRoom = (props) => {
 
   const imageOverlayClosed = () => {
     setImg('')
+    setImgLoaded(false);
     setOpenPreview(false)
   }
 
@@ -144,10 +139,9 @@ const ChatRoom = (props) => {
       if (activeChatContext.roomOwner) {
 
         const recipient_pubKey = await importKey("jwk", JSON.parse(user._id), "ECDH", true, []);
-        const reply_encryptionKey = await deriveKey(this.state.keys.privateKey, recipient_pubKey, "AES", false, ["encrypt", "decrypt"])
+        const reply_encryptionKey = await deriveKey(activeChatContext.keys.privateKey, recipient_pubKey, "AES", false, ["encrypt", "decrypt"])
         activeChatContext.setReplyTo(user)
         activeChatContext.setReplyEncryptionKey(reply_encryptionKey)
-        setOpenWhisperDialog(true)
       } else {
         notify('Whisper is only for room owners.', 'info')
       }
@@ -182,11 +176,10 @@ const ChatRoom = (props) => {
     activeChatContext.removeInputFiles()
     activeChatContext.setImgUrl(null)
   }
-
   const { height } = Dimensions.get('window')
   return (
     <View style={{ flexGrow: 1, flexBasis: 'fit-content', height: height - 160 }}>
-      <ImageOverlay open={openPreview} img={img} onClose={imageOverlayClosed} />
+      <ImageOverlay open={openPreview} img={img} imgLoaded={imgLoaded} onClose={imageOverlayClosed} />
       <ChangeNameDialog open={openChangeName} />
       <MotdDialog open={openMotd} roomName={props.roomName} />
       <AttachMenu open={attachMenu} handleClose={handleClose} />

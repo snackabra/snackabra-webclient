@@ -11,6 +11,7 @@ export default function WhisperUserDialog(props) {
   const [open, setOpen] = useState(props.open);
 
   const [text, setText] = useState('');
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     setOpen(props.open)
@@ -21,9 +22,15 @@ export default function WhisperUserDialog(props) {
   }
 
   const sendWhisper = () => {
-    activeChatContext.sendMessage(text, true);
-    setText('')
-    setOpen(false)
+    if(text.length > 0){
+      activeChatContext.sendMessage(text, true);
+      setText('')
+      setError(false)
+      props.onClose()
+    }else{
+      setError(true)
+    }
+
   }
 
   const getWhisperText = () => {
@@ -38,10 +45,11 @@ export default function WhisperUserDialog(props) {
             direction="row"
             justifyContent="space-between"
             alignItems="flex-start">
-        <Grid item xs={12} sx={{pb:1,pt:1}}>
+        <Grid item xs={12} sx={{ pb: 1, pt: 1 }}>
           <TextField
             id="whisper-text"
             placeholder="Whisper"
+            error={error}
             onChange={updateWhisperText}
             multiline
             fullWidth
@@ -49,7 +57,8 @@ export default function WhisperUserDialog(props) {
             value={text}
           />
         </Grid>
-        <StyledButton variant={'outlined'} onClick={sendWhisper}>Send</StyledButton>
+        <StyledButton variant={'contained'} onClick={sendWhisper}>Send</StyledButton>
+        <StyledButton variant={'contained'} onClick={props.onClose}>Cancel</StyledButton>
       </Grid>
     </ResponsiveDialog>
   )

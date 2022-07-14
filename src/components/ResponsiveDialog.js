@@ -39,7 +39,7 @@ export default function ResponsiveDialog(props) {
         </DialogContent>
         {props.showActions &&
           (<DialogActions>
-            <StyledButton variant={'outlined'} autoFocus onClick={handleClose}>
+            <StyledButton variant={'contained'} autoFocus onClick={handleClose}>
               Cancel
             </StyledButton>
 

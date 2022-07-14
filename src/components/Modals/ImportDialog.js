@@ -10,7 +10,7 @@ export default function ImportDialog(props){
   }, [props.open])
 
   return (
-    <ResponsiveDialog title={'Import Keys'} open={open} onClose={props.onClose}>
+    <ResponsiveDialog title={'Import Keys'} open={open} onClose={props.onClose} showActions>
       <ImportRoomKeys/>
     </ResponsiveDialog>
   )

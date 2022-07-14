@@ -1,10 +1,11 @@
 import * as React from "react"
 import config from "../config";
 import { areKeysSame, deriveKey, encrypt, extractPubKey, generateKeys, importKey, sign, verify } from "../utils/crypto";
-import { decrypt } from "../utils/utils";
+import { decrypt, onlyUnique } from "../utils/utils";
 import RoomContext from "./RoomContext";
 import NotificationContext from "./NotificationContext";
 import { getFileData, restrictPhoto, saveImage } from "../utils/ImageProcessor";
+import { uniqBy, remove } from "lodash";
 
 const ActiveChatContext = React.createContext(undefined);
 let currentWebSocket, roomId, keys = {}, roomReady = false;
@@ -12,7 +13,6 @@ let currentWebSocket, roomId, keys = {}, roomReady = false;
 export const ActiveRoomProvider = ({ children }) => {
   const roomContext = React.useContext(RoomContext);
   const Notifications = React.useContext(NotificationContext);
-
 
   const [messages, setMessages] = React.useState([]);
   const [controlMessages, setControlMessages] = React.useState([]);
@@ -47,6 +47,24 @@ export const ActiveRoomProvider = ({ children }) => {
     roomId = newRoom;
   }
 
+  const loadRoom = async (data = null) => {
+    console.time('load-room')
+    if (!roomReady) {
+      let _keys = data.keys;
+      await loadRoomKeys(_keys);
+      setMotd(data.motd);
+      setLocked(data.roomLocked)
+      setOwnerRotation(data.ownerRotation)
+      if (data.motd !== '') {
+        sendSystemInfo('Message of the Day: ' + data.motd);
+      } else {
+        sendSystemMessage('Connected');
+      }
+      roomReady = true;
+    }
+    console.timeEnd('load-room')
+  }
+
   // ##############################  FUNCTIONS TO GET ALL RELEVANT KEYS FROM KV/DO  ###############################
 
   const loadPersonalKeys = async (loadRoom) => {
@@ -73,13 +91,12 @@ export const ActiveRoomProvider = ({ children }) => {
         }
       }
     } catch (e) {
-      console.log(e)
+      console.error(e)
     }
   }
 
 
   const loadRoomKeys = async (_keys) => {
-    console.log(_keys.ownerKey)
     try {
       console.log("Loading room keys...")
       if (_keys.ownerKey === null) {
@@ -92,8 +109,8 @@ export const ActiveRoomProvider = ({ children }) => {
       try {
         _exportable_owner_pubKey.key_ops = [];
       } catch (error) {
-        console.log("Error in getKeys(): ")
-        console.log(error);
+        console.error("Error in getKeys(): ")
+        console.error(error);
       }
       const _exportable_room_signKey = JSON.parse(_keys.signKey);
       const _exportable_encryption_key = JSON.parse(_keys.encryptionKey);
@@ -103,7 +120,7 @@ export const ActiveRoomProvider = ({ children }) => {
       let isVerifiedGuest = false;
       const _owner_pubKey = await importKey("jwk", _exportable_owner_pubKey, "ECDH", false, []);
       if (_owner_pubKey.error) {
-        console.log(_owner_pubKey.error);
+        console.error(_owner_pubKey.error);
       }
       let isOwner = areKeysSame(_exportable_pubKey, _exportable_owner_pubKey);
       let isAdmin = (document.cookie.split('; ').find(row => row.startsWith('token_' + roomId)) !== undefined) || (process.env.REACT_APP_ROOM_SERVER !== 's_socket.privacy.app' && isOwner);
@@ -161,7 +178,16 @@ export const ActiveRoomProvider = ({ children }) => {
       setRoomOwner(isOwner)
       setRoomAdmin(isAdmin)
       setIsVerifiedGuest(isVerifiedGuest)
-      currentWebSocket.send(JSON.stringify({ ready: true }));
+      if (currentWebSocket) {
+        currentWebSocket.send(JSON.stringify({ ready: true }));
+
+      } else {
+        setTimeout(() => {
+          console.log('Websocket was not opened, retrying')
+          currentWebSocket.send(JSON.stringify({ ready: true }));
+        }, 5000)
+      }
+
       console.log('Room keys loaded!');
       if (isAdmin) {
 
@@ -170,7 +196,7 @@ export const ActiveRoomProvider = ({ children }) => {
         console.log('AdminDialog features loaded!');
       }
     } catch (e) {
-      console.log(e);
+      console.error(e);
       setError('Failure loading room keys. Please try joining the room again...')
     }
   }
@@ -203,6 +229,7 @@ export const ActiveRoomProvider = ({ children }) => {
   }
 
   const unwrapMessages = async (new_messages) => {
+
     let unwrapped_messages = {}
     for (let id in new_messages) {
       if (new_messages[id].hasOwnProperty("encrypted_contents")) {
@@ -214,7 +241,6 @@ export const ActiveRoomProvider = ({ children }) => {
           }
           // console.log(msg)
           const _json_msg = JSON.parse(msg.plaintext);
-          // console.log(_json_msg)
           if (!_json_msg.hasOwnProperty('control')) {
             unwrapped_messages[id] = _json_msg;
           } else {
@@ -222,7 +248,7 @@ export const ActiveRoomProvider = ({ children }) => {
             setControlMessages([...controlMessages, _json_msg])
           }
         } catch (e) {
-          // console.log(e);
+          // console.error(e);
           // Skip the message if decryption fails - its probably due to the user not having <roomId>_lockedKey.
         }
       } else {
@@ -244,7 +270,6 @@ export const ActiveRoomProvider = ({ children }) => {
     }
     let msg;
     try {
-      // console.log(enc_key)
       msg = { encrypted_contents: await encrypt(JSON.stringify(contents), enc_key, "string") }
     } catch {
       return { error: 'Could not send message. The encryption key seems to be corrupted.' }
@@ -346,7 +371,7 @@ export const ActiveRoomProvider = ({ children }) => {
           }
         }
       } catch (e) {
-        console.log(e);
+        console.error(e);
       }
 
     }
@@ -356,17 +381,17 @@ export const ActiveRoomProvider = ({ children }) => {
       if (!moreMessages) {
         _messages.push({ _id: "no_old_message", text: "No older messages", system: true })
       }
-      setMessages(Object.assign([..._messages, ...messages]))
+      setMessages(uniqBy([..._messages, ...messages], '_id'))
       setMoreMessages(moreMessages)
     } else {
-      setMessages(Object.assign([...messages, ..._messages]))
+      setMessages(uniqBy([...messages, ..._messages], '_id'))
     }
   }
 
 
   const getOldMessages = async () => {
     try {
-      setLoadingMore(true)
+      setLoadingMore(false)
       const currentMessagesLength = messages.length;
       const fetch_resp = await fetch(config.ROOM_SERVER + roomId + "/oldMessages?currentMessagesLength=" + currentMessagesLength)
       let old_messages = await unwrapMessages(await fetch_resp.json());
@@ -374,14 +399,49 @@ export const ActiveRoomProvider = ({ children }) => {
       addChatMessage(old_messages, true);
       setLoadingMore(false)
     } catch (e) {
-      console.log(e)
+      console.error(e)
       sendSystemInfo('Could not fetch older messages');
+    }
+  }
+
+  async function cleanQueue(message_id) {
+    const cachedQueue = await document.cacheDb.getItem(`${roomId}_msg_queue`);
+    if (cachedQueue === null) {
+      return;
+    }
+    const queue = remove(cachedQueue, function (n) {
+      return n._id !== message_id;
+    });
+    await document.cacheDb.setItem(`${roomId}_msg_queue`, queue);
+  }
+
+  const queueMessage = async (message, whisper) => {
+    let queue = [];
+    const cachedQueue = await document.cacheDb.getItem(`${roomId}_msg_queue`);
+    if (cachedQueue) {
+      queue = cachedQueue
+    }
+    queue.push({ ...message[0], whisper, files })
+    await document.cacheDb.setItem(`${roomId}_msg_queue`, uniqBy(queue, '_id'));
+  }
+
+  const processMessageQueue = async (queue) => {
+    await document.cacheDb.setItem(`${roomId}_msg_queue`, []);
+    for (let i in queue) {
+      if (queue[i].files.length > 0) {
+        console.log(queue[i].files)
+        setFiles(queue[i].files)
+      }
+      if (queue[i]?._id) {
+        sendMessage([{ ...queue[i] }], queue[i].whisper)
+      }
     }
   }
 
 
   const sendMessage = async (message, whisper = false) => {
     let file;
+    queueMessage(message, whisper);
 
     try {
       // If room has not been initalized, set system message
@@ -405,28 +465,23 @@ export const ActiveRoomProvider = ({ children }) => {
         file = await getFileData(await restrictPhoto(files[0], 15, "image/jpeg", 0.92), encrypted ? 'arrayBuffer' : 'url');
       }
 
-      // let imgId, imgKey, previewId, previewKey = '';
       let imgId = '', previewId = '', imgKey = '', previewKey = '', fullStorePromise = '', previewStorePromise = '';
-      /*
-      if (file != null) {
-        let image_data = await saveImage(file_inp.files[0]);
-        let imgKeys = image_data.full;
-        imgId = imgKeys.id;
-        imgKey = imgKeys.key;
-        let previewKeys = image_data.preview;
-        previewId = previewKeys.id;
-        previewKey = previewKeys.key;
-      }
-      */
+
       if (file != null) {
         let image_data = await saveImage(files[0], roomId, sendSystemMessage);
-        imgId = image_data.full;
-        imgKey = image_data.fullKey;
-        previewId = image_data.preview;
-        previewKey = image_data.previewKey;
-        fullStorePromise = image_data.fullStorePromise;
-        previewStorePromise = image_data.previewStorePromise;
+        if (typeof image_data !== 'string') {
+          imgId = image_data.full;
+          imgKey = image_data.fullKey;
+          previewId = image_data.preview;
+          previewKey = image_data.previewKey;
+          fullStorePromise = image_data.fullStorePromise;
+          previewStorePromise = image_data.previewStorePromise;
+        } else {
+          await document.cacheDb.setItem(`${image_data}_msg`, message);
+        }
+
       } else if (message[0].text === '') {
+        cleanQueue(message[0]._id);
         return;
       }
 
@@ -435,7 +490,6 @@ export const ActiveRoomProvider = ({ children }) => {
         shared_key = replyEncryptionKey;
         contents.recipient = JSON.parse(replyTo._id);
       }
-
       // Encrypt message with shared key between room owner and verified guest if the "Whisper" checkbox is selected or if the room owner wants to reply to a particular message with an encrypted message
       if (encrypted) {
 
@@ -462,7 +516,6 @@ export const ActiveRoomProvider = ({ children }) => {
         const _image_sign = await sign(keys.personal_signKey, file);
         const _imageMetadata = { imageId: imgId, previewId: previewId, imageKey: imgKey, previewKey: previewKey }
         const _imageMetadata_string = JSON.stringify(_imageMetadata);
-        // const _imageMetadata_sign = await sign(keys.personal_signKey, JSON.stringify(_imageMetadata))
         const _imageMetadata_sign = await sign(keys.personal_signKey, _imageMetadata_string)
         contents = {
           encrypted: false,
@@ -474,7 +527,6 @@ export const ActiveRoomProvider = ({ children }) => {
           imageMetaData: _imageMetadata_string,
           imageMetadata_sign: _imageMetadata_sign
         };
-
       }
       contents.sender_username = username;
       msg = await wrapMessage(contents);
@@ -484,22 +536,24 @@ export const ActiveRoomProvider = ({ children }) => {
       }
       if (currentWebSocket) {
         currentWebSocket.send(JSON.stringify(msg));
-        if (fullStorePromise !== '') {
+        if (typeof fullStorePromise === 'object') {
           fullStorePromise.then(async (controlData) => {
-            // console.log(controlData);
             let control_msg = await wrapMessage({ ...controlData, control: true });
+            setControlMessages([...controlMessages, control_msg].filter(onlyUnique))
             currentWebSocket.send(JSON.stringify(control_msg));
           });
         }
-        if (previewStorePromise !== '') {
+        if (typeof previewStorePromise === 'object') {
           previewStorePromise.then(async (controlData) => {
             let control_msg = await wrapMessage({ ...controlData, control: true });
+            setControlMessages([...controlMessages, control_msg].filter(onlyUnique))
             currentWebSocket.send(JSON.stringify(control_msg));
           });
         }
-
+        cleanQueue(message[0]._id);
       } else {
-        sendSystemMessage("Error: Lost connection")
+        console.log(msg)
+        sendSystemMessage("Your client is offline. Your message will send once connectivity is restored.")
       }
 
     } catch (e) {
@@ -520,11 +574,33 @@ export const ActiveRoomProvider = ({ children }) => {
     }
   }
 
+  // ############################   Load the entire room from cache   ##########################################
+  const loadFromCache = () => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const loadRoomData = await document.cacheDb.getItem(`${roomId}_data`)
+        if (loadRoomData !== null) {
+          await loadRoom(loadRoomData);
+        }
+
+        const messageData = await document.cacheDb.getItem(`${roomId}_messages`)
+
+        const _messages = await unwrapMessages(messageData);
+        await addChatMessage(_messages)
+        console.log('Loaded from room from cache')
+        resolve();
+      } catch (e) {
+        console.error(e)
+        reject(e)
+      }
+
+    })
+
+  }
   // ############################   FUNCTIONS TO HANDLE WEBSOCKET   ##########################################
-
-
-  const join = (selectedRoom) => {
+  const join = async (selectedRoom) => {
     try {
+      loadFromCache();
       let ws = new WebSocket(config.ROOM_SERVER_WS + selectedRoom + "/websocket");
       let rejoined = false;
       let startTime = Date.now();
@@ -546,11 +622,16 @@ export const ActiveRoomProvider = ({ children }) => {
         }
       }
 
-      ws.addEventListener("open", event => {
+      ws.addEventListener("open", async (event) => {
         currentWebSocket = ws;
         // Send user info message.
         ws.send(JSON.stringify({ name: JSON.stringify(keys.exportable_pubKey) }));
         console.info('Websocket Opened')
+        let messageQueue = await document.cacheDb.getItem(`${roomId}_msg_queue`)
+        if (messageQueue !== null && messageQueue.length > 0) {
+          processMessageQueue(messageQueue)
+        }
+
       });
 
       ws.addEventListener("message", async event => {
@@ -558,24 +639,30 @@ export const ActiveRoomProvider = ({ children }) => {
         if (data.error) {
           sendSystemInfo("Error from server: " + data.error)
         } else if (data.ready) {
-          if (!roomReady) {
-            let _keys = data.keys;
-            await loadRoomKeys(_keys);
-            setMotd(data.motd);
-            setLocked(data.roomLocked)
-            setOwnerRotation(data.ownerRotation)
-            if (data.motd !== '') {
-              sendSystemInfo('Message of the Day: ' + data.motd);
-            } else {
-              sendSystemMessage('Connected');
-            }
-            roomReady = true;
-          }
+          await document.cacheDb.setItem(`${roomId}_data`, data)
+          loadRoom(data);
         } else if (data.system) {
           if (data.keyRotation) {
             sendSystemInfo('The room owner has rotated their keys. Please reload the room to update your copy of the owner keys.')
           }
         } else {
+          let cachedMessages = await document.cacheDb.getItem(`${roomId}_messages`)
+          if (!cachedMessages) {
+            cachedMessages = [];
+          }
+          if (Object.keys(data).length > 1) {
+            document.cacheDb.setItem(`${roomId}_messages`, uniqBy([...[data], ...[cachedMessages]], '_id')[0])
+          } else {
+            /*
+            const newCache = [];
+            for(let x in cachedMessages){
+              if(cachedMessages[x].)
+            }
+
+             */
+            cachedMessages[Object.keys(data)[0]] = data[Object.keys(data)[0]]
+            document.cacheDb.setItem(`${roomId}_messages`, uniqBy([...[cachedMessages]], '_id')[0])
+          }
           const _messages = await unwrapMessages(data);
           await addChatMessage(_messages)
         }
@@ -596,7 +683,7 @@ export const ActiveRoomProvider = ({ children }) => {
         rejoin();
       });
     } catch (e) {
-      console.log(e);
+      console.error(e);
       sendSystemInfo('Could not connect to websocket')
       return ({ error: 'Could not connect to the websocket' })
     }
@@ -625,11 +712,23 @@ export const ActiveRoomProvider = ({ children }) => {
       let token_sign = await sign(keys.personal_signKey, token_data);
       request.headers = { authorization: token_data + "." + token_sign }
     }
+
+    const capacity = await document.cacheDb.getItem(`${roomId}_capacity`)
+    const join_requests = await document.cacheDb.getItem(`${roomId}_join_requests`)
+    if (capacity && join_requests) {
+      console.log('Loading cached room data')
+      setRoomCapacity(capacity);
+      setJoinRequests(join_requests)
+    }
+
+
     fetch(config.ROOM_SERVER + roomId + "/getAdminData", request)
       .then(resp => resp.json().then(data => {
           if (data.error) {
             setAdminError(true)
           } else {
+            document.cacheDb.setItem(`${roomId}_capacity`, data.capacity)
+            document.cacheDb.setItem(`${roomId}_join_requests`, data.join_requests)
             setRoomCapacity(data.capacity);
             setJoinRequests(data.join_requests)
           }
@@ -642,7 +741,6 @@ export const ActiveRoomProvider = ({ children }) => {
       let user = changeUsername
       const user_pubKey = JSON.parse(user._id);
       let contacts = roomContext.contacts;
-      console.log(messages)
       let _messages = Object.assign(messages);
       _messages.forEach(message => {
         if (message.user._id === user._id) {
@@ -654,7 +752,7 @@ export const ActiveRoomProvider = ({ children }) => {
       setMessages(_messages)
       roomContext.updateContacts(contacts);
     } catch (e) {
-      console.log(e);
+      console.error(e);
       return { error: e };
     }
   }
@@ -683,7 +781,7 @@ export const ActiveRoomProvider = ({ children }) => {
         credentials: 'include'
       });
     } catch (e) {
-      console.log(e);
+      console.error(e);
       return { error: e };
     }
   }
@@ -708,7 +806,7 @@ export const ActiveRoomProvider = ({ children }) => {
         }
       }
     } catch (e) {
-      console.log(e);
+      console.error(e);
       return { error: e };
     }
   }
@@ -719,7 +817,7 @@ export const ActiveRoomProvider = ({ children }) => {
       const locked_json = (await (await fetch(config.ROOM_SERVER + roomId + "/roomLocked", { credentials: 'include' })).json());
       return locked_json.locked;
     } catch (e) {
-      console.log(e);
+      console.error(e);
       return { error: e };
     }
   }
@@ -731,7 +829,7 @@ export const ActiveRoomProvider = ({ children }) => {
       // console.log(joinRequests)
       joinRequests.error ? setAdminError(true) : setJoinRequests(joinRequests.join_requests);
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   }
 
@@ -749,7 +847,7 @@ export const ActiveRoomProvider = ({ children }) => {
         setMotd(motd)
       }
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   }
 
@@ -763,6 +861,7 @@ export const ActiveRoomProvider = ({ children }) => {
 
   const selectRoom = async (selectedRoom) => {
     try {
+
       setMessages([])
       await loadPersonalKeys(selectedRoom);
       join(selectedRoom);
@@ -774,7 +873,7 @@ export const ActiveRoomProvider = ({ children }) => {
         //roomContext.updateRoomNames(rooms)
       }
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   }
 
@@ -790,7 +889,7 @@ export const ActiveRoomProvider = ({ children }) => {
         setFiles([file])
       }
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   }
 
@@ -799,7 +898,7 @@ export const ActiveRoomProvider = ({ children }) => {
       try {
         selectRoom(roomId);
       } catch (e) {
-        console.log(e);
+        console.error(e);
         sendSystemInfo('Could not enter the room')
       }
     }
@@ -841,7 +940,8 @@ export const ActiveRoomProvider = ({ children }) => {
     lockRoom,
     setMOTD,
     updateRoomCapacity,
-    sendSystemMessage
+    sendSystemMessage,
+    join
   }}>{children} </ActiveChatContext.Provider>
 };
 
