@@ -7,9 +7,9 @@ http://www.gnu.org/software/src-highlite -->
 import React<font color="#990000">,</font> <font color="#FF0000">{</font> useState <font color="#FF0000">}</font> from <font color="#FF0000">'react'</font><font color="#990000">;</font>
 import <font color="#FF0000">{</font> JwModal <font color="#FF0000">}</font> from <font color="#FF0000">'../../containers/Modal/Modal'</font>
 import <font color="#FF0000">{</font> Trans <font color="#FF0000">}</font> from <font color="#FF0000">'@lingui/macro'</font>
-import <font color="#FF0000">'./Admin.css'</font>
+import <font color="#FF0000">'./AdminDialog.css'</font>
 
-<b><font color="#0000FF">const</font></b> Admin <font color="#990000">=</font> <font color="#990000">(</font>props<font color="#990000">)</font> <font color="#990000">=&gt;</font> <font color="#FF0000">{</font>
+<b><font color="#0000FF">const</font></b> AdminDialog <font color="#990000">=</font> <font color="#990000">(</font>props<font color="#990000">)</font> <font color="#990000">=&gt;</font> <font color="#FF0000">{</font>
   <b><font color="#0000FF">const</font></b> <font color="#990000">[</font>roomCapacity<font color="#990000">,</font> setRoomCapacity<font color="#990000">]</font> <font color="#990000">=</font> <b><font color="#000000">useState</font></b><font color="#990000">(</font>props<font color="#990000">.</font>roomCapacity<font color="#990000">);</font>
   <b><font color="#0000FF">const</font></b> <font color="#990000">[</font>motd<font color="#990000">,</font> setMOTD<font color="#990000">]</font> <font color="#990000">=</font> <b><font color="#000000">useState</font></b><font color="#990000">(</font>props<font color="#990000">.</font>motd<font color="#990000">);</font>
   <i><font color="#9A1900">/*</font></i>
@@ -42,7 +42,7 @@ import <font color="#FF0000">'./Admin.css'</font>
             JwModal<font color="#990000">.</font><b><font color="#000000">close</font></b><font color="#990000">(</font><font color="#FF0000">'confirm-lockdown'</font><font color="#990000">)(</font>e<font color="#990000">);</font>
           <font color="#FF0000">}}</font><font color="#990000">&gt;&lt;</font>Trans id<font color="#990000">=</font><font color="#FF0000">'confirm room restriction button text'</font><font color="#990000">&gt;</font>Confirm Room Restriction<font color="#990000">&lt;</font><font color="#FF6600">/Trans&gt;&lt;/</font>button<font color="#990000">&gt;</font>
         <font color="#990000">&lt;/</font>JwModal<font color="#990000">&gt;</font>
-        <font color="#990000">&lt;</font>h2 id<font color="#990000">=</font><font color="#FF0000">'admin-title'</font><font color="#990000">&gt;&lt;</font>Trans id<font color="#990000">=</font><font color="#FF0000">'admin header'</font><font color="#990000">&gt;</font>Admin Controls <font color="#990000">-</font> <font color="#FF0000">{</font>props<font color="#990000">.</font>roomName<font color="#FF0000">}</font><font color="#990000">&lt;</font><font color="#FF6600">/Trans&gt;&lt;/</font>h2 <font color="#990000">&gt;</font>
+        <font color="#990000">&lt;</font>h2 id<font color="#990000">=</font><font color="#FF0000">'admin-title'</font><font color="#990000">&gt;&lt;</font>Trans id<font color="#990000">=</font><font color="#FF0000">'admin header'</font><font color="#990000">&gt;</font>AdminDialog Controls <font color="#990000">-</font> <font color="#FF0000">{</font>props<font color="#990000">.</font>roomName<font color="#FF0000">}</font><font color="#990000">&lt;</font><font color="#FF6600">/Trans&gt;&lt;/</font>h2 <font color="#990000">&gt;</font>
         <font color="#990000">&lt;</font>div className<font color="#990000">=</font><font color="#FF0000">"adminSection"</font><font color="#990000">&gt;</font>
           <font color="#990000">&lt;</font>label htmlFor<font color="#990000">=</font><font color="#FF0000">'motd'</font><font color="#990000">&gt;&lt;</font>Trans id<font color="#990000">=</font><font color="#FF0000">'motd label'</font><font color="#990000">&gt;</font>Enter the Message of the Day below<font color="#990000">:</font> <font color="#990000">&lt;</font><font color="#FF6600">/Trans&gt;&lt;/</font>label<font color="#990000">&gt;</font>
           <font color="#990000">&lt;</font>br <font color="#990000">/&gt;</font>
@@ -94,5 +94,5 @@ import <font color="#FF0000">'./Admin.css'</font>
     <font color="#990000">);</font>
 <font color="#FF0000">}</font>
 
-<b><font color="#0000FF">export</font></b> <b><font color="#0000FF">default</font></b> Admin<font color="#990000">;</font>
+<b><font color="#0000FF">export</font></b> <b><font color="#0000FF">default</font></b> AdminDialog<font color="#990000">;</font>
 </tt></pre>

@@ -1,0 +1,19 @@
+{
+  "roomData": {
+    "i1sotYcKbhhG5ufo0djzIb9djKK24tqzb2g0IcaJjcgZ_vBDvf6pr8iL2lRSnpRS": {
+      "key": "{\"crv\":\"P-384\",\"d\":\"hrGwoZq8D3FclmSa-5a-GfBlkpB0u5IgxFHuB-tsZaoCfVasdyjXw76yqWPVw-Gp\",\"ext\":true,\"key_ops\":[\"deriveKey\"],\"kty\":\"EC\",\"x\":\"bIgK8D2Sj9heeQBVWRNkB7L6NIRhy7LVqOv5DZTpm5TtyoGrWASFbDNHuPe9enfU\",\"y\":\"WJOQGH660Jv0O55JjrwAlUHJoUE8PR4KrhWMB8GUmykq-1jGbIkSoEua3Q9Rc50l\"}",
+      "lastSeenMessage": "011000000110011000100101011000111111100110"
+    }
+  },
+  "contacts": {
+    "bIgK8D2Sj9heeQBVWRNkB7L6NIRhy7LVqOv5DZTpm5TtyoGrWASFbDNHuPe9enfU WJOQGH660Jv0O55JjrwAlUHJoUE8PR4KrhWMB8GUmykq-1jGbIkSoEua3Q9Rc50l": "Me"
+  },
+  "roomMetadata": {
+    "i1sotYcKbhhG5ufo0djzIb9djKK24tqzb2g0IcaJjcgZ_vBDvf6pr8iL2lRSnpRS": {
+      "name": "Room 1",
+      "lastMessageTime": "0",
+      "unread": false
+    }
+  },
+  "pem": false
+}
