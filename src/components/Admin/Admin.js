@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { JwModal } from '../../containers/Modal/Modal'
 import { Trans } from '@lingui/macro'
-import './Admin.css'
 
 const Admin = (props) => {
   const [roomCapacity, setRoomCapacity] = useState(props.roomCapacity);
