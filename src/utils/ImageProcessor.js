@@ -190,7 +190,7 @@ export async function restrictPhoto(photo, maxSize, imageType, qualityArgument) 
   // console.log(`... stepping back up to W ${_old_c.width} x H ${_old_c.height} and will then try scale ${_ratio.toFixed(4)}`);
   let _final_c;
   do {
-    _final_c = scaleCanvas(_old_c, Math.sqrt(_ratio) * 0.99);  // we're targeting within 1%
+    _final_c = scaleCanvas(_old_c, Math.sqrt(_ratio) * 0.97);  // update: we target within 3% (vs 1%)
     _b1 = await new Promise((resolve) => {
       _final_c.toBlob(resolve, imageType, qualityArgument);
       // console.log(`(generating blob of requested type ${imageType})`);
@@ -198,7 +198,7 @@ export async function restrictPhoto(photo, maxSize, imageType, qualityArgument) 
     // workingDots();
     // console.log(`... fine-tuning to W ${_final_c.width} x H ${_final_c.height} (size ${_b1.size})`);
     _ratio *= (maxSize / _b1.size);
-  } while (((_b1.size > maxSize) || ((Math.abs(_b1.size - maxSize) / maxSize) > 0.02)) && (--_maxIteration > 0));  // it's ok within 2%
+  } while (((_b1.size > maxSize) || ((Math.abs(_b1.size - maxSize) / maxSize) > 0.05)) && (--_maxIteration > 0));  // it's ok within 5%, previously 2%
 
   // workingDots();
   // console.log(`... ok looks like we're good now ... final size is ${_b1.size} (which is ${((_b1.size * 100) / maxSize).toFixed(2)}% of cap)`);
