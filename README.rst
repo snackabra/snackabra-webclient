@@ -39,6 +39,10 @@ You need to copy the template ".env" file to the root:
 See below (Private Servers) for details: this file points your
 webclient to your preferred ``snackabra`` servers (room and storage).
 
+Note: if you are developing under Miniflare, just copy the
+``setup/miniflare.template.env`` file instead, it has the default
+settings for servers.
+
 Once done, you can simply:
 
 ::
