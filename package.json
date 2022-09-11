@@ -36,6 +36,7 @@
     "@mui/icons-material": "^5.8.4",
     "@mui/material": "^5.8.2",
     "core-js": "^2.6.12",
+    "http-proxy-middleware": "^2.0.6",
     "lodash": "^4.17.21",
     "mui-image": "^1.0.5",
     "node-fetch": "^3.2.6",

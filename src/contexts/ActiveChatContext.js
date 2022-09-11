@@ -4,7 +4,7 @@ import { areKeysSame, deriveKey, encrypt, extractPubKey, generateKeys, importKey
 import { decrypt, onlyUnique } from "../utils/utils";
 import RoomContext from "./RoomContext";
 import NotificationContext from "./NotificationContext";
-import { getFileData, restrictPhoto, saveImage } from "../utils/ImageProcessor";
+import { SBImage, restrictPhoto, getFileData, saveImage } from "../utils/ImageProcessor";
 import { uniqBy, remove } from "lodash";
 
 const ActiveChatContext = React.createContext(undefined);
@@ -32,8 +32,9 @@ export const ActiveRoomProvider = ({ children }) => {
   const [replyEncryptionKey, setReplyEncryptionKey] = React.useState({});
   const [username, setUsername] = React.useState({});
   const [files, setFiles] = React.useState([]);
-  const [imgUrl, setImgUrl] = React.useState(null)
-  const [ownerRotation, setOwnerRotation] = React.useState(null)
+  const [imgUrl, setImgUrl] = React.useState(null);
+  const [sbImage, setSbImage] = React.useState(null);
+  const [ownerRotation, setOwnerRotation] = React.useState(null);
 
   const setKeys = (newKeys) => {
     keys = Object.assign(keys, newKeys);
@@ -440,7 +441,12 @@ export const ActiveRoomProvider = ({ children }) => {
 
 
   const sendMessage = async (message, whisper = false) => {
-    let file;
+    let file; // psm: changing to SBImage() objects
+    // let sbImage; // psm: should come from react
+
+    console.log("Sending MESSAGE:");
+    console.log(message);
+
     queueMessage(message, whisper);
 
     try {
@@ -462,13 +468,27 @@ export const ActiveRoomProvider = ({ children }) => {
       let msg = {}
       let shared_key = keys.shared_key;
       if (files !== null && files.length > 0) {
-        file = await getFileData(await restrictPhoto(files[0], 15, "image/jpeg", 0.92), encrypted ? 'arrayBuffer' : 'url');
+	console.log(`SBImage() with file:`);
+	console.log(files[0]);
+	// this generates the thumbnail (15 KB limit)
+        // file = await getFileData(await restrictPhoto(files[0], 15, "image/jpeg", 0.92), encrypted ? 'arrayBuffer' : 'url');
+	// sbImage = new SBImage(files[0]); // currently only images
+	file = await getFileData(await restrictPhoto(sbImage, 15), encrypted ? 'arrayBuffer' : 'url');
+	// sbImage.setFile(files[0], encrypted ? 'arrayBuffer' : 'url'); // psm: i'm a bit confused about whisper in this context
+	if (encrypted == 'url') {
+	  console.log("################################################################");
+	  console.log("################################################################");
+	  console.log("#### ok ... why is this ever value 'url'? ");
+	  console.log("################################################################");
+	  console.log("################################################################");
+	}
       }
 
       let imgId = '', previewId = '', imgKey = '', previewKey = '', fullStorePromise = '', previewStorePromise = '';
 
-      if (file != null) {
-        let image_data = await saveImage(files[0], roomId, sendSystemMessage);
+      if (sbImage != null) {
+        // let image_data = await saveImage(files[0], roomId, sendSystemMessage);
+        let image_data = await saveImage(sbImage, roomId, sendSystemMessage);
         if (typeof image_data !== 'string') {
           imgId = image_data.full;
           imgKey = image_data.fullKey;
@@ -877,16 +897,34 @@ export const ActiveRoomProvider = ({ children }) => {
     }
   }
 
+  // const previewImage = async (photo, file) => {
+  //   try {
+  //     if (photo) {
+  //       const b64url = await new Promise((resolve) => {
+  //         const reader = new FileReader();
+  //         reader.onload = (e) => resolve(e.target.result);
+  //         reader.readAsDataURL(photo);
+  //       });
+  //       setImgUrl(b64url)
+  //       setFiles([file])
+  //     }
+  //   } catch (e) {
+  //     console.error(e);
+  //   }
+  // }
+
   const previewImage = async (photo, file) => {
     try {
       if (photo) {
-        const b64url = await new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (e) => resolve(e.target.result);
-          reader.readAsDataURL(photo);
-        });
+	const sbImage = new SBImage(photo);
+	const b64url = await sbImage.img.then((i) => i.src);
         setImgUrl(b64url)
         setFiles([file])
+	setSbImage(sbImage)
+	// console.log("I'm in preview, should have the sb object:");
+	// console.log(sbImage);
+	// console.log("I'm in preview, here is b64url:");
+	// console.log(b64url);
       }
     } catch (e) {
       console.error(e);
@@ -927,6 +965,7 @@ export const ActiveRoomProvider = ({ children }) => {
     username, setUsername,
     files, setFiles,
     imgUrl, setImgUrl,
+    sbImage, setSbImage,				       
     sendMessage,
     getOldMessages,
     chooseFile,
