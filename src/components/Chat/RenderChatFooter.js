@@ -1,11 +1,10 @@
 import React from 'react'
-import { Grid, IconButton, Paper } from "@mui/material";
+import { Grid, IconButton, Paper, Divider } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
-import { useContext } from "react";
 import ActiveChatContext from "../../contexts/ActiveChatContext";
 
 const RenderChatFooter = (props) => {
-  if (typeof props.imgUrl === 'string') {
+  // if (typeof props.imgUrl === 'string') {
     return (
       <Grid item>
         <Paper sx={{
@@ -17,16 +16,14 @@ const RenderChatFooter = (props) => {
             justifyContent="space-between"
             alignItems="flex-start"
           >
-            <img id='previewImage' width='80%' src={props.imgUrl} alt='Image preview'></img>
-	    &nbsp;&nbsp;
-	    <canvas id='previewSBImage' width='80%'></canvas>
+	    <canvas id='previewSBImage' width='400px'>Preview of shared image</canvas>
             <IconButton onClick={props.removeInputFiles} aria-label="close">
               <CloseIcon />
             </IconButton>
           </Grid>
         </Paper>
       </Grid>)
-  }
+  // }
   return null;
 }
 

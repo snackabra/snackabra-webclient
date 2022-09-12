@@ -35,7 +35,7 @@ export const ActiveRoomProvider = ({ children }) => {
   const [replyEncryptionKey, setReplyEncryptionKey] = React.useState({});
   const [username, setUsername] = React.useState({});
   const [files, setFiles] = React.useState([]);
-  const [imgUrl, setImgUrl] = React.useState(null);
+  // const [imgUrl, setImgUrl] = React.useState(null);
   const [sbImage, setSbImage] = React.useState(null);
   const [ownerRotation, setOwnerRotation] = React.useState(null);
 
@@ -922,16 +922,19 @@ export const ActiveRoomProvider = ({ children }) => {
 
 	const sbImage = new SBImage(photo);
 
+	sbImage.aspectRatio.then((r) => console.log("aspectRatio *****", r));
+
 	// this put spinner up instantly
 	// TODO: how is this made smaller than 80% x 80% initially?
-	setImgUrl(spinnerB64);
+	// setImgUrl(spinnerB64);
 
 	// psm: update, no need to block on this, a promise works fine
 	// const b64url = await sbImage.img.then((i) => i.src);
         // setImgUrl(b64url)
 
 	sbImage.img.then((i) => {
-	  setImgUrl(i.src);
+	  console.log(i);
+	  // setImgUrl(i.src);
 
 	  // console.log("++++++++++++++++ sbImageCanvas: ", sbImageCanvas);
  	  // console.log("I'm in preview, should have the sb object:");
@@ -941,15 +944,18 @@ export const ActiveRoomProvider = ({ children }) => {
 	});
 
 	queueMicrotask(() => {
-	  const imageCanvas = document.getElementById("previewImage");
-	  console.log("&&&&&&&&&&&&&&&& imageCanvas", imageCanvas);
+	  // const imageCanvas = document.getElementById("previewImage");
+	  // console.log("&&&&&&&&&&&&&&&& imageCanvas", imageCanvas);
 
 	  // TODO: this can be kicked off immediately but I do not
 	  // know how to get a canvas reference
 	  const sbImageCanvas = document.getElementById("previewSBImage");
+	  // const ctx = sbImageCanvas.getContext('2d');
+	  // ctx.fillStyle = 'blue';
+	  // ctx.fill();
 	  console.log("&&&&&&&&&&&&&&&& sbImageCanvas", sbImageCanvas);
 
-	  sbImageCanvas.width = imageCanvas.width;
+	  // sbImageCanvas.width = imageCanvas.width;
 	  // TODO: problem - we don't know the true height!
 	  // sbImageCanvas.height = imageCanvas.height;
 	  sbImage.loadToCanvas(sbImageCanvas);
@@ -997,7 +1003,7 @@ export const ActiveRoomProvider = ({ children }) => {
     replyEncryptionKey, setReplyEncryptionKey,
     username, setUsername,
     files, setFiles,
-    imgUrl, setImgUrl,
+    // imgUrl, setImgUrl,
     sbImage, setSbImage,				       
     sendMessage,
     getOldMessages,

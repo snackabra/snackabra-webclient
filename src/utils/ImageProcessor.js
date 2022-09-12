@@ -429,6 +429,66 @@ let script_02 =
 export class SBImage {
   constructor(image) {
     this.image = image; // file
+
+    var resolveAspectRatio;
+
+    this.aspectRatio = new Promise((resolve) => {
+      // block on getting width and height...
+      resolveAspectRatio = resolve;
+    });
+
+    // Fetch the original image
+    console.log("Fetching file:");
+    console.log(image);
+    this.imgURL = new Promise((resolve) => {
+      const _self = this;
+      const reader = image.stream().getReader();
+      return new ReadableStream({
+	start(controller) {
+	  var foundSize = false;
+          return pump();
+          function pump() {
+            return reader.read().then(({ done, value }) => {
+	      // When no more data needs to be consumed, close the stream
+	      if (done) {
+		controller.close();
+		return;
+	      }
+	      // console.log("Got a chunk!");
+	      // console.log(value);
+	      // // pull out size
+	      if (!foundSize) {
+	      	foundSize = true;
+		console.log("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+	       	_self.width = value[165] * 256 + value[166];
+	       	_self.height = value[163] * 256 + value[164];
+		// var width = value[165] * 256 + value[166];
+		// var height = value[163] * 256 + value[164];
+
+	      	console.log(`got the size of the image!!  ${_self.width} x ${_self.height}`);
+		resolveAspectRatio(_self.width / _self.height);
+	      }
+	      // Enqueue the next data chunk into our target stream
+	      controller.enqueue(value);
+	      return pump();
+            });
+          }
+	}
+      })
+    })
+    // Create a new response out of the stream
+      .then((stream) => new Response(stream))
+    // Create an object URL for the response
+      .then((response) => response.blob())
+      .then((blob) => URL.createObjectURL(blob))
+    // Update image
+      .then((url) => {
+	console.log("Finished getting 'url':");
+	console.log(url);
+	resolve(url);
+      })
+      .catch((err) => console.error(err));
+    
     this.img = new Promise((resolve) => {
       const reader = new FileReader();
       const img = document.createElement('img');
@@ -438,6 +498,7 @@ export class SBImage {
       }
       reader.readAsDataURL(this.image);
     });
+
     this.canvas = new Promise((resolve) => {
       this.img.then((img) => {
 	const canvas = document.createElement('canvas'); 
@@ -449,11 +510,13 @@ export class SBImage {
 	resolve(canvas);
       });
     });
+
     // this.blob = new Promise((resolve) => {
     //   const imageType = "image/jpeg";
     //   const qualityArgument = 0.92;
     //   this.canvas.then((canvas) => canvas.toBlob(resolve, imageType, qualityArgument));
     // });
+
     this.blob = new Promise((resolve) => {
       // spin up worker
       let worker = new Worker(script_02);
