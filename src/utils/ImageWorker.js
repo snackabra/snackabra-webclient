@@ -9,10 +9,21 @@
   document.head.appendChild(script)
 */
 
-import { SBImage } from '../utils/ImageProcessor.js';
+// import { SBImage, _restrictPhoto } from '../utils/ImageProcessor.js';
 
 export default(i) => {  // eslint-disable-line
   console.log(`starting worker number ${i}`);
+
+  // const IW_blob = new Blob([`(${IW_code})(maxSize, _c, _b1)`]);
+  // const IW_blob = new Blob([`(${IW_code})`]);
+  // const IW_url = URL.createObjectURL(IW_blob);
+  // console.log("%%%%%%%%%%%%%%%% IW_url:", IW_u);
+  // self.importScripts(IW_url);
+
+  // const ImageProcessor = require('../utils/ImageProcessor.js');
+  // self.importScripts('ImageProcessor.js');
+
+  // console.log("++++++++++++++++ ImageProcessor", ImageProcessor);
 
   self.onmessage = (msg) => {
     console.log(`[${i}] starting ImageWorker(args) ... arg object is:`);
@@ -42,10 +53,38 @@ export default(i) => {  // eslint-disable-line
 	});
 	break;
       case 'testCanvas':
-	// 
-	const imageDataBuffer = msg.data[1];
-	console.log("Imageworker received canvas buffer:", imageDataBuffer);
-	postMessage("Still alive!");
+	const offscreen = msg.data[1];
+	console.log("%%%%%%%%%%%%%%%% offscreen:", offscreen);
+	const imageSAB = msg.data[2];
+	console.log("%%%%%%%%%%%%%%%% imageSAB:", imageSAB);
+	const ctx = offscreen.getContext('2d');
+	console.log("%%%%%%%%%%%%%%%% ctx", ctx);
+	console.log("%%%%%%%%%%%%%%%% offscreen.canvas:", offscreen.canvas);
+	// const arr = new Uint8ClampedArray(imageSAB);
+	const arr = new Uint8Array(imageSAB);
+	const imgBlob = new Blob([arr.slice()], {type: 'image/jpeg'});
+	createImageBitmap(imgBlob).then((img) => {
+	  console.log("%%%%%%%%%%%%%%%% img:", img);
+	  // offscreen.getContext('2d').drawImage(img, 0, 0, img.width, img.height);
+	  if (ctx) {
+	    console.log("%%%%%%%%%%%%%%%% test to draw on ctx:");
+	    // first off we just straight-up write to the canvas
+	    ctx.drawImage(img, 0, 0, ctx.canvas.width, ctx.canvas.height);
+	    // console.log("%%%%%%%%%%%%%%%% test to commit results:");
+	    // ctx.commit();  // hm .. unclear if this is actually in any browser yet?
+	    // postMessage(["All Done!", offscreen], [offscreen]);
+
+	    // TODO: experiment with more work in here
+	    // console.log("%%%%%%%%%%%%%%%% test to restrict size:");
+	    // let _new_img = _restrictPhoto(15, ctx, img);
+	    // console.log("%%%%%%%%%%%%%%%% got _new_img:", _new_img);
+
+	    postMessage("All Done!");
+	  }
+	});
+	// offscreen.drawImage(img, 0, 0, img.width, img.height);
+	// const img = new ImageData(arr.slice());
+	// postMessage("Still alive!");
 	break;
       default:
 	postMessage(`No such image worker command (${command})`);

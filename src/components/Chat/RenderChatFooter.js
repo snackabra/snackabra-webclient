@@ -5,8 +5,6 @@ import { useContext } from "react";
 import ActiveChatContext from "../../contexts/ActiveChatContext";
 
 const RenderChatFooter = (props) => {
-
-
   if (typeof props.imgUrl === 'string') {
     return (
       <Grid item>
@@ -19,7 +17,9 @@ const RenderChatFooter = (props) => {
             justifyContent="space-between"
             alignItems="flex-start"
           >
-            <img id='previewImage' width='150px' src={props.imgUrl} alt='Image preview'></img>
+            <img id='previewImage' width='80%' src={props.imgUrl} alt='Image preview'></img>
+	    &nbsp;&nbsp;
+	    <canvas id='previewSBImage' width='80%'></canvas>
             <IconButton onClick={props.removeInputFiles} aria-label="close">
               <CloseIcon />
             </IconButton>

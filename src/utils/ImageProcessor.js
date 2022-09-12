@@ -191,35 +191,15 @@ export async function getFileData(file, outputType) {
 
 // refactoring from using raw photo to using SBImage object
 // change: imageType, qualityArgument both hardcoded
-export async function restrictPhoto(sbImage, maxSize) {
-  console.log("################################################################");
-  console.log("#################### inside restrictPhoto() ####################");
-  console.log("################################################################");
+
+// helper
+// maxSize: target (max) size in KB
+// _c: full image on starting point canvas (eg sbImage.canvas)
+// _b1: blob version (eg sbImage.blob)
+export async function _restrictPhoto(maxSize, _c, _b1) {
+  const t2 = new Date().getTime();
   const imageType = "image/jpeg";
   const qualityArgument = 0.92;
-  const t0 = new Date().getTime();
-  // imageType default should be 'image/jpeg'
-  // qualityArgument should be 0.92 for jpeg and 0.8 for png (MDN default)
-  maxSize = maxSize * 1024; // KB
-  // let _c = await readPhoto(photo);
-  let _c = await sbImage.img.then(() => sbImage.canvas);
-  console.log("Got sbImage as:");
-  console.log(sbImage);
-  console.log("And got sbImage.canvas as:");
-  console.log(_c);
-  const t1 = new Date().getTime();
-  console.log(`#### readPhoto took ${t1 - t0} milliseconds`);
-  // let _b1 = await new Promise((resolve) => _c.blob.then((b) => resolve(b)));
-  let _b1 = await sbImage.blob.then(() => sbImage.blob);
-  console.log("got blob");
-  console.log(_b1);
-  // let _b1 = await new Promise((resolve) => {
-  //   _c.toBlob(resolve, imageType, qualityArgument);
-  // });
-  const t2 = new Date().getTime();
-  console.log(`#### getting photo into a blob took ${t2 - t1} milliseconds`);
-  // workingDots();
-
   let _size = _b1.size;
   if (_size <= maxSize) {
     console.log(`Starting size ${_size} is fine (below target size ${maxSize}`);
@@ -287,17 +267,48 @@ export async function restrictPhoto(sbImage, maxSize) {
     console.log(` ... we're within ${(Math.abs(_b1.size - maxSize) / maxSize)} of cap (${maxSize})`);
   } while (((_b1.size > maxSize) || ((Math.abs(_b1.size - maxSize) / maxSize) > 0.10)) && (--_maxIteration > 0));  // we're pretty tolerant here
 
-  // workingDots();
-  console.log(`... ok looks like we're good now ... final size is ${_b1.size} (which is ${((_b1.size * 100) / maxSize).toFixed(2)}% of cap)`);
-
-  // document.getElementById('the-original-image').width = _final_c.width;  // a bit of a hack
-
-  const end = new Date().getTime();
-
-  console.log(`#### restrictPhoto() took total ${end - t0} milliseconds`);
   return _b1;
 }
 
+
+
+export async function restrictPhoto(sbImage, maxSize) {
+  console.log("################################################################");
+  console.log("#################### inside restrictPhoto() ####################");
+  console.log("################################################################");
+  const t0 = new Date().getTime();
+  // imageType default should be 'image/jpeg'
+  // qualityArgument should be 0.92 for jpeg and 0.8 for png (MDN default)
+  maxSize = maxSize * 1024; // KB
+  // let _c = await readPhoto(photo);
+  let _c = await sbImage.img.then(() => sbImage.canvas);
+  console.log("Got sbImage as:");
+  console.log(sbImage);
+  console.log("And got sbImage.canvas as:");
+  console.log(_c);
+  const t1 = new Date().getTime();
+  console.log(`#### readPhoto took ${t1 - t0} milliseconds`);
+  // let _b1 = await new Promise((resolve) => _c.blob.then((b) => resolve(b)));
+  let _b1 = await sbImage.blob.then(() => sbImage.blob);
+  console.log("got blob");
+  console.log(_b1);
+
+  // let _b1 = await new Promise((resolve) => {
+  //   _c.toBlob(resolve, imageType, qualityArgument);
+  // });
+  const t2 = new Date().getTime();
+  console.log(`#### getting photo into a blob took ${t2 - t1} milliseconds`);
+  // workingDots();
+
+  let _final_b1 = _restrictPhoto(maxSize, _c, _b1);
+
+  // workingDots();
+  console.log(`... ok looks like we're good now ... final size is ${_b1.size} (which is ${((_b1.size * 100) / maxSize).toFixed(2)}% of cap)`);
+  // document.getElementById('the-original-image').width = _final_c.width;  // a bit of a hack
+  const end = new Date().getTime();
+  console.log(`#### restrictPhoto() took total ${end - t0} milliseconds`);
+  return _final_b1;
+}
 
 
 // basically replaced by SBImage
@@ -456,13 +467,6 @@ export class SBImage {
 
     // this requests some worker to load the file into a sharedarraybuffer
     this.imageSAB = doImageTask(['loadSB', image], false);
-    
-    {
-      const canvas = document.createElement('canvas'); 
-      var ctx = canvas.getContext('2d');
-      var imageData = ctx.createImageData(400, 400);
-      doImageTask(['testCanvas', imageData.data.buffer], [imageData.data.buffer]).then((m) => console.log(m));
-    }
 
     // // simple worker template
     // this.w = new Promise((resolve) => {
@@ -485,6 +489,29 @@ export class SBImage {
     //   });
     // });
   }
+
+  loadToCanvas(canvas) {
+    this.imageSAB.then((imageSAB) => {
+      if (OffscreenCanvas) {
+	console.log("%%%%%%%%%%%%%%%% we are here");
+	console.log(imageSAB);
+	// const canvas = document.createElement('canvas'); // test to give it from caller
+	// var ctx = canvas.getContext('2d');
+	// var imageData = ctx.createImageData(400, 400);
+	const offscreen = canvas.transferControlToOffscreen();
+	// const ctx = offscreen.getContext('2d');
+	// doImageTask(['testCanvas', imageData.data.buffer], [imageData.data.buffer]).then((m) => console.log(m));
+	doImageTask(['testCanvas', offscreen, imageSAB], [offscreen]).then((m) => {
+	  console.log("**************** Returned message:", m);
+	  console.log("**************** offscreen:", canvas);
+	  console.log("**************** offscreen:", offscreen);
+	});
+      } else {
+	console.log("**************** THIS feature only works with OffscreenCanvas");
+	console.log("                 (TODO: make the code work as promise as fallback");
+      }
+    });
+  }
 }
 
 // const { Index } = require("flexsearch");
@@ -503,6 +530,11 @@ let next_worker = 0;
 let max_workers = window.navigator.hardwareConcurrency; 
 
 console.log(`setting up ${max_workers} image helper workers`);
+
+// const IW_code = _restrictPhoto.toString();
+// const IW_blob = new Blob([`${IW_code}`]);
+// const IW_url = URL.createObjectURL(IW_blob);
+// console.log("%%%%%%%%%%%%%%%% IW_code:", IW_code);
 
 for (let i = 0; i < max_workers; i++) {
   let newWorker = {
@@ -525,7 +557,7 @@ function doImageTask(vars, transfer) {
     instance.onmessage = function(m) {
       console.log(`[${i}] finished finished ... returning with:`);
       console.log(m);
-      resolve(m);
+      resolve(m.data);
     }
     try {
       if (transfer) {
@@ -533,8 +565,9 @@ function doImageTask(vars, transfer) {
       } else {
 	instance.postMessage(vars);
       }
-    } catch {
+    } catch (error) {
       console.error(`Failed to send task to worker ${i}`);
+      console.error(error);
       reject("failed");
     }
   });
