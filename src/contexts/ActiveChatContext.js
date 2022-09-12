@@ -933,6 +933,14 @@ export const ActiveRoomProvider = ({ children }) => {
 	sbImage.img.then((i) => {
 	  setImgUrl(i.src);
 
+	  // console.log("++++++++++++++++ sbImageCanvas: ", sbImageCanvas);
+ 	  // console.log("I'm in preview, should have the sb object:");
+	  // console.log(sbImage);
+	  // console.log("I'm in preview, here is b64url:");
+	  // console.log(b64url);
+	});
+
+	queueMicrotask(() => {
 	  const imageCanvas = document.getElementById("previewImage");
 	  console.log("&&&&&&&&&&&&&&&& imageCanvas", imageCanvas);
 
@@ -941,16 +949,12 @@ export const ActiveRoomProvider = ({ children }) => {
 	  const sbImageCanvas = document.getElementById("previewSBImage");
 	  console.log("&&&&&&&&&&&&&&&& sbImageCanvas", sbImageCanvas);
 
-	  sbImageCanvas.width = imageCanvas.width;
-	  sbImageCanvas.height = imageCanvas.height;
+	  // sbImageCanvas.width = imageCanvas.width;
+	  // sbImageCanvas.height = imageCanvas.height;
 	  sbImage.loadToCanvas(sbImageCanvas);
 
-	  // console.log("++++++++++++++++ sbImageCanvas: ", sbImageCanvas);
- 	  // console.log("I'm in preview, should have the sb object:");
-	  // console.log(sbImage);
-	  // console.log("I'm in preview, here is b64url:");
-	  // console.log(b64url);
 	});
+
         setFiles([file])
 	setSbImage(sbImage)
       }
