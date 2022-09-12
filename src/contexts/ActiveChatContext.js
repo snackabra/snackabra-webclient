@@ -949,7 +949,8 @@ export const ActiveRoomProvider = ({ children }) => {
 	  const sbImageCanvas = document.getElementById("previewSBImage");
 	  console.log("&&&&&&&&&&&&&&&& sbImageCanvas", sbImageCanvas);
 
-	  // sbImageCanvas.width = imageCanvas.width;
+	  sbImageCanvas.width = imageCanvas.width;
+	  // TODO: problem - we don't know the true height!
 	  // sbImageCanvas.height = imageCanvas.height;
 	  sbImage.loadToCanvas(sbImageCanvas);
 
