@@ -959,9 +959,10 @@ export const ActiveRoomProvider = ({ children }) => {
 	  // TODO: problem - we don't know the true height!
 	  // sbImageCanvas.height = imageCanvas.height;
 	  sbImage.loadToCanvas(SBImageCanvas).then((c) => {
-	    const imageElement = document.getElementById("previewImage");
-	    const ctx = imageElement.getContext('2d');
-	    ctx.drawImage(c, imageElement.width, imageElement.height);
+	    // ... future optimization
+	    // const imageElement = document.getElementById("previewImage");
+	    // const ctx = c.getContext('2d');
+	    // ctx.drawImage(c, imageElement.width, imageElement.height);
 	  });
 	});
         setFiles([file])
