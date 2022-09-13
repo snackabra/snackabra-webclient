@@ -174,7 +174,7 @@ const ChatRoom = (props) => {
 
   const removeInputFiles = () => {
     activeChatContext.removeInputFiles()
-    // activeChatContext.setImgUrl(null)
+    activeChatContext.setImgUrl(null)
   }
   const { height } = Dimensions.get('window')
   return (
@@ -211,7 +211,7 @@ const ChatRoom = (props) => {
           return handleReply(context)
         }}
         renderChatFooter={() => {
-          return <RenderChatFooter removeInputFiles={removeInputFiles} /* imgUrl={activeChatContext.imgUrl} */ />
+          return <RenderChatFooter removeInputFiles={removeInputFiles} imgUrl={activeChatContext.imgUrl} />
         }}
         renderBubble={(props) => {
           return <RenderBubble {...props} keys={activeChatContext.getKeys()} />

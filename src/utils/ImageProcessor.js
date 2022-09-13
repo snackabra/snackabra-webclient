@@ -426,6 +426,45 @@ let script_02 =
     };
     `;
 
+// code by Thomas Lochmatter, thomas.lochmatter@viereck.ch
+// Returns an object with the width and height of the JPEG image
+// stored in bytes, or null if the bytes do not represent a JPEG
+// image.
+function readJpegHeader(bytes) {	
+  // JPEG magick
+  if (bytes[0] != 0xff) return;
+  if (bytes[1] != 0xd8) return;
+  // Go through all markers
+  var pos = 2;
+  var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  while (pos + 4 < bytes.byteLength) {
+    // Scan for the next start marker (if the image is corrupt, this marker may not be where it is expected)
+    if (bytes[pos] != 0xff) {
+      pos += 1;
+      continue;
+    }
+    var type = bytes[pos + 1];
+    // Short marker
+    pos += 2;
+    if (bytes[pos] == 0xff) continue;
+    // SOFn marker
+    var length = dv.getUint16(pos);
+    if (pos + length > bytes.byteLength) return;
+    if (length >= 7 && (type == 0xc0 || type == 0xc2)) {
+      var data = {};
+      data.progressive = type == 0xc2;
+      data.bitDepth = bytes[pos + 2];
+      data.height = dv.getUint16(pos + 3);
+      data.width = dv.getUint16(pos + 5);
+      data.components = bytes[pos + 7];
+      return data;
+    }
+    // Other marker
+    pos += length;
+  }
+  return;
+}
+
 export class SBImage {
   constructor(image) {
     this.image = image; // file
@@ -456,17 +495,25 @@ export class SBImage {
 	      }
 	      // console.log("Got a chunk!");
 	      // console.log(value);
-	      // // pull out size
+	      // pull out size
 	      if (!foundSize) {
 	      	foundSize = true;
-		console.log("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
-	       	_self.width = value[165] * 256 + value[166];
-	       	_self.height = value[163] * 256 + value[164];
+		// console.log("$$$$$$$ found first chunk")
+		const h = readJpegHeader(value);
+	       	// _self.width = value[165] * 256 + value[166];
+	       	// _self.height = value[163] * 256 + value[164];
 		// var width = value[165] * 256 + value[166];
 		// var height = value[163] * 256 + value[164];
 
-	      	console.log(`got the size of the image!!  ${_self.width} x ${_self.height}`);
-		resolveAspectRatio(_self.width / _self.height);
+		if (h) {
+		  console.log("^^^^^^^^^^^^^^^^", h);
+	       	  _self.width = h.width;
+		  _self.height = h.height;
+	      	  console.log(`got the size of the image!!  ${_self.width} x ${_self.height}`);
+		  resolveAspectRatio(_self.width / _self.height);
+		} else {
+		  console.log("PROBLEM ***** ... could not parse jpeg header");
+		}
 	      }
 	      // Enqueue the next data chunk into our target stream
 	      controller.enqueue(value);
@@ -499,17 +546,32 @@ export class SBImage {
       reader.readAsDataURL(this.image);
     });
 
+    // this.canvas = new Promise((resolve) => {
+    //   this.img.then((img) => {
+    // 	const canvas = document.createElement('canvas'); 
+    // 	canvas.width = img.width;
+    // 	canvas.height = img.height;
+    // 	canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+    // 	console.log("resolved canvas object:");
+    // 	console.log(canvas);
+    // 	resolve(canvas);
+    //   });
+    // });
+
+    // create a canvas and then wait for the correct size
     this.canvas = new Promise((resolve) => {
-      this.img.then((img) => {
+      this.aspectRatio.then((r) => {
 	const canvas = document.createElement('canvas'); 
-	canvas.width = img.width;
-	canvas.height = img.height;
-	canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-	console.log("resolved canvas object:");
-	console.log(canvas);
+	canvas.width = this.width;
+	canvas.height = this.height;
+	this.img.then((img) =>
+	  canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height));
+	// this will return right away with correctly-sized canvas
 	resolve(canvas);
       });
     });
+
+
 
     // this.blob = new Promise((resolve) => {
     //   const imageType = "image/jpeg";
@@ -554,30 +616,37 @@ export class SBImage {
   }
 
   loadToCanvas(canvas) {
-    this.imageSAB.then((imageSAB) => {
-      if (OffscreenCanvas) {
-	console.log("%%%%%%%%%%%%%%%% we are here");
-	console.log(imageSAB);
-	// const canvas = document.createElement('canvas'); // test to give it from caller
-	// var ctx = canvas.getContext('2d');
-	// var imageData = ctx.createImageData(400, 400);
-	const offscreen = canvas.transferControlToOffscreen();
-	// const ctx = offscreen.getContext('2d');
-	// doImageTask(['testCanvas', imageData.data.buffer], [imageData.data.buffer]).then((m) => console.log(m));
-	doImageTask(['testCanvas', offscreen, imageSAB], [offscreen]).then((m) => {
-	  console.log("**************** Returned message:", m);
-	  console.log("**************** offscreen:", canvas);
-	  console.log("**************** offscreen:", offscreen);
+    return new Promise((resolve) => {
+      this.aspectRatio.then((r) => {
+	console.log("~~~~~~~~~~~~~~~~ got WxH", this.width, this.height);
+	canvas.width = this.width;
+	canvas.height = this.height;
+	this.imageSAB.then((imageSAB) => {
+	  if (OffscreenCanvas) {
+	    console.log("%%%%%%%%%%%%%%%% we are here");
+	    console.log(imageSAB);
+	    // const canvas = document.createElement('canvas'); // test to give it from caller
+	    // var ctx = canvas.getContext('2d');
+	    // var imageData = ctx.createImageData(400, 400);
+	    const offscreen = canvas.transferControlToOffscreen();
+	    // const ctx = offscreen.getContext('2d');
+	    // doImageTask(['testCanvas', imageData.data.buffer], [imageData.data.buffer]).then((m) => console.log(m));
+	    doImageTask(['testCanvas', offscreen, imageSAB], [offscreen]).then((m) => {
+	      console.log("**************** Returned message:", m);
+	      console.log("**************** offscreen:", canvas);
+	      console.log("**************** offscreen:", offscreen);
+	      resolve(canvas);
+	    });
+	  } else {
+	    console.log("**************** THIS feature only works with OffscreenCanvas");
+	    console.log("                 (TODO: make the code work as promise as fallback");
+	  }
 	});
-      } else {
-	console.log("**************** THIS feature only works with OffscreenCanvas");
-	console.log("                 (TODO: make the code work as promise as fallback");
-      }
+      });
     });
   }
 }
 
-// const { Index } = require("flexsearch");
 
 // we need this so it can be packaged
 export class BlobWorker extends Worker {
