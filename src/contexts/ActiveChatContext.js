@@ -243,17 +243,20 @@ export const ActiveRoomProvider = ({ children }) => {
           if (msg.error) {
             msg = await decrypt(keys.locked_key, new_messages[id].encrypted_contents)
           }
-          // console.log(msg)
+	  console.log("unwrapped_messages() - raw:")
+          console.log(msg)
           const _json_msg = JSON.parse(msg.plaintext);
           if (!_json_msg.hasOwnProperty('control')) {
             unwrapped_messages[id] = _json_msg;
           } else {
-            // console.log(_json_msg);
+	    console.log("unwrapped_messages() - json:")
+            console.log(_json_msg);
             setControlMessages([...controlMessages, _json_msg])
           }
         } catch (e) {
-          // console.error(e);
-          // Skip the message if decryption fails - its probably due to the user not having <roomId>_lockedKey.
+          // ecryption fails - its probably due to the user not having <roomId>_locked
+	  console.error("error decrypting - probably a locked room")
+	  console.error(e);
         }
       } else {
         unwrapped_messages[id] = new_messages[id];

@@ -359,40 +359,40 @@ export function scaleCanvas(canvas, scale) {
 
 
 export function padImage(image_buffer) {
-  let _sizes = [128, 256, 512, 1024, 2048, 4096];   // in KB
-  _sizes = _sizes.map((size) => size * 1024);
-  const image_size = image_buffer.byteLength;
-  // console.log('BEFORE PADDING: ', image_size)
-  let _target;
-  if (image_size < _sizes[_sizes.length - 1]) {
-    for (let i = 0; i < _sizes.length; i++) {
-      if (image_size + 21 < _sizes[i]) {
-        _target = _sizes[i];
-        break;
+    let _sizes = [128, 256, 512, 1024, 2048, 4096];   // in KB
+    _sizes = _sizes.map((size) => size * 1024);
+    const image_size = image_buffer.byteLength;
+    // console.log('BEFORE PADDING: ', image_size)
+    let _target;
+    if (image_size < _sizes[_sizes.length - 1]) {
+      for (let i = 0; i < _sizes.length; i++) {
+	if (image_size + 21 < _sizes[i]) {
+	  _target = _sizes[i];
+	  break;
+	}
+      }
+    } else {
+      _target = (Math.ceil(image_size / (1024 * 1024))) * 1024 * 1024;
+      if (image_size + 21 >= _target) {
+	_target += 1024;
       }
     }
-  } else {
-    _target = (Math.ceil(image_size / (1024 * 1024))) * 1024 * 1024;
-    if (image_size + 21 >= _target) {
-      _target += 1024;
+    let _padding_array = [128];
+    _target = _target - image_size - 21;
+    // We will finally convert to Uint32Array where each element is 4 bytes
+    // So we need (_target/4) - 6 array elements with value 0 (128 bits or 16 bytes or 4 elements to be left empty,
+    // last 4 bytes or 1 element to represent the size and 1st element is 128 or 0x80)
+    for (let i = 0; i < _target; i++) {
+      _padding_array.push(0);
     }
+    // _padding_array.push(image_size);
+    const _padding = new Uint8Array(_padding_array).buffer;
+    // console.log('Padding size: ', _padding.byteLength)
+    let final_data = utils._appendBuffer(image_buffer, _padding);
+    final_data = utils._appendBuffer(final_data, new Uint32Array([image_size]).buffer);
+    // console.log('AFTER PADDING: ', final_data.byteLength)
+    return final_data;
   }
-  let _padding_array = [128];
-  _target = _target - image_size - 21;
-  // We will finally convert to Uint32Array where each element is 4 bytes
-  // So we need (_target/4) - 6 array elements with value 0 (128 bits or 16 bytes or 4 elements to be left empty,
-  // last 4 bytes or 1 element to represent the size and 1st element is 128 or 0x80)
-  for (let i = 0; i < _target; i++) {
-    _padding_array.push(0);
-  }
-  // _padding_array.push(image_size);
-  const _padding = new Uint8Array(_padding_array).buffer;
-  // console.log('Padding size: ', _padding.byteLength)
-  let final_data = utils._appendBuffer(image_buffer, _padding);
-  final_data = utils._appendBuffer(final_data, new Uint32Array([image_size]).buffer);
-  // console.log('AFTER PADDING: ', final_data.byteLength)
-  return final_data;
-}
 
 export function unpadData(data_buffer) {
   // console.log(data_buffer, typeof data_buffer)
