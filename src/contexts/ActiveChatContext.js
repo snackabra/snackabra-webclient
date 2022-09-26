@@ -333,6 +333,15 @@ export const ActiveRoomProvider = ({ children }) => {
               _text_verified = false
             } else {
               const sender_pubKey = await importKey("jwk", new_messages[id].sender_pubKey, "ECDH", true, []);
+	      console.log("deriving verification keys from: (room private key, new_messages[id], new_messages[id].sender_pubkey,  sender public key)")
+	      console.log(keys.room_privateSignKey)
+	      console.log("================================================================")
+	      console.log(new_messages[id])
+	      console.log("================================================================")
+	      console.log(new_messages[id].sender_pubKey)
+	      console.log("================================================================")
+	      console.log(sender_pubKey)
+	      console.log("================================================================")
               const verificationKey = await deriveKey(keys.room_privateSignKey, sender_pubKey, "HMAC", false, ["sign", "verify"])
               _text_verified = await verify(verificationKey, sign, new_messages[id].contents)
               _image_verified = await verify(verificationKey, _image_sign, new_messages[id].image)
@@ -378,6 +387,7 @@ export const ActiveRoomProvider = ({ children }) => {
           }
         }
       } catch (e) {
+	// debugger;
         console.error(e);
       }
 

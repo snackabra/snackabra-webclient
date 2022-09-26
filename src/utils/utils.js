@@ -84,6 +84,8 @@ export function base64ToArrayBuffer(base64) {
     return bytes.buffer;
   } catch (e) {
     console.log(e);
+    console.log("string was:")
+    console.log(base64)
     return { error: e };
   }
 }
