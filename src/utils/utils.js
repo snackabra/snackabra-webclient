@@ -139,6 +139,8 @@ export function assemblePayload(data) {
 
 export function extractPayload(payload) {
   try {
+    console.log("extractPayload(): ")
+    console.log(payload)
     const metadataSize = new Uint32Array(payload.slice(0, 4))[0];
     const decoder = new TextDecoder();
     console.log("METADATASIZE: ", metadataSize)

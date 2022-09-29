@@ -39,7 +39,8 @@ export const RoomProvider = ({ children }) => {
         }
       }
       Object.keys(localStorage).forEach((room) => {
-        //console.log(room.split('_').slice(-1))
+        console.log("got rooms from local storage")
+        console.log(room.split('_').slice(-1))
         if (!(_rooms.hasOwnProperty(room) || room === 'contacts' || room.split('_').slice(-1)[0] === 'lockedKey' || room.split('_').slice(-1)[0] === 'owner' || room.split('_').slice(-1)[0] === 'room' || room.split('_').slice(-1)[0] === 'username' || room === 'rooms' || room === 'lastvisit' || room.split('_').slice(-1)[0] === 'lastSeenMessage')) {
           _rooms[room] = { name: 'Room ' + counter };
           counter += 1;
@@ -54,6 +55,8 @@ export const RoomProvider = ({ children }) => {
         method: 'POST',
         body: JSON.stringify(Object.keys(_rooms))
       }).then(res => res.json().then(message_times => {
+        console.log("Got Room list:")
+        console.log(body)
         Object.keys(_rooms).forEach(room => {
           _rooms[room]['lastMessageTime'] = message_times[room];
           _rooms[room]['unread'] = (!localStorage.hasOwnProperty(room + '_lastSeenMessage') || (localStorage.hasOwnProperty(room + '_lastSeenMessage') && parseInt(localStorage.getItem(room + '_lastSeenMessage'), 2) < parseInt(message_times[room], 2))) && message_times[room] !== '0';

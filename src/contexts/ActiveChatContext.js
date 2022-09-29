@@ -52,6 +52,8 @@ export const ActiveRoomProvider = ({ children }) => {
   }
 
   const loadRoom = async (data = null) => {
+    console.log("loadRoom:")
+    console.log(data)
     console.time('load-room')
     if (!roomReady) {
       let _keys = data.keys;
@@ -101,6 +103,8 @@ export const ActiveRoomProvider = ({ children }) => {
 
 
   const loadRoomKeys = async (_keys) => {
+    console.log("loadRoomKeys()")
+    console.log(_keys)
     try {
       console.log("Loading room keys...")
       if (_keys.ownerKey === null) {
@@ -138,6 +142,8 @@ export const ActiveRoomProvider = ({ children }) => {
               "Content-Type": "application/json"
             }
           });
+          console.log("/postPubKey?type=guestKey")
+          console.log(_exportable_pubKey)
           _exportable_verifiedGuest_pubKey = { ..._exportable_pubKey };
         }
         if (areKeysSame(_exportable_verifiedGuest_pubKey, _exportable_pubKey)) {
@@ -182,15 +188,14 @@ export const ActiveRoomProvider = ({ children }) => {
       setRoomOwner(isOwner)
       setRoomAdmin(isAdmin)
       setIsVerifiedGuest(isVerifiedGuest)
-      if (currentWebSocket) {
-        currentWebSocket.send(JSON.stringify({ ready: true }));
-
-      } else {
-        setTimeout(() => {
-          console.log('Websocket was not opened, retrying')
-          currentWebSocket.send(JSON.stringify({ ready: true }));
-        }, 5000)
-      }
+      // if (currentWebSocket) {
+      //   currentWebSocket.send(JSON.stringify({ ready: true }));
+      // } else {
+      //   setTimeout(() => {
+      //     console.log('Websocket was not opened, retrying')
+      //     currentWebSocket.send(JSON.stringify({ ready: true }));
+      //   }, 5000)
+      // }
 
       console.log('Room keys loaded!');
       if (isAdmin) {
@@ -233,7 +238,8 @@ export const ActiveRoomProvider = ({ children }) => {
   }
 
   const unwrapMessages = async (new_messages) => {
-
+    console.log("unwrapMessages()")
+    console.log(new_messages)
     let unwrapped_messages = {}
     for (let id in new_messages) {
       if (new_messages[id].hasOwnProperty("encrypted_contents")) {
@@ -243,13 +249,15 @@ export const ActiveRoomProvider = ({ children }) => {
           if (msg.error) {
             msg = await decrypt(keys.locked_key, new_messages[id].encrypted_contents)
           }
-	  console.log("unwrapped_messages() - raw:")
+	        console.log("unwrapped_messages() - raw (after decryption):")
           console.log(msg)
           const _json_msg = JSON.parse(msg.plaintext);
           if (!_json_msg.hasOwnProperty('control')) {
+	          console.log("unwrapped_messages() - control:")
+            console.log(_json_msg);
             unwrapped_messages[id] = _json_msg;
           } else {
-	    console.log("unwrapped_messages() - json:")
+	          console.log("unwrapped_messages() - json:")
             console.log(_json_msg);
             setControlMessages([...controlMessages, _json_msg])
           }
@@ -616,11 +624,10 @@ export const ActiveRoomProvider = ({ children }) => {
       try {
         const loadRoomData = await document.cacheDb.getItem(`${roomId}_data`)
         if (loadRoomData !== null) {
+          console.log("Loading room info from cache:")
           await loadRoom(loadRoomData);
         }
-
         const messageData = await document.cacheDb.getItem(`${roomId}_messages`)
-
         const _messages = await unwrapMessages(messageData);
         await addChatMessage(_messages)
         console.log('Loaded from room from cache')
@@ -763,6 +770,8 @@ export const ActiveRoomProvider = ({ children }) => {
           if (data.error) {
             setAdminError(true)
           } else {
+            console.log("/getAdminData")
+            console.log(data)
             document.cacheDb.setItem(`${roomId}_capacity`, data.capacity)
             document.cacheDb.setItem(`${roomId}_join_requests`, data.join_requests)
             setRoomCapacity(data.capacity);
