@@ -1,5 +1,7 @@
 // #########################    FUNCTIONS TO HANDLE ALL IMAGE PROCESSING   ###########################################
-
+// ##
+// ## PLEASE NOTE: as of today (20221020) moving this to snackabra.ts in the 0.5 ('typescript') branch
+// ##              ... and starting to clean up as a TS set of utils
 
 // TODO - can be optimized (asynchronized more) to return the hashes once calculated
 // and then do all the encryption stuff.
