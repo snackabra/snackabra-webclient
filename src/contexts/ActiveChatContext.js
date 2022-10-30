@@ -1,7 +1,7 @@
 import * as React from "react"
 import config from "../config";
 import { areKeysSame, deriveKey, encrypt, extractPubKey, generateKeys, importKey, sign, verify } from "../utils/crypto";
-import { decrypt, onlyUnique } from "../utils/utils";
+import { decrypt, onlyUnique, jsonParseWrapper } from "../utils/utils";
 import RoomContext from "./RoomContext";
 import NotificationContext from "./NotificationContext";
 import { SBImage, restrictPhoto, getFileData, saveImage } from "../utils/ImageProcessor";
@@ -110,7 +110,7 @@ export const ActiveRoomProvider = ({ children }) => {
       if (_keys.ownerKey === null) {
         return { error: "Room does not exist" }
       }
-      let _exportable_owner_pubKey = JSON.parse(_keys.ownerKey || JSON.stringify({}));
+      let _exportable_owner_pubKey = jsonParseWrapper(_keys.ownerKey || JSON.stringify({}), 'L113');
       if (_exportable_owner_pubKey.hasOwnProperty('key')) {
         _exportable_owner_pubKey = typeof _exportable_owner_pubKey.key === 'object' ? _exportable_owner_pubKey.key : JSON.parse(_exportable_owner_pubKey.key)
       }
@@ -249,22 +249,22 @@ export const ActiveRoomProvider = ({ children }) => {
           if (msg.error) {
             msg = await decrypt(keys.locked_key, new_messages[id].encrypted_contents)
           }
-	        console.log("unwrapped_messages() - raw (after decryption):")
+          console.log("unwrapped_messages() - raw (after decryption):")
           console.log(msg)
-          const _json_msg = JSON.parse(msg.plaintext);
+          const _json_msg = jsonParseWrapper(msg.plaintext, 'L254');
           if (!_json_msg.hasOwnProperty('control')) {
-	          console.log("unwrapped_messages() - control:")
+            console.log("unwrapped_messages() - control:")
             console.log(_json_msg);
             unwrapped_messages[id] = _json_msg;
           } else {
-	          console.log("unwrapped_messages() - json:")
+            console.log("unwrapped_messages() - json:")
             console.log(_json_msg);
             setControlMessages([...controlMessages, _json_msg])
           }
         } catch (e) {
           // ecryption fails - its probably due to the user not having <roomId>_locked
-	  console.error("error decrypting - probably a locked room")
-	  console.error(e);
+          console.error("error decrypting - probably a locked room")
+          console.error(e);
         }
       } else {
         unwrapped_messages[id] = new_messages[id];
@@ -341,15 +341,15 @@ export const ActiveRoomProvider = ({ children }) => {
               _text_verified = false
             } else {
               const sender_pubKey = await importKey("jwk", new_messages[id].sender_pubKey, "ECDH", true, []);
-	      console.log("deriving verification keys from: (room private key, new_messages[id], new_messages[id].sender_pubkey,  sender public key)")
-	      console.log(keys.room_privateSignKey)
-	      console.log("================================================================")
-	      console.log(new_messages[id])
-	      console.log("================================================================")
-	      console.log(new_messages[id].sender_pubKey)
-	      console.log("================================================================")
-	      console.log(sender_pubKey)
-	      console.log("================================================================")
+              console.log("deriving verification keys from: (room private key, new_messages[id], new_messages[id].sender_pubkey,  sender public key)")
+              console.log(keys.room_privateSignKey)
+              console.log("================================================================")
+              console.log(new_messages[id])
+              console.log("================================================================")
+              console.log(new_messages[id].sender_pubKey)
+              console.log("================================================================")
+              console.log(sender_pubKey)
+              console.log("================================================================")
               const verificationKey = await deriveKey(keys.room_privateSignKey, sender_pubKey, "HMAC", false, ["sign", "verify"])
               _text_verified = await verify(verificationKey, sign, new_messages[id].contents)
               _image_verified = await verify(verificationKey, _image_sign, new_messages[id].image)
@@ -395,7 +395,7 @@ export const ActiveRoomProvider = ({ children }) => {
           }
         }
       } catch (e) {
-	// debugger;
+        // debugger;
         console.error(e);
       }
 
@@ -492,20 +492,20 @@ export const ActiveRoomProvider = ({ children }) => {
       let msg = {}
       let shared_key = keys.shared_key;
       if (files !== null && files.length > 0) {
-	console.log(`SBImage() with file:`);
-	console.log(files[0]);
-	// this generates the thumbnail (15 KB limit)
+        console.log(`SBImage() with file:`);
+        console.log(files[0]);
+        // this generates the thumbnail (15 KB limit)
         // file = await getFileData(await restrictPhoto(files[0], 15, "image/jpeg", 0.92), encrypted ? 'arrayBuffer' : 'url');
-	// sbImage = new SBImage(files[0]); // currently only images
-	file = await getFileData(await restrictPhoto(sbImage, 15), encrypted ? 'arrayBuffer' : 'url');
-	// sbImage.setFile(files[0], encrypted ? 'arrayBuffer' : 'url'); // psm: i'm a bit confused about whisper in this context
-	if (encrypted == 'url') {
-	  console.log("################################################################");
-	  console.log("################################################################");
-	  console.log("#### ok ... why is this ever value 'url'? ");
-	  console.log("################################################################");
-	  console.log("################################################################");
-	}
+        // sbImage = new SBImage(files[0]); // currently only images
+        file = await getFileData(await restrictPhoto(sbImage, 15), encrypted ? 'arrayBuffer' : 'url');
+        // sbImage.setFile(files[0], encrypted ? 'arrayBuffer' : 'url'); // psm: i'm a bit confused about whisper in this context
+        if (encrypted == 'url') {
+          console.log("################################################################");
+          console.log("################################################################");
+          console.log("#### ok ... why is this ever value 'url'? ");
+          console.log("################################################################");
+          console.log("################################################################");
+        }
       }
 
       let imgId = '', previewId = '', imgKey = '', previewKey = '', fullStorePromise = '', previewStorePromise = '';
@@ -767,17 +767,17 @@ export const ActiveRoomProvider = ({ children }) => {
 
     fetch(config.ROOM_SERVER + roomId + "/getAdminData", request)
       .then(resp => resp.json().then(data => {
-          if (data.error) {
-            setAdminError(true)
-          } else {
-            console.log("/getAdminData")
-            console.log(data)
-            document.cacheDb.setItem(`${roomId}_capacity`, data.capacity)
-            document.cacheDb.setItem(`${roomId}_join_requests`, data.join_requests)
-            setRoomCapacity(data.capacity);
-            setJoinRequests(data.join_requests)
-          }
-        })
+        if (data.error) {
+          setAdminError(true)
+        } else {
+          console.log("/getAdminData")
+          console.log(data)
+          document.cacheDb.setItem(`${roomId}_capacity`, data.capacity)
+          document.cacheDb.setItem(`${roomId}_join_requests`, data.join_requests)
+          setRoomCapacity(data.capacity);
+          setJoinRequests(data.join_requests)
+        }
+      })
       )
   }
 
@@ -942,53 +942,53 @@ export const ActiveRoomProvider = ({ children }) => {
     try {
       if (photo) {
 
-	const sbImage = new SBImage(photo);
+        const sbImage = new SBImage(photo);
 
-	sbImage.aspectRatio.then((r) => console.log("aspectRatio *****", r));
+        sbImage.aspectRatio.then((r) => console.log("aspectRatio *****", r));
 
-	// this put spinner up instantly
-	// TODO: how is this made smaller than 80% x 80% initially?
-	setImgUrl(spinnerB64);
+        // this put spinner up instantly
+        // TODO: how is this made smaller than 80% x 80% initially?
+        setImgUrl(spinnerB64);
 
-	// psm: update, no need to block on this, a promise works fine
-	// const b64url = await sbImage.img.then((i) => i.src);
+        // psm: update, no need to block on this, a promise works fine
+        // const b64url = await sbImage.img.then((i) => i.src);
         // setImgUrl(b64url)
 
-	sbImage.img.then((i) => {
-	  // console.log(i);
-	  setImgUrl(i.src);
+        sbImage.img.then((i) => {
+          // console.log(i);
+          setImgUrl(i.src);
 
-	  // console.log("++++++++++++++++ sbImageCanvas: ", sbImageCanvas);
- 	  // console.log("I'm in preview, should have the sb object:");
-	  // console.log(sbImage);
-	  // console.log("I'm in preview, here is b64url:");
-	  // console.log(b64url);
-	});
+          // console.log("++++++++++++++++ sbImageCanvas: ", sbImageCanvas);
+          // console.log("I'm in preview, should have the sb object:");
+          // console.log(sbImage);
+          // console.log("I'm in preview, here is b64url:");
+          // console.log(b64url);
+        });
 
-	sbImage.aspectRatio.then((r) => {
-	  const imageElement = document.getElementById("previewImage");
-	  imageElement.height = imageElement.width / r;
-	});
+        sbImage.aspectRatio.then((r) => {
+          const imageElement = document.getElementById("previewImage");
+          imageElement.height = imageElement.width / r;
+        });
 
-	queueMicrotask(() => {
-	  // const imageCanvas = document.getElementById("previewImage");
-	  const SBImageCanvas = document.createElement('canvas');
-	  // console.log("&&&&&&&&&&&&&&&& imageCanvas", imageCanvas);
-	  // const ctx = sbImageCanvas.getContext('2d');
-	  // ctx.fillStyle = 'blue';
-	  // ctx.fill();
-	  // sbImageCanvas.width = imageCanvas.width;
-	  // TODO: problem - we don't know the true height!
-	  // sbImageCanvas.height = imageCanvas.height;
-	  sbImage.loadToCanvas(SBImageCanvas).then((c) => {
-	    // ... future optimization
-	    // const imageElement = document.getElementById("previewImage");
-	    // const ctx = c.getContext('2d');
-	    // ctx.drawImage(c, imageElement.width, imageElement.height);
-	  });
-	});
+        queueMicrotask(() => {
+          // const imageCanvas = document.getElementById("previewImage");
+          const SBImageCanvas = document.createElement('canvas');
+          // console.log("&&&&&&&&&&&&&&&& imageCanvas", imageCanvas);
+          // const ctx = sbImageCanvas.getContext('2d');
+          // ctx.fillStyle = 'blue';
+          // ctx.fill();
+          // sbImageCanvas.width = imageCanvas.width;
+          // TODO: problem - we don't know the true height!
+          // sbImageCanvas.height = imageCanvas.height;
+          sbImage.loadToCanvas(SBImageCanvas).then((c) => {
+            // ... future optimization
+            // const imageElement = document.getElementById("previewImage");
+            // const ctx = c.getContext('2d');
+            // ctx.drawImage(c, imageElement.width, imageElement.height);
+          });
+        });
         setFiles([file])
-	setSbImage(sbImage)
+        setSbImage(sbImage)
       }
     } catch (e) {
       console.error(e);
@@ -1029,7 +1029,7 @@ export const ActiveRoomProvider = ({ children }) => {
     username, setUsername,
     files, setFiles,
     imgUrl, setImgUrl,
-    sbImage, setSbImage,				       
+    sbImage, setSbImage,
     sendMessage,
     getOldMessages,
     chooseFile,

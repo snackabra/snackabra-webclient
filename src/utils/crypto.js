@@ -101,7 +101,8 @@ export async function deriveKey(privateKey, publicKey, type, extractable, keyUsa
 export async function getImageKey(imageHash, _salt) {
 
   try {
-    let keyMaterial = await importKey("raw", utils.base64ToArrayBuffer(decodeURIComponent(imageHash)), "PBKDF2", false, ["deriveBits", "deriveKey"]);
+    // let keyMaterial = await importKey("raw", utils.base64ToArrayBuffer(decodeURIComponent(imageHash)), "PBKDF2", false, ["deriveBits", "deriveKey"]);
+    let keyMaterial = await importKey("raw", utils.base64ToArrayBuffer(imageHash), "PBKDF2", false, ["deriveBits", "deriveKey"]);
 
     // TODO - Support deriving from PBKDF2 in deriveKey function
     let key = await window.crypto.subtle.deriveKey(
@@ -151,7 +152,8 @@ export async function encrypt(contents, secret_key = null, outputType = "string"
       console.log(error);
       return { error: "Encryption failed" }
     }
-    return (outputType === 'string') ? { content: encodeURIComponent(utils.arrayBufferToBase64(encrypted)), iv: encodeURIComponent(utils.arrayBufferToBase64(iv)) } : { content: encrypted, iv: iv };
+    // return (outputType === 'string') ? { content: encodeURIComponent(utils.arrayBufferToBase64(encrypted)), iv: encodeURIComponent(utils.arrayBufferToBase64(iv)) } : { content: encrypted, iv: iv };
+    return (outputType === 'string') ? { content: utils.arrayBufferToBase64(encrypted), iv: utils.arrayBufferToBase64(iv) } : { content: encrypted, iv: iv };
   } catch (e) {
     console.log(e);
     return { error: e };
@@ -160,25 +162,26 @@ export async function encrypt(contents, secret_key = null, outputType = "string"
 
 
 export async function decrypt(secretKey, contents, outputType = "string") {
-  try {
-    const ciphertext = typeof contents.content === 'string' ? utils.base64ToArrayBuffer(decodeURIComponent(contents.content)) : contents.content;
-    const iv = typeof contents.iv === 'string' ? utils.base64ToArrayBuffer(decodeURIComponent(contents.iv)) : contents.iv;
-    let decrypted = await window.crypto.subtle.decrypt(
-      {
-        name: "AES-GCM",
-        iv: iv
-      },
-      secretKey,
-      ciphertext
-    );
-    if (outputType === "string") {
-      return { error: false, plaintext: new TextDecoder().decode(decrypted) };
-    }
-    return { error: false, plaintext: decrypted };
-  } catch (e) {
-    // console.log(e);
-    return { error: true, plaintext: "(whispered)" };
-  }
+  throw("use the decryupt() in utils")
+  // try {
+  //   const ciphertext = typeof contents.content === 'string' ? utils.base64ToArrayBuffer(decodeURIComponent(contents.content)) : contents.content;
+  //   const iv = typeof contents.iv === 'string' ? utils.base64ToArrayBuffer(decodeURIComponent(contents.iv)) : contents.iv;
+  //   let decrypted = await window.crypto.subtle.decrypt(
+  //     {
+  //       name: "AES-GCM",
+  //       iv: iv
+  //     },
+  //     secretKey,
+  //     ciphertext
+  //   );
+  //   if (outputType === "string") {
+  //     return { error: false, plaintext: new TextDecoder().decode(decrypted) };
+  //   }
+  //   return { error: false, plaintext: decrypted };
+  // } catch (e) {
+  //   // console.log(e);
+  //   return { error: true, plaintext: `error in decrypt (crypto): ${e}` };
+  // }
 }
 
 
@@ -193,7 +196,8 @@ export async function sign(secretKey, contents) {
         secretKey,
         encoded
       );
-      return encodeURIComponent(utils.arrayBufferToBase64(sign));
+      // return encodeURIComponent(utils.arrayBufferToBase64(sign));
+      return utils.arrayBufferToBase64(sign);
     } catch (error) {
       console.log(error);
       return { error: "Failed to sign content" };
@@ -207,7 +211,8 @@ export async function sign(secretKey, contents) {
 
 export async function verify(secretKey, sign, contents) {
   try {
-    const _sign = utils.base64ToArrayBuffer(decodeURIComponent(sign));
+    // const _sign = utils.base64ToArrayBuffer(decodeURIComponent(sign));
+    const _sign = utils.base64ToArrayBuffer(sign);
     const encoder = new TextEncoder();
     const encoded = encoder.encode(contents);
     try {
