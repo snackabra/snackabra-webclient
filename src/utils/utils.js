@@ -2,8 +2,6 @@
 
 /* snackabra-webclient/src/utils/utils.js */
 
-/* NOTE: most of these are migrating to snackabra.ts */
-
 // function assemblePayloadV1(data) {
 //   try {
 //     let metadata = {}
@@ -29,7 +27,7 @@ import config from "../config";
 const SB = require('snackabra')
 const sbCrypto = new SB.SBCrypto();
 
-export function extractPayloadV1(payload) {
+function extractPayloadV1(payload) {
   try {
     const metadataSize = new Uint32Array(payload.slice(0, 4))[0];
     const decoder = new TextDecoder();
@@ -59,45 +57,20 @@ export function _appendBuffer(buffer1, buffer2) {
     return {};
   }
 };
-/***********************************************************/
-/***********************************************************/
-/***********************************************************/
-// KLUDGE: selectively copy-pasting from snackabra.js
-/***********************************************************/
-/***********************************************************/
-/***********************************************************/
 
-export function jsonParseWrapper(str, loc) {
-  // psm: you can't have a return type in TS if the function
-  //      might throw an exception
+
+export function arrayBufferToBase64(buffer) {
   try {
-      return JSON.parse(str);
-  }
-  catch (error) {
-      // sometimes it's an embedded string
-      try {
-          // This would be simple: 'return JSON.parse(eval(str));'
-          // But eval() not safe. Instead we iteratively strip possible wrapping
-          // single or double quotation marks. There are various cases where this
-          // will not be enough, but we'll add "unwrapping" logic as we find
-          // the examples.
-          let s2 = '';
-          let s3 = '';
-          let str2 = str;
-          while (str2 != (s3 = s2, s2 = str2, str2 = str2?.match(/^(['"])(.*)\1$/m)?.[2]))
-              return JSON.parse(`'${s3}'`);
-      }
-      catch {
-          // let's try one more thing
-          try {
-              return JSON.parse(str.slice(1, -1));
-          }
-          catch {
-              // i am beginning to dislike TS .. ugh no simple way to get error message
-              // see: https://kentcdodds.com/blog/get-a-catch-block-error-message-with-typescript
-              throw new Error(`JSON.parse() error at ${loc} (tried eval and slice)\nString was: ${str}`);
-          }
-      }
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary);
+  } catch (e) {
+    console.log(e);
+    return { error: e };
   }
 }
 
@@ -115,62 +88,11 @@ export function base64ToArrayBuffer(base64) {
     console.log(e);
     return { error: e };
   }
-  return output.join('');
 }
 
 export function ab2str(buf) {
   return new TextDecoder().decode(buf);
 }
-
-/***********************************************************/
-/***********************************************************/
-/***********************************************************/
-
-// export function arrayBufferToBase64(buffer) {
-//   try {
-//     let binary = '';
-//     const bytes = new Uint8Array(buffer);
-//     const len = bytes.byteLength;
-//     for (let i = 0; i < len; i++) {
-//       binary += String.fromCharCode(bytes[i]);
-//     }
-//     return window.btoa(binary);
-//   } catch (e) {
-//     console.log(e);
-//     return { error: e };
-//   }
-// }
-
-
-// export function base64ToArrayBuffer(base64) {
-//   try {
-//     var binary_string = window.atob(base64);
-//     var len = binary_string.length;
-//     var bytes = new Uint8Array(len);
-//     for (var i = 0; i < len; i++) {
-//       bytes[i] = binary_string.charCodeAt(i);
-//     }
-//     return bytes.buffer;
-//   } catch (e) {
-//     console.log(e);
-//     console.log("string was:")
-//     console.log(base64)
-//     return { error: e };
-//   }
-// }
-
-// export function ab2str(buf) {
-//   return String.fromCharCode.apply(null, new Uint8Array(buf));
-// }
-
-// export function str2ab(str) {
-//   const buf = new ArrayBuffer(str.length);
-//   const bufView = new Uint8Array(buf);
-//   for (let i = 0, strLen = str.length; i < strLen; i++) {
-//     bufView[i] = str.charCodeAt(i);
-//   }
-//   return buf;
-// }
 
 export function partition(str, n) {
   var returnArr = [];
@@ -180,6 +102,15 @@ export function partition(str, n) {
   }
   return returnArr;
 };
+
+export function str2ab(str) {
+  const buf = new ArrayBuffer(str.length);
+  const bufView = new Uint8Array(buf);
+  for (let i = 0, strLen = str.length; i < strLen; i++) {
+    bufView[i] = str.charCodeAt(i);
+  }
+  return buf;
+}
 
 export function assemblePayload(data) {
   try {
@@ -208,8 +139,6 @@ export function assemblePayload(data) {
 
 export function extractPayload(payload) {
   try {
-    console.log("extractPayload(): ")
-    console.log(payload)
     const metadataSize = new Uint32Array(payload.slice(0, 4))[0];
     const decoder = new TextDecoder();
     console.log("METADATASIZE: ", metadataSize)
@@ -396,7 +325,6 @@ export async function getImageIds(messages, decKey, lockedKey) {
 }
 
 export async function decrypt(secretKey, contents, outputType = "string") {
-  let ciphertext, iv
   try {
     const ciphertext = typeof contents.content === 'string' ? SB.base64ToArrayBuffer(decodeURIComponent(contents.content)) : contents.content;
     const iv = typeof contents.iv === 'string' ? SB.base64ToArrayBuffer(decodeURIComponent(contents.iv)) : contents.iv;
@@ -413,23 +341,11 @@ export async function decrypt(secretKey, contents, outputType = "string") {
     }
     return { error: false, plaintext: decrypted };
   } catch (e) {
-    console.log(`error in decrypt: ${e}`)
-    console.dir(e);
-    console.trace();
-    console.log("iv:")
-    console.log(iv)
-    console.log("cipher:")
-    console.log(ciphertext)
-    console.log("secret key:");
-    console.log(typeof secretKey);
-    console.log(secretKey);
-    console.log("contents:");
-    console.log(contents);
-    return { error: true, plaintext: `error in decrypt (utils): ${e}` };
+    // console.log(e);
+    return { error: true, plaintext: "(whispered)" };
   }
 }
 
 export function onlyUnique(value, index, self) {
   return self.indexOf(value) === index;
 }
-
