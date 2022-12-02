@@ -3,16 +3,18 @@ import { Trans } from "@lingui/macro";
 import { FormControl, Grid, IconButton, InputAdornment, InputLabel, OutlinedInput, TextField, Typography } from "@mui/material";
 import DownloadIcon from '@mui/icons-material/Download';
 import { StyledButton } from "../../styles/Buttons";
-import { useState, useContext } from "react"
+import { useState } from "react"
 import * as utils from '../../utils/utils';
-import RoomContext from "../../contexts/RoomContext";
+import {observer} from "mobx-react"
+import { SnackabraContext } from "mobx-snackabra-store";
 
-const ExportRoomKeys = (props) => {
-  const roomContext = useContext(RoomContext)
+
+//TODO: optimize this component it is slowing down the loading of the homepage
+const ExportRoomKeys = observer(() => {
+  const sbContext = React.useContext(SnackabraContext);
   const [fileName, setFilename] = useState('SnackabraData');
-
   const getData = (pem) => {
-    return { roomData: roomContext.rooms, contacts: roomContext.contacts, roomMetadata: roomContext.roomMetadata, pem: pem }
+    return { roomData: sbContext.rooms, contacts: sbContext.contacts, roomMetadata: sbContext.rooms, pem: pem }
   }
 
   const exportPemKeys = async () => {
@@ -49,15 +51,13 @@ const ExportRoomKeys = (props) => {
 
   return (
     <Grid id="key_export"
-          xs={12}
           container
           direction="row"
           justifyContent="flex-start"
           alignItems="flex-start">
 
-      {Object.keys(roomContext.roomMetadata).length > 0 || Object.keys(roomContext.contacts).length > 0 || Object.keys(roomContext.rooms).length > 0
-        ? <Grid xs={12}
-                spacing={2}
+      {Object.keys(sbContext.rooms).length > 0
+        ? <Grid spacing={2}
                 container
                 direction="row"
                 justifyContent="flex-start"
@@ -110,6 +110,6 @@ const ExportRoomKeys = (props) => {
         : <Typography variant={'body1'} gutterBottom><Trans id='key export ls empty message'>Your localstorage does not have any data to export!</Trans></Typography>}
     </Grid>
   )
-}
+})
 
 export default ExportRoomKeys

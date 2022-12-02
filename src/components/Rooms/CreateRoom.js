@@ -2,20 +2,28 @@ import * as React from "react"
 import { Trans } from "@lingui/macro";
 import { Grid, TextField } from "@mui/material";
 import { StyledButton } from "../../styles/Buttons";
+import CircularProgress from '@mui/material/CircularProgress';
 import { useState, useContext } from "react"
 import NotificationContext from "../../contexts/NotificationContext";
-import RoomContext from "../../contexts/RoomContext";
+import {observer} from "mobx-react"
+import { SnackabraContext } from "mobx-snackabra-store";
 
 
-const CreateRoom = (props) => {
+const CreateRoom = observer((props) => {
+  const sbContext = React.useContext(SnackabraContext);
   const Notifications = useContext(NotificationContext)
-  const Room = useContext(RoomContext)
   const [secret, setSecret] = useState('');
+  const [creating, setCreating] = useState(false);
 
-  const success = () => {
+  const success = (roomId) => {
     Notifications.setMessage('Room Created!');
     Notifications.setSeverity('success');
     Notifications.setOpen(true)
+    setCreating(false)
+    setTimeout(()=>{
+      window.location.href = window.location.origin+`/${roomId}`
+    }, 750)
+    
   }
 
   const error = () => {
@@ -27,11 +35,12 @@ const CreateRoom = (props) => {
 
   const createRoom = async () => {
     try {
-      await Room.createNewRoom(secret)
+      setCreating(true)
+      const roomId = await sbContext.createRoom(secret)
       if (typeof props?.onClose === 'function') {
         props.onClose()
       }
-      success();
+      success(roomId);
     } catch (e) {
       console.error(e)
       error()
@@ -39,8 +48,7 @@ const CreateRoom = (props) => {
   }
 
   return (
-    <Grid xs={12}
-          spacing={2}
+    <Grid spacing={2}
           container
           direction="row"
           justifyContent="flex-start"
@@ -57,12 +65,21 @@ const CreateRoom = (props) => {
         />
       </Grid>
       <Grid xs={12} item>
-        <StyledButton variant="contained" onClick={createRoom}><Trans id='new room header'>Create New
-          Room</Trans></StyledButton>
+      {creating ?
+            <StyledButton disabled variant={'outlined'}>
+              <CircularProgress color={"success"} size={20} />
+              &nbsp;Creating
+            </StyledButton>
+
+            :
+            <StyledButton variant="contained" onClick={createRoom}><Trans id='new room header'>Create New
+            Room</Trans></StyledButton>
+          }
+
       </Grid>
 
     </Grid>
   )
-}
+})
 
 export default CreateRoom

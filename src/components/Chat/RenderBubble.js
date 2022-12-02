@@ -1,38 +1,32 @@
 import React from 'react'
 import { Grid, Typography } from "@mui/material";
-import { areKeysSame } from "../../utils/crypto";
 import { Bubble } from "react-native-gifted-chat";
-import ActiveChatContext from "../../contexts/ActiveChatContext";
-import { useContext } from "react";
+const SB = require('snackabra')
+const sbCrypto = new SB.SBCrypto();
 
 const RenderBubble = (props) => {
 
-  let newProps = {}
-  let current_user_key
-  try {
-    current_user_key = JSON.parse(props.currentMessage.user._id);
-  } catch (error) {
-    // onsole.log(props.currentMessage.user._id)
-  }
-  const isSameDay = (currentMessage, diffMessage) => {
-    if (!currentMessage || !diffMessage || (!currentMessage.createdAt && !diffMessage.createdAt)) {
-      return false;
-    }
-    let currDt = new Date(currentMessage.createdAt);
-    let diffDt = new Date(diffMessage.createdAt);
-    return (currDt.getDate() - diffDt.getDate() === 0) && (currDt.getMonth() - diffDt.getMonth() === 0) && (currDt.getFullYear() - diffDt.getFullYear() === 0);
-  }
+  const [isVerifiedGuest, setVerifiedGuest] = React.useState(false)
+  const [isAdmin, setIsAdmin] = React.useState(false)
+  const [isMe, setMe] = React.useState(false)
+  const [newProps, setNewProps] = React.useState({})
 
-  const isSameUser = (currentMessage, diffMessage) => {
-    return (diffMessage &&
-      diffMessage.user &&
-      currentMessage &&
-      currentMessage.user &&
-      diffMessage.user._id === currentMessage.user._id);
-  }
-  try {
-    if (props.currentMessage.whispered) {
-      newProps = {
+
+  React.useEffect(() => {
+    let current_user_key = props.currentMessage.user._id !== 'system' ? JSON.parse(props.currentMessage.user._id) : {};
+    const init = async () => {
+      //TODO: this is breaking the server for some reason
+      // const verified = await props.socket.api.postPubKey(current_user_key)
+      setVerifiedGuest(true);
+      setIsAdmin(sbCrypto.compareKeys(props.socket.exportable_owner_pubKey, current_user_key))
+      setMe(sbCrypto.compareKeys(props.socket.exportable_pubKey, current_user_key))
+    }
+    init();
+  }, [props.currentMessage.user._id, props.socket.api, props.socket.exportable_owner_pubKey, props.socket.exportable_pubKey])
+
+  React.useEffect(() => {
+    if (props.currentMessage.encrypted) {
+      setNewProps({
         wrapperStyle: {
           left: {
             backgroundColor: "yellow",
@@ -51,9 +45,9 @@ const RenderBubble = (props) => {
             color: "black",
           }
         }
-      }
-    } else if (props.currentMessage.verified === false) {
-      newProps = {
+      })
+    } else if (!isAdmin && !isVerifiedGuest) {
+      setNewProps({
         wrapperStyle: {
           left: {
             borderColor: "red",
@@ -66,9 +60,9 @@ const RenderBubble = (props) => {
             borderWidth: "4px",
           }
         }
-      }
+      })
     } else if (props.currentMessage.info) {
-      newProps = {
+      setNewProps({
         wrapperStyle: {
           left: {
             borderColor: "black",
@@ -82,11 +76,26 @@ const RenderBubble = (props) => {
             color: "Black",
           },
         }
-      }
+      })
+    } else if (props.currentMessage._id.match(/^sending_/)) {
+      setNewProps({
+        wrapperStyle: {
+          left: {
+            borderColor: "gray",
+            borderStyle: "solid",
+            borderWidth: "4px",
+          },
+          right: {
+            borderColor: "gray",
+            borderStyle: "solid",
+            borderWidth: "4px",
+          }
+        }
+      })
     }
     // else if (props.currentMessage.user._id === JSON.stringify(state.keys.exportable_room_pubKey)) {
-    else if (areKeysSame(current_user_key, props.keys.exportable_owner_pubKey)) {
-      newProps = {
+    else if (isAdmin) {
+      setNewProps({
         wrapperStyle: {
           left: {
             borderColor: "#2ECC40",
@@ -99,11 +108,11 @@ const RenderBubble = (props) => {
             borderWidth: "4px",
           }
         }
-      }
+      })
     }
     //else if (props.currentMessage.user._id === JSON.stringify(state.keys.exportable_verifiedGuest_pubKey)) {
-    else if (areKeysSame(current_user_key, props.keys.exportable_verifiedGuest_pubKey)) {
-      newProps = {
+    else if (isVerifiedGuest) {
+      setNewProps({
         wrapperStyle: {
           left: {
             borderColor: "#B10DC9",
@@ -116,27 +125,54 @@ const RenderBubble = (props) => {
             borderWidth: "4px",
           }
         }
-      }
+      })
     }
-  } catch (e) {
-    console.log(e);
+  }, [isVerifiedGuest, isAdmin, props.currentMessage.encrypted, props.currentMessage.info, props.currentMessage._id])
+
+
+  const isSameDay = (currentMessage, diffMessage) => {
+    if (!currentMessage || !diffMessage || (!currentMessage.createdAt && !diffMessage.createdAt)) {
+      return false;
+    }
+    let currDt = new Date(currentMessage.createdAt);
+    let diffDt = new Date(diffMessage.createdAt);
+    return (currDt.getDate() - diffDt.getDate() === 0) && (currDt.getMonth() - diffDt.getMonth() === 0) && (currDt.getFullYear() - diffDt.getFullYear() === 0);
   }
-  // For username on top
+
+  const isSameUser = (currentMessage, diffMessage) => {
+    return (diffMessage &&
+      diffMessage.user &&
+      currentMessage &&
+      currentMessage.user &&
+      diffMessage.user._id === currentMessage.user._id);
+  }
+  if (isMe && props.currentMessage.sender_username === 'Unnamed') {
+    props.currentMessage.user.name = 'Me'
+    console.log('here')
+  }
   return (
-    <Grid style={{ width: '90%' }}>
-      {(isSameUser(props.currentMessage, props.previousMessage) && isSameDay(props.currentMessage, props.previousMessage)) || areKeysSame(current_user_key, props.keys.exportable_pubKey)
-        ? null
+    <Grid style={{ width: '50%' }}>
+      {(isSameUser(props.currentMessage, props.previousMessage) && isSameDay(props.currentMessage, props.previousMessage))
+        ? ''
         : <Typography variant={'body1'} style={{
           width: '50vw',
           paddingBottom: 3,
           left: 0,
           fontSize: 12,
           backgroundColor: 'transparent',
-          color: '#aaa'
+          color: props.currentMessage.whispered || props.position === 'left' ? '#aaa' : 'white'
         }}>
-          {typeof props.currentMessage.user.name === 'string' ? props.currentMessage.user.name : ''}
+          {props.currentMessage.user.name}
         </Typography>}
       <Bubble
+        textStyle={{
+          right: {
+            color: 'white',
+          },
+          left: {
+            color: 'black'
+          }
+        }}
         {...props}
         {...newProps} />
     </Grid>

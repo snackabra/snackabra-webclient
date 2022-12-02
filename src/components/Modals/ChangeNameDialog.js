@@ -2,22 +2,23 @@ import * as React from "react"
 import ResponsiveDialog from "../ResponsiveDialog";
 import { Grid, OutlinedInput } from "@mui/material";
 import { StyledButton } from "../../styles/Buttons";
-import { useContext, useState, useEffect } from "react";
-import ActiveChatContext from "../../contexts/ActiveChatContext";
+import { useState, useEffect } from "react";
+import { observer } from "mobx-react"
+import { SnackabraContext } from "mobx-snackabra-store";
 
-export default function ChangeNameDialog(props) {
-  const activeChatContext = useContext(ActiveChatContext)
 
+const ChangeNameDialog = observer((props) => {
+  const sbContext = React.useContext(SnackabraContext);
   const [open, setOpen] = useState(props.open);
-  const [username, setUsername] = useState(props.open);
+  const [username, setUsername] = useState(props.name);
 
   useEffect(() => {
     setOpen(props.open)
   }, [props.open])
 
   useEffect(() => {
-    setUsername(activeChatContext.changeUsername.name)
-  }, [activeChatContext.changeUsername.name])
+    setUsername(props.name)
+  }, [props.name])
 
   const updateUsername = (e) => {
     setUsername(e.target.value)
@@ -25,27 +26,24 @@ export default function ChangeNameDialog(props) {
 
   const setMe = () => {
     setUsername('Me')
-    localStorage.setItem(activeChatContext.roomId + '_username', 'Me')
-    activeChatContext.saveUsername(username)
-    setOpen(false)
+    sbContext.username = username
+    props.onClose()
   }
 
-  const saveUserName = () =>{
-    localStorage.setItem(activeChatContext.roomId + '_username', username)
-    activeChatContext.saveUsername(username)
-    setOpen(false)
+  const saveUserName = () => {
+    props.onClose(username, props._id)
   }
 
   return (
-    <ResponsiveDialog title={'Change Username'} open={open}>
+    <ResponsiveDialog title={'Change Username'} open={open} onClose={props.onClose}>
       <Grid container
-            direction="row"
-            justifyContent="space-between"
-            alignItems="flex-start">
-        <Grid item xs={12}>
+        direction="row"
+        justifyContent="space-between"
+        alignItems="flex-start">
+        <Grid item xs={12} sx={{ pb: 1 }}>
           <OutlinedInput placeholder="Please enter text"
-                         value={username}
-                         onChange={updateUsername} fullWidth />
+            value={username}
+            onChange={updateUsername} fullWidth />
         </Grid>
         <StyledButton variant={'outlined'} onClick={saveUserName}>Save</StyledButton>
         <StyledButton variant={'outlined'} onClick={setMe}>Me</StyledButton>
@@ -53,4 +51,6 @@ export default function ChangeNameDialog(props) {
     </ResponsiveDialog>
   )
 
-}
+})
+
+export default ChangeNameDialog

@@ -10,65 +10,68 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import AddCommentIcon from '@mui/icons-material/AddComment';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
+import AddCircleOutlinedIcon from '@mui/icons-material/AddCircleOutlined';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
-import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
-import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import InputAdornment from '@mui/material/InputAdornment';
+import CloseIcon from '@mui/icons-material/Close';
 import Toolbar from '@mui/material/Toolbar';
 import { useContext } from "react";
-import RoomContext from "../contexts/RoomContext";
 import ImportDialog from "../components/Modals/ImportDialog";
 import { useParams } from "react-router-dom";
 import { Grid, Hidden, IconButton, TextField, Typography } from "@mui/material";
 import ChatRoom from "../components/Chat/ChatRoom";
 import CreateRoomDialog from "../components/Modals/CreateRoomDialog";
+import JoinDialog from "../components/Modals/JoinDialog";
 import AdminDialog from "../components/Modals/AdminDialog";
 import { downloadRoomData } from "../utils/utils";
 import Fab from '@mui/material/Fab';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
+import NotificationContext from "../contexts/NotificationContext";
+import RoomMenu from "../components/Rooms/RoomMenu"
+import { observer } from "mobx-react"
+import { SnackabraContext } from "mobx-snackabra-store";
+
 
 const drawerWidth = 240;
 
-const page = window.location;
-
-function ResponsiveDrawer(props) {
-  const roomContext = useContext(RoomContext)
+const ResponsiveDrawer = observer((props) => {
+  const sbContext = React.useContext(SnackabraContext);
+  const Notifications = useContext(NotificationContext)
   let { room_id } = useParams();
   const { window } = props;
+  const [roomId, setRoomId] = React.useState(false);
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [openImportDialog, setOpenImportDialog] = React.useState(false);
   const [openCreateDialog, setOpenCreateDialog] = React.useState(false);
   const [openAdminDialog, setOpenAdminDialog] = React.useState(false);
-  const [rooms, setRooms] = React.useState(roomContext.rooms);
+  const [openJoinDialog, setOpenJoinDialog] = React.useState(false);
   const [editingRoomId, setEditingRoomId] = React.useState(false);
   const [updatedName, setUpdatedName] = React.useState(false);
 
-  React.useEffect(() => {
-    setRooms(roomContext.rooms)
-    //roomContext.updateRoomNames(roomContext.rooms)
-  }, [roomContext.rooms])
+  React.useEffect(()=>{
+      setRoomId(room_id)
+  },[room_id])
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
 
   const getRoomData = (roomId) => {
-    console.log(roomContext.roomMetadata)
-    downloadRoomData(roomId, roomContext.roomMetadata)
+    downloadRoomData(roomId, sbContext.roomMetadata)
   }
 
   const editRoom = (roomId) => {
     setEditingRoomId(roomId)
+    setTimeout(() => {
+      console.log(roomId)
+      document.getElementById(roomId).focus()
+    }, 250);
   }
 
   const submitName = (e) => {
     if (e.keyCode === 13) {
-
-      if (rooms.hasOwnProperty(editingRoomId)) {
-        const _roomMetadata = localStorage.hasOwnProperty('rooms') ? JSON.parse(localStorage.getItem('rooms')) : {}
-        _roomMetadata[editingRoomId] = { name: updatedName };
-        roomContext.updateRoomNames(_roomMetadata)
-        setEditingRoomId(false)
-      }
+      sbContext.roomName = updatedName
+      setEditingRoomId(false)
     }
   }
 
@@ -81,6 +84,16 @@ function ResponsiveDrawer(props) {
       <Toolbar />
       <Divider />
       <List>
+        <ListItem disablePadding>
+          <ListItemButton onClick={() => {
+            setOpenJoinDialog(true)
+          }}>
+            <ListItemIcon>
+              <AddCircleOutlinedIcon />
+            </ListItemIcon>
+            <ListItemText primary={'Join a room'} />
+          </ListItemButton>
+        </ListItem>
         <ListItem disablePadding>
           <ListItemButton onClick={() => {
             setOpenCreateDialog(true)
@@ -101,7 +114,7 @@ function ResponsiveDrawer(props) {
             <ListItemText primary={'Import a room'} />
           </ListItemButton>
         </ListItem>
-        <Hidden xsUp={!roomContext.showAdminTab}>
+        <Hidden xsUp={!sbContext.admin}>
           <ListItem disablePadding>
             <ListItemButton onClick={() => {
               setOpenAdminDialog(true)
@@ -114,48 +127,61 @@ function ResponsiveDrawer(props) {
           </ListItem>
         </Hidden>
         <Divider />
-        {Object.keys(roomContext.roomMetadata).map((room, index) => {
-          const bgColor = room === room_id ? '#ff5c42' : 'inherit';
-          const color = room === room_id ? '#fff' : 'inherit';
-          const roomName = roomContext.roomMetadata[room]?.name || `Room ${index + 1}`
+        {Object.keys(sbContext.rooms).map((room, index) => {
+          const bgColor = room === roomId ? '#ff5c42' : 'inherit';
+          const color = room === roomId ? '#fff' : 'inherit';
+          const roomName = sbContext.rooms[room].name
           return (
             <ListItem key={index} disablePadding sx={{ backgroundColor: bgColor, color: color }}>
               <ListItemButton>
                 <Grid container
-                      direction="row"
-                      justifyContent={'space-between'}
-                      alignItems={'center'}
+                  direction="row"
+                  justifyContent={'space-between'}
+                  alignItems={'center'}
                 >
                   <Grid xs={7} item>
                     {editingRoomId !== room ?
-                      <a href={`/rooms/${room}`}>
+                      <a href={`/${room}`}>
                         <ListItemText primary={roomName} />
                       </a> :
-                      <TextField value={updatedName}
-                                 onKeyDown={submitName}
-                                 onFocus={() => {
-                                   setUpdatedName(roomName)
-                                 }}
-                                 onChange={updateName}
-                                 variant="standard"
-                                 focused autoComplete={false} autoFocus />
+                      <TextField
+                        id={editingRoomId}
+                        value={updatedName}
+                        onKeyDown={submitName}
+                        onFocus={() => {
+                          setUpdatedName('')
+                        }}
+                        onChange={updateName}
+                        variant="standard"
+                        autoComplete="false"
+                        InputProps={{
+                          endAdornment:
+                            <InputAdornment position="end">
+                              <IconButton
+                                aria-label="cancel room rename"
+                                onClick={() => { setEditingRoomId(false) }}
+                                onMouseDown={() => { setEditingRoomId(false) }}
+                                edge="end"
+                              >
+                                <CloseIcon sx={{ color: "#fff" }} />
+                              </IconButton>
+                            </InputAdornment>
+                        }}
+                        autoFocus />
                     }
                   </Grid>
-                  <Grid xs={5}
-                        direction="row"
-                        justifyContent="flex-end"
-                        alignItems="center"
-                        container>
-                    <IconButton onClick={() => {
-                      editRoom(room)
-                    }}>
-                      <EditOutlinedIcon sx={{ cursor: 'pointer', color: color }} />
-                    </IconButton>
-                    <IconButton onClick={() => {
-                      getRoomData(room)
-                    }}>
-                      <FileDownloadOutlinedIcon sx={{ cursor: 'pointer', color: color }} />
-                    </IconButton>
+                  <Grid xs={5} item>
+                    <RoomMenu
+                      socket={sbContext.socket}
+                      selected={room === roomId}
+                      roomId={room}
+                      editRoom={() => {
+                        editRoom(room)
+                      }}
+                      getRoomData={() => {
+                        getRoomData(room)
+                      }}
+                    />
                   </Grid>
                 </Grid>
               </ListItemButton>
@@ -176,21 +202,22 @@ function ResponsiveDrawer(props) {
         setOpenImportDialog(false)
       }} />
       <CreateRoomDialog open={openCreateDialog} onClose={() => {
-        setRooms(roomContext.getRooms())
         setOpenCreateDialog(false)
-        page.reload();
       }} />
       <AdminDialog open={openAdminDialog} onClose={() => {
         setOpenAdminDialog(false)
+      }} />
+      <JoinDialog open={openJoinDialog} onClose={() => {
+        setOpenJoinDialog(false)
       }} />
       <Box
         component="nav"
         sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
       >
         <Fab color="#ff5c42"
-             variant="extended"
-             onClick={handleDrawerToggle}
-             sx={{ mt: 2, position: 'absolute',display: { xs: 'flex-inline', sm: 'none' }, }}>
+          variant="extended"
+          onClick={handleDrawerToggle}
+          sx={{ mt: 2, position: 'absolute', display: { xs: 'flex-inline', sm: 'none' }, }}>
           <Typography variant={'body2'}>Menu</Typography>
           <KeyboardArrowRightIcon />
         </Fab>
@@ -223,20 +250,20 @@ function ResponsiveDrawer(props) {
       </Box>
       <Box
         component="main"
-        sx={{ flexGrow: 1, p: 3, width: { xs: '100%', sm: `calc(100% - ${drawerWidth}px)` } }}
+        sx={{ flexGrow: 1, p: 0, width: { xs: '100%', sm: `calc(100% - ${drawerWidth}px)` } }}
       >
-        <Toolbar />
-        {!room_id && (<Grid>
+        {(!roomId || !sbContext.activeroom) && (<Grid>
+          <Toolbar />
           <Typography variant={'h6'}>Select a room or create a new one to get started.</Typography>
         </Grid>)
         }
-        {room_id &&
-          (<ChatRoom roomId={room_id} />)
+        {(roomId && sbContext) &&
+          (<ChatRoom roomId={roomId ? roomId : sbContext.activeroom} sbContext={sbContext} Notifications={Notifications} />)
         }
       </Box>
     </Box>
   );
-}
+})
 
 
 export default ResponsiveDrawer;

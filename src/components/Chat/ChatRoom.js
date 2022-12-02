@@ -3,226 +3,452 @@
 import * as React from 'react';
 import { GiftedChat } from 'react-native-gifted-chat';
 import RenderBubble from "./RenderBubble";
-import { useContext, useState } from "react";
-import ActiveChatContext from "../../contexts/ActiveChatContext";
 import RenderAttachmentIcon from "./RenderAttachmentIcon";
 import ImageOverlay from "../Modals/ImageOverlay";
 import RenderImage from "./RenderImage";
-import { retrieveData } from "../../utils/ImageProcessor";
 import ChangeNameDialog from "../Modals/ChangeNameDialog";
 import MotdDialog from "../Modals/MotdDialog";
-import NotificationContext from "../../contexts/NotificationContext";
-import { deriveKey, importKey } from "../../utils/crypto";
 import RenderChatFooter from "./RenderChatFooter";
 import RenderTime from "./RenderTime";
-import { Dimensions, View } from "react-native";
+import { View } from "react-native";
 import AttachMenu from "./AttachMenu";
-import RoomContext from "../../contexts/RoomContext";
-import config from "../../config";
 import FirstVisitDialog from "../Modals/FirstVisitDialog";
-import { orderBy, uniqBy } from "lodash";
+import RenderSend from "./RenderSend";
+import RenderComposer from "./RenderComposer";
+import { observer } from "mobx-react"
+import { getStorePromises, retrieveData } from "../../utils/ImageProcessor";
+const SB = require('snackabra')
 
-const ChatRoom = (props) => {
-  const activeChatContext = useContext(ActiveChatContext)
-  const roomContext = useContext(RoomContext)
-  const Notifications = useContext(NotificationContext)
+@observer
+class ChatRoom extends React.Component {
+  sending = {}
+  state = {
+    openPreview: false,
+    openChangeName: false,
+    openFirstVisit: false,
+    changeUserNameProps: {},
+    openMotd: false,
+    anchorEl: null,
+    img: '',
+    imgLoaded: false,
+    messages: [],
+    controlMessages: [],
+    roomId: this.props.roomId || 'offline',
+    files: [],
+    loading: false,
+    uploading: false,
+    user: {},
+    height: 0,
+    visibility: 'visible'
+  }
+  sbContext = this.props.sbContext
 
-  const [openPreview, setOpenPreview] = useState(false);
-  const [openChangeName, setOpenChangeName] = useState(false);
-  const [openFirstVisit, setOpenFirstVisit] = useState(false);
-  const [openMotd, setMotdDialog] = useState(false);
-  const [anchorEl, setAnchorEl] = React.useState(null);
-  const attachMenu = Boolean(anchorEl);
-  const [img, setImg] = useState('');
-  const [imgLoaded, setImgLoaded] = useState(false);
-  const [messages, setMessages] = useState([]);
-  const [controlMessages, setControlMessages] = useState([]);
+  componentDidMount() {
 
-  React.useEffect(() => {
-    const _roomMetadata = JSON.parse(localStorage.getItem('rooms')) || {}
-    if (!_roomMetadata.hasOwnProperty(props.roomId)) {
-      _roomMetadata[props.roomId] = { name: `Room ${Object.keys(_roomMetadata).length + 1}` };
-      roomContext.updateRoomNames(_roomMetadata)
+    const handleResize = () => {
+      this.setState({ height: window.innerHeight })
+
     }
-  }, [])
 
-  React.useEffect(() => {
+    window.addEventListener('resize', handleResize)
+    window.addEventListener('orientationchange', handleResize)
+    handleResize();
 
-    const mergedMesssages = orderBy(
-      uniqBy([...messages, ...activeChatContext.messages], '_id'),
-      ['_id'],
-      ['asc']);
-    setMessages(mergedMesssages)
-  }, [activeChatContext.messages]);
-
-  React.useEffect(() => {
-    const updatedControlMessages = [...controlMessages, ...activeChatContext.controlMessages];
-    setControlMessages(updatedControlMessages)
-  }, [activeChatContext.controlMessages]);
-
-  React.useEffect(() => {
-    roomContext.goToRoom(props.roomId)
-    activeChatContext.changeRoomId(props.roomId)
-    window.onmessage = async (e) => {
-      //console.log(e)
-      if (e.origin !== 'https://privacy.app') {
-        return;
+    // reconnect when window comes into focus and the state of the socket is not opened
+    document.addEventListener("visibilitychange", () => {
+      if (this.state.visibility === 'hidden' && document.visibilityState === 'visible' && this.sbContext.socket?.status !== 'OPEN') {
+        this.connect();
       }
-      try {
-        // TODO lets discuss whats going on here
-        let payload = JSON.parse(e.data);
-        if (payload.hasOwnProperty('localStorage')) {
-          e.source.postMessage(JSON.stringify(localStorage));
-        }
-        for (let room in payload) {
-          if (room.split('.')[1] === 'name') {
-            let rooms = roomContext.getRooms();
-            rooms[room.split('.')[0]] = { name: payload[room] };
-            roomContext.updateRoomNames(rooms, room);
-          } else if (room.split('.')[1] === 'keyRotation') {
-            fetch(config.ROOM_SERVER + props.roomId + "/ownerKeyRotation", { credentials: 'include' });
-          } else {
-            localStorage.setItem(room, JSON.stringify(payload[room]));
-          }
-        }
-      } catch (e) {
-        console.log(e);
-      }
-    }
-    if (localStorage.getItem(props.roomId) === null && props.roomId !== '') {
-      setOpenFirstVisit(true);
+      this.setState({ visibility: document.visibilityState })
+    })
+    if (!this.sbContext.rooms[this.props.roomId]?.key) {
+      console.log(JSON.stringify(this.sbContext.activeroom))
+      console.log(this.sbContext.rooms[this.props.roomId]?.key)
+      this.setState({ openFirstVisit: true })
     } else {
-      activeChatContext.joinRoom(props.roomId)
+      this.connect();
     }
-  }, [])
-
-
-  const notify = (message, severity) => {
-    Notifications.setMessage(message);
-    Notifications.setSeverity(severity);
-    Notifications.setOpen(true)
   }
 
-  const openImageOverlay = (message) => {
-    setImg(message.image);
-    setOpenPreview(true)
-    try {
+  connect = (username) => {
+    const room = this.sbContext.getExistingRoom(this.props.roomId)
+    const options = {
+      roomId: this.props.roomId,
+      username: username ? username : 'Unnamed',
+      key: room?.key ? room?.key : null,
+      secret: null,
+      messageCallback: this.recieveMessages
+    }
+    this.sbContext.connect(options).then(() => {
+      this.setState({ messages: this.sbContext.messages }, () => {
+        this.sbContext.getOldMessages(0).then((r) => {
+          let controlMessages = [];
+          let messages = [];
+          r.forEach((m, i) => {
+            if (!m.control) {
+              const user_pubKey = m.user._id;
+              m.user._id = JSON.stringify(m.user._id);
+              m.user.name = this.sbContext.contacts[user_pubKey.x + ' ' + user_pubKey.y] !== undefined ? this.sbContext.contacts[user_pubKey.x + ' ' + user_pubKey.y] : m.user.name;
+              m.sender_username = m.user.name;
+              m.createdAt = new Date(parseInt(m.timestampPrefix, 2));
+              messages.push(m)
+            } else {
+              controlMessages.push(m)
+            }
 
-      retrieveData(message, controlMessages).then((data) => {
+          })
+          this.setState({ controlMessages: controlMessages })
+          if (this.sbContext.motd !== '') {
+            this.sendSystemInfo('MOTD: ' + this.props.sbContext.motd, (systemMessage) => {
+              this.sbContext.messages = messages
+              this.setState({ messages: [...messages, systemMessage] })
+            })
+          } else {
+            this.sbContext.messages = messages
+            this.setState({ messages: [...messages] })
+          }
+
+        })
+      })
+    })
+  }
+
+  recieveMessages = (msg) => {
+    if (msg) {
+      console.log(msg)
+      if (!msg.control) {
+        const messages = this.state.messages.reduce((acc, curr) => {
+          if (!this.sending.hasOwnProperty(curr._id)) {
+            acc.push(curr);
+          } else {
+            delete this.sending[curr._id]
+          }
+          return acc;
+        }, []);
+        this.setState({ messages: [...messages, msg] })
+      } else {
+        this.setState({ controlMessages: [...this.state.controlMessages, msg] })
+      }
+
+    }
+  }
+
+  notify = (message, severity) => {
+    this.props.Notifications.setMessage(message);
+    this.props.Notifications.setSeverity(severity);
+    this.props.Notifications.setOpen(true)
+  }
+
+  openImageOverlay = (message) => {
+    this.setState({ img: message.image, openPreview: true })
+    try {
+      retrieveData(message, this.state.controlMessages).then((data) => {
+        console.log(data)
         if (data.hasOwnProperty('error')) {
-          activeChatContext.sendSystemMessage('Could not open image: ' + data['error']);
+          //activeChatContext.sendSystemMessage('Could not open image: ' + data['error']);
         } else {
-          setImgLoaded(true);
-          setImg(data['url']);
+          this.setState({ img: data['url'], imgLoaded: true })
         }
       })
     } catch (error) {
       console.log('openPreview() exception: ' + error.message);
-      activeChatContext.sendSystemMessage('Could not open image (' + error.message + ')');
-      setOpenPreview(false)
+      //activeChatContext.sendSystemMessage('Could not open image (' + error.message + ')');
+      this.setState({ openPreview: false })
     }
   }
 
-  const imageOverlayClosed = () => {
-    setImg('')
-    setImgLoaded(false);
-    setOpenPreview(false)
+  imageOverlayClosed = () => {
+    this.setState({ openPreview: false, img: '', imgLoaded: false })
   }
 
-  const promptUsername = () => {
-    setOpenChangeName(true)
+  promptUsername = (context) => {
+    this.setState({ openChangeName: true, changeUserNameProps: context })
   }
 
 
-  const handleReply = async (user) => {
+  handleReply = (user) => {
     try {
-      if (activeChatContext.roomOwner) {
-
-        const recipient_pubKey = await importKey("jwk", JSON.parse(user._id), "ECDH", true, []);
-        const reply_encryptionKey = await deriveKey(activeChatContext.keys.privateKey, recipient_pubKey, "AES", false, ["encrypt", "decrypt"])
-        activeChatContext.setReplyTo(user)
-        activeChatContext.setReplyEncryptionKey(reply_encryptionKey)
+      if (this.sbContext.roomOwner) {
+        this.sbContext.handleReply(user)
       } else {
-        notify('Whisper is only for room owners.', 'info')
+        this.notify('Whisper is only for room owners.', 'info')
       }
     } catch (e) {
       console.log(e);
-      notify(e.message, 'error')
+      this.notify(e.message, 'error')
     }
   }
 
-  const getOldMessages = () => {
-    activeChatContext.getOldMessages()
+  loadFiles = async (loaded) => {
+    this.setState({ loading: false, files: loaded })
+  }
+  //TODO: for images render in chat and then replace with received message
+  sendFiles = async (giftedMessage) => {
+    this.setState({ uploading: true })
+    const fileMessages = [];
+    const filesArray = [];
+    this.state.files.forEach(async (file, i) => {
+
+      const message = {
+        createdAt: new Date().toString(),
+        text: "",
+        image: file.url,
+        user: this.sbContext.user,
+        _id: 'sending_' + giftedMessage[0]._id
+      }
+      this.sending[message._id] = message._id
+      fileMessages.push(message)
+      filesArray.push(file)
+    })
+    this.setState({ messages: [...this.state.messages, ...fileMessages] })
+    for (let x in filesArray) {
+      const sbImage = filesArray[x]
+      const storePromises = await getStorePromises(sbImage, this.sbContext.activeroom)
+      let sbm = new SB.SBMessage(this.sbContext.socket)
+      // populate
+      sbm.contents.image = this.state.files[x].url
+      const imageMetaData = {
+        imageId: sbImage.fullId,
+        imageKey: sbImage.fullKey,
+        previewId: sbImage.previewId,
+        previewKey: sbImage.previewKey,
+      }
+      sbm.contents.imageMetaData = imageMetaData;
+      sbm.send(); // and no we don't need to wait
+      Promise.all([storePromises.previewStorePromise]).then((previewVerification) => {
+        console.log(previewVerification)
+        console.info('Preview image uploaded')
+        // now the preview (up to 2MiB) has been safely stored
+        let controlMessage = new SB.SBMessage(this.sbContext.socket);
+        // controlMessage.imageMetaData = imageMetaData;
+        controlMessage.contents.control = true;
+        controlMessage.contents.verificationToken = previewVerification;
+        controlMessage.contents.id = imageMetaData.previewId;
+        controlMessage.send();
+      }).finally(() => {
+        queueMicrotask(() => {
+          storePromises.fullStorePromise.then(() => {
+            console.info('Full image uploaded')
+          })
+        });
+        if (Number(x) === filesArray.length - 1) {
+          this.setState({ uploading: false })
+          this.removeInputFiles()
+        }
+      })
+    }
+    // const files = await saveImage()
+    // Promise.all(arrayBufferPromises).then((a) => {
+    //   a.forEach((ab, i) => {
+    //     // resize needs to be done
+    //     Promise.all([
+    //       // these return SBObjectHandle
+    //       this.sbContext.SB.storage.storeObject(ab, 'f', this.sbContext.activeroom),
+    //       this.sbContext.SB.storage.storeObject(ab, 'p', this.sbContext.activeroom)
+    //     ]).then((o) => {
+    //       // mtg: We are sending the message here missing the id of the image, I think we can use the signature 
+    //       let sbm = new SB.SBMessage(this.sbContext.socket)
+    //       // populate
+    //       sbm.contents.image = this.state.files[i].restrictedUrl
+    //       const imageMetaData = {
+    //         imageId: o[0].id,
+    //         imageKey: o[0].key,
+    //         previewId: o[1].id,
+    //         previewKey: o[1].key,
+    //       }
+    //       sbm.contents.imageMetaData = imageMetaData;
+    //       sbm.send(); // and no we don't need to wait
+    //       o[1].verification.then((previewVerification) => {
+    //         // now the preview (up to 2MiB) has been safely stored
+    //         let controlMessage = new SB.SBMessage(this.sbContext.socket);
+    //         // controlMessage.imageMetaData = imageMetaData;
+    //         controlMessage.contents.control = true;
+    //         controlMessage.contents.verificationToken = previewVerification;
+    //         controlMessage.contents.id = o[1].id;
+    //         controlMessage.send();
+    //       }).finally(() => {
+    //         if (i === arrayBufferPromises.length - 1) {
+    //           this.setState({ uploading: false })
+    //           this.removeInputFiles()
+    //         }
+    //       })
+    //     })
+
+    //   })
+
+    // })
   }
 
-  const sendMessages = (messages) => {
-    activeChatContext.sendMessage(messages);
-    removeInputFiles();
+  sendMessages = async (giftedMessage) => {
+    if (giftedMessage[0].text === "") {
+      if (this.state.files.length > 0) {
+        this.sendFiles(giftedMessage)
+      }
+    } else {
+      giftedMessage[0]._id = 'sending_' + giftedMessage[0]._id;
+      const msg_id = giftedMessage[0]._id;
+
+      giftedMessage[0].user = { _id: JSON.stringify(this.sbContext.socket.exportable_pubKey), name: this.sbContext.username }
+      this.setState({ messages: [...this.state.messages, giftedMessage[0]] })
+      this.sending[msg_id] = msg_id
+      let sbm = new SB.SBMessage(this.sbContext.socket, giftedMessage[0].text)
+      sbm.send();
+
+    }
   }
 
-  const getExportablePubKey = () => {
-    return activeChatContext.keys.exportable_pubKey;
+  sendSystemInfo = (msg_string, callback) => {
+    const systemMessage = {
+      _id: this.state.messages.length,
+      text: msg_string,
+      user: { _id: 'system', name: 'System Message' },
+      whispered: false,
+      verified: true,
+      info: true
+    }
+    this.setState({
+      messages: [...this.state.messages, systemMessage]
+    }, () => {
+      if (callback) {
+        callback(systemMessage)
+      }
+    })
   }
 
-  const openAttachMenu = (e) => {
-    setAnchorEl(e.currentTarget);
+  sendSystemMessage = (message) => {
+    this.setState({
+      messages: [...this.state.messages, {
+        _id: this.state.messages.length,
+        user: { _id: 'system', name: 'System Message' },
+        text: message,
+        system: true
+      }]
+    })
   }
 
-  const handleClose = () => {
-    setAnchorEl(null);
+  openAttachMenu = (e) => {
+    this.setState({ anchorEl: e.currentTarget });
+  }
+
+  handleClose = () => {
+    this.setState({ anchorEl: null });
   };
 
-  const removeInputFiles = () => {
-    activeChatContext.removeInputFiles()
-    activeChatContext.setImgUrl(null)
+  removeInputFiles = () => {
+    if (document.getElementById('fileInput')) {
+
+      document.getElementById('fileInput').value = '';
+    }
+    this.setState({ files: [] })
   }
-  const { height } = Dimensions.get('window')
-  return (
-    <View style={{ flexGrow: 1, flexBasis: 'fit-content', height: height - 160 }}>
-      <ImageOverlay open={openPreview} img={img} imgLoaded={imgLoaded} onClose={imageOverlayClosed} />
-      <ChangeNameDialog open={openChangeName} />
-      <MotdDialog open={openMotd} roomName={props.roomName} />
-      <AttachMenu open={attachMenu} handleClose={handleClose} />
-      <FirstVisitDialog open={openFirstVisit} onClose={() => {
-        setOpenFirstVisit(false)
-      }} roomId={props.roomId} />
-      <GiftedChat
-        messages={messages}
-        onSend={sendMessages}
-        // timeFormat='L LT'
-        user={{ _id: JSON.stringify(getExportablePubKey()) }}
-        inverted={false}
-        alwaysShowSend={true}
-        loadEarlier={activeChatContext.moreMessages}
-        isLoadingEarlier={activeChatContext.loadingMore}
-        onLoadEarlier={getOldMessages}
-        renderActions={(props) => {
-          return <RenderAttachmentIcon {...props} openAttachMenu={openAttachMenu} />
-        }}
-        // renderUsernameOnMessage={true}
-        // infiniteScroll={true}   // This is not supported for web yet
-        renderMessageImage={(props) => {
-          return <RenderImage {...props} openImageOverlay={openImageOverlay} />
-        }}
-        scrollToBottom={true}
-        showUserAvatar={true}
-        onPressAvatar={promptUsername}
-        onLongPressAvatar={(context) => {
-          return handleReply(context)
-        }}
-        renderChatFooter={() => {
-          return <RenderChatFooter removeInputFiles={removeInputFiles} imgUrl={activeChatContext.imgUrl} />
-        }}
-        renderBubble={(props) => {
-          return <RenderBubble {...props} keys={activeChatContext.getKeys()} />
-        }}
-        onLongPress={() => false}
-        renderTime={RenderTime}
 
-      />
-    </View>
-  )
+  showLoading = () => {
+    this.setState({ loading: false })
+  }
 
+  saveUsername = (newUsername, _id) => {
+    if (_id === this.sbContext.user._id) {
+      console.log('its me!!!')
+      this.sbContext.username = newUsername;
+    }
+    const contacts = this.sbContext.contacts
+    const user_pubKey = JSON.parse(_id);
+    contacts[user_pubKey.x + ' ' + user_pubKey.y] = newUsername;
+    this.sbContext.contacts = contacts;
+    const _messages = this.state.messages.map((message) => {
+      if (message.user._id === _id) {
+        message.user.name = newUsername;
+        message.sender_username = newUsername;
+      }
+      return message;
+    });
+    this.setState({ messages: [] }, () => {
+      this.setState({ messages: _messages, changeUserNameProps: {} })
+      this.sbContext.messages = _messages;
+    });
+    // setTimeout(()=>{
+    //   window.location.reload()
+    // }, 1000)
+
+  }
+
+  updateFiles = (files) => {
+    this.setState({ files: files })
+  }
+
+  render() {
+    const attachMenu = Boolean(this.state.anchorEl);
+    return (
+
+      <View style={{
+        flexGrow: 1,
+        flexBasis: 'fit-content',
+        height: this.state.height - 48
+      }}>
+        <ImageOverlay open={this.state.openPreview} img={this.state.img} imgLoaded={this.state.imgLoaded}
+          onClose={this.imageOverlayClosed} />
+        <ChangeNameDialog {...this.state.changeUserNameProps} open={this.state.openChangeName} onClose={(userName, _id) => {
+          this.saveUsername(userName, _id)
+          this.setState({ openChangeName: false })
+        }} />
+        <MotdDialog open={this.state.openMotd} roomName={this.props.roomName} />
+        <AttachMenu open={attachMenu} handleClose={this.handleClose} />
+        <FirstVisitDialog open={this.state.openFirstVisit} sbContext={this.sbContext} messageCallback={this.recieveMessages} onClose={(username) => {
+          this.setState({ openFirstVisit: false })
+          this.connect(username)
+        }} roomId={this.state.roomId} />
+        <GiftedChat
+          messages={this.state.messages}
+          onSend={this.sendMessages}
+          // timeFormat='L LT'
+          user={this.sbContext.user}
+          inverted={false}
+          alwaysShowSend={true}
+          loadEarlier={this.props.sbContext.moreMessages}
+          isLoadingEarlier={this.props.sbContext.loadingMore}
+          onLoadEarlier={this.getOldMessages}
+          renderActions={(props) => {
+            return <RenderAttachmentIcon
+              {...props}
+              addFile={this.loadFiles}
+              openAttachMenu={this.openAttachMenu}
+              showLoading={this.showLoading} />
+          }}
+          //renderUsernameOnMessage={true}
+          // infiniteScroll={true}   // This is not supported for web yet
+          renderMessageImage={(props) => {
+            return <RenderImage {...props} openImageOverlay={this.openImageOverlay} />
+          }}
+          scrollToBottom={true}
+          showUserAvatar={true}
+          onPressAvatar={this.promptUsername}
+          onLongPressAvatar={(context) => {
+            return this.handleReply(context)
+          }}
+          renderChatFooter={() => {
+            return <RenderChatFooter removeInputFiles={this.removeInputFiles}
+              files={this.state.files}
+              setFiles={this.updateFiles}
+              uploading={this.state.uploading}
+              loading={this.state.loading} />
+          }}
+          renderBubble={(props) => {
+            return <RenderBubble {...props} keys={{ ...this.props.sbContext.socket.keys, ...this.props.sbContext.userKey }}
+              socket={this.props.sbContext.socket}
+              SB={this.SB} />
+          }}
+          renderSend={RenderSend}
+          renderComposer={(props) => {
+            return <RenderComposer {...props} filesAttached={this.state.files.length > 0} />
+          }}
+          onLongPress={() => false}
+          renderTime={RenderTime}
+
+        />
+      </View>
+
+    )
+  }
 }
 
 export default ChatRoom;

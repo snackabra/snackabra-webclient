@@ -1,47 +1,52 @@
 import * as React from 'react';
 import { IconButton } from "@mui/material";
 import AttachmentIcon from '@mui/icons-material/Attachment';
-import ActiveChatContext from "../../contexts/ActiveChatContext";
+import { SBImage } from "../../utils/ImageProcessor";
+
+const getSbImage = (file) => {
+  return new Promise((resolve) => {
+    const sbImage = new SBImage(file);
+    queueMicrotask(() => {
+      const SBImageCanvas = document.createElement('canvas');
+      sbImage.loadToCanvas(SBImageCanvas).then((c) => {
+        sbImage.aspectRatio.then((r) => {
+          sbImage.aspectRatio = r
+          resolve(sbImage)
+        });
+      });
+    });
+
+  })
+}
 
 function RenderAttachmentIcon(props) {
-  const activeChatContext = React.useContext(ActiveChatContext)
-  const [file, setFile] = React.useState(''); // TODO - why is 'file' not used?
 
-  let fileReader;
-
-  const selectPhoto = (e) => {
+  const selectFiles = async (e) => {
+    props.showLoading()
     try {
-      const t0 = new Date().getTime();
-      const photo = e.target.files[0];
-      console.log("Asked to preview file:");
-      console.log(photo);
-      fileReader = new FileReader();
-      fileReader.onloadend = handleFileRead;
-      fileReader.readAsText(photo);
-      activeChatContext.previewImage(photo, e.target.files[0]); // psm ... hm they are the same?
-      const t1 = new Date().getTime();
-      console.log(`... done load/preview ... took ${t1 - t0} milliseconds`);
-      if(typeof props.handleClose === 'function'){
-        props.handleClose()
+      const files = []
+      for (let i in e.target.files) {
+        if (typeof e.target.files[i] === 'object') {
+          const attachment = await getSbImage(e.target.files[i])
+          files.push(attachment)
+
+        }
       }
-      setFile('')
+      props.addFile(files)
     } catch (e) {
       console.log(e)
     }
   }
 
-  const handleFileRead = (e) => {
-    const content = fileReader.result;
-    setFile(content)
-  };
-
   return (
     <IconButton component="label" id={'attach-menu'} aria-label="attach" size="large">
       <AttachmentIcon />
       <input
-        onChange={selectPhoto}
+        id="fileInput"
+        onChange={selectFiles}
         type="file"
         hidden
+        multiple
       />
     </IconButton>
   )

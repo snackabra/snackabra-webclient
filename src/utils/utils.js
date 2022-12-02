@@ -26,6 +26,8 @@
 
 
 import config from "../config";
+const SB = require('snackabra')
+const sbCrypto = new SB.SBCrypto();
 
 export function extractPayloadV1(payload) {
   try {
@@ -100,201 +102,24 @@ export function jsonParseWrapper(str, loc) {
 }
 
 
-// for later use - message ID formats
-const messageIdRegex = /([A-Za-z0-9+/_\-=]{64})([01]{42})/;
-// Strict b64 check:
-// const b64_regex = new RegExp('^(?:[A-Za-z0-9+/_\-]{4})*(?:[A-Za-z0-9+/_\-]{2}==|[A-Za-z0-9+/_\-]{3}=)?$')
-// But we will go (very) lenient:
-const b64_regex = /^([A-Za-z0-9+/_\-=]*)$/;
-// stricter - only accepts URI friendly:
-const url_regex = /^([A-Za-z0-9_\-=]*)$/;
-/**
- * Returns 'true' if (and only if) string is well-formed base64.
- * Works same on browsers and nodejs.
- */
-function _assertBase64(base64) {
-    // return (b64_regex.exec(base64)?.[0] === base64);
-    const z = b64_regex.exec(base64);
-    if (z)
-        return (z[0] === base64);
-    else
-        return false;
-}
-// refactor helper - replace encodeURIComponent everywhere
-function ensureSafe(base64) {
-    const z = b64_regex.exec(base64);
-    _sb_assert((z) && (z[0] === base64), 'ensureSafe() tripped: something is not URI safe');
-    return base64;
-}
-
-/**
- * Standardized 'str2ab()' function, string to array buffer.
- * This assumes on byte per character.
- *
- * @param {string} string
- * @return {Uint8Array} buffer
- */
-export function str2ab(string) {
-  return new TextEncoder().encode(string);
-}
-/**
-* Standardized 'ab2str()' function, array buffer to string.
-* This assumes one byte per character.
-*
-* @param {Uint8Array} buffer
-* @return {string} string
-*/
-export function ab2str(buffer) {
-  return new TextDecoder('utf-8').decode(buffer);
-}
-/**
-* based on https://github.com/qwtel/base64-encoding/blob/master/base64-js.ts
-*/
-const b64lookup = [];
-const urlLookup = [];
-const revLookup = [];
-const CODE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-const CODE_B64 = CODE + '+/';
-const CODE_URL = CODE + '-_';
-const PAD = '=';
-const MAX_CHUNK_LENGTH = 16383; // must be multiple of 3
-for (let i = 0, len = CODE_B64.length; i < len; ++i) {
-  b64lookup[i] = CODE_B64[i];
-  urlLookup[i] = CODE_URL[i];
-  revLookup[CODE_B64.charCodeAt(i)] = i;
-}
-revLookup['-'.charCodeAt(0)] = 62; //
-revLookup['_'.charCodeAt(0)] = 63;
-function getLens(b64) {
-  const len = b64.length;
-  let validLen = b64.indexOf(PAD);
-  if (validLen === -1)
-      validLen = len;
-  const placeHoldersLen = validLen === len ? 0 : 4 - (validLen % 4);
-  return [validLen, placeHoldersLen];
-}
-function _byteLength(validLen, placeHoldersLen) {
-  return ((validLen + placeHoldersLen) * 3 / 4) - placeHoldersLen;
-}
-/**
-* Standardized 'atob()' function, e.g. takes the a Base64 encoded
-* input and decodes it. Note: always returns Uint8Array.
-* Accepts both regular Base64 and the URL-friendly variant,
-* where `+` => `-`, `/` => `_`, and the padding character is omitted.
-*
-* @param {str} base64 string in either regular or URL-friendly representation.
-* @return {Uint8Array} returns decoded binary result
-*/
-export function base64ToArrayBuffer(str) {
-  if (!_assertBase64(str))
-      throw new Error(`invalid character in string '${str}'`);
-  let tmp;
-  switch (str.length % 4) {
-      case 2:
-          str += '==';
-          break;
-      case 3:
-          str += '=';
-          break;
-  }
-  const [validLen, placeHoldersLen] = getLens(str);
-  const arr = new Uint8Array(_byteLength(validLen, placeHoldersLen));
-  let curByte = 0;
-  const len = placeHoldersLen > 0 ? validLen - 4 : validLen;
-  let i;
-  for (i = 0; i < len; i += 4) {
-      const r0 = revLookup[str.charCodeAt(i)];
-      const r1 = revLookup[str.charCodeAt(i + 1)];
-      const r2 = revLookup[str.charCodeAt(i + 2)];
-      const r3 = revLookup[str.charCodeAt(i + 3)];
-      tmp = (r0 << 18) | (r1 << 12) | (r2 << 6) | (r3);
-      arr[curByte++] = (tmp >> 16) & 0xff;
-      arr[curByte++] = (tmp >> 8) & 0xff;
-      arr[curByte++] = (tmp) & 0xff;
-  }
-  if (placeHoldersLen === 2) {
-      const r0 = revLookup[str.charCodeAt(i)];
-      const r1 = revLookup[str.charCodeAt(i + 1)];
-      tmp = (r0 << 2) | (r1 >> 4);
-      arr[curByte++] = tmp & 0xff;
-  }
-  if (placeHoldersLen === 1) {
-      const r0 = revLookup[str.charCodeAt(i)];
-      const r1 = revLookup[str.charCodeAt(i + 1)];
-      const r2 = revLookup[str.charCodeAt(i + 2)];
-      tmp = (r0 << 10) | (r1 << 4) | (r2 >> 2);
-      arr[curByte++] = (tmp >> 8) & 0xff;
-      arr[curByte++] = tmp & 0xff;
-  }
-  return arr;
-}
-function tripletToBase64(lookup, num) {
-  return (lookup[num >> 18 & 0x3f] +
-      lookup[num >> 12 & 0x3f] +
-      lookup[num >> 6 & 0x3f] +
-      lookup[num & 0x3f]);
-}
-function encodeChunk(lookup, view, start, end) {
-  let tmp;
-  const output = new Array((end - start) / 3);
-  for (let i = start, j = 0; i < end; i += 3, j++) {
-      tmp =
-          ((view.getUint8(i) << 16) & 0xff0000) +
-              ((view.getUint8(i + 1) << 8) & 0x00ff00) +
-              (view.getUint8(i + 2) & 0x0000ff);
-      output[j] = tripletToBase64(lookup, tmp);
+export function base64ToArrayBuffer(base64) {
+  try {
+    var binary_string = str2ab(base64);
+    var len = binary_string.length;
+    var bytes = new Uint8Array(len);
+    for (var i = 0; i < len; i++) {
+      bytes[i] = binary_string.charCodeAt(i);
+    }
+    return bytes.buffer;
+  } catch (e) {
+    console.log(e);
+    return { error: e };
   }
   return output.join('');
 }
 
-const bs2dv = (bs) => bs instanceof ArrayBuffer
-  ? new DataView(bs)
-  : new DataView(bs.buffer, bs.byteOffset, bs.byteLength);
-  
-/**
-* Standardized 'btoa()'-like function, e.g., takes a binary string
-* ('b') and returns a Base64 encoded version ('a' used to be short
-* for 'ascii').
-*
-* @param {bufferSource} ArrayBuffer buffer
-* @return {string} base64 string
-*/
-export function arrayBufferToBase64(buffer) {
-  if (buffer == null) {
-      _sb_exception('L509', 'arrayBufferToBase64() -> null paramater');
-      return '';
-  }
-  else {
-      // const view = bs2dv(bufferSource)
-      // const view = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
-      // console.log(buffer)
-      // const view = new DataView(buffer)
-      const view = bs2dv(buffer);
-      const len = view.byteLength;
-      const extraBytes = len % 3; // if we have 1 byte left, pad 2 bytes
-      const len2 = len - extraBytes;
-      const parts = new Array(Math.floor(len2 / MAX_CHUNK_LENGTH) + Math.sign(extraBytes));
-      const lookup = urlLookup; // Note: yes this will break regular atob()
-      const pad = '';
-      let j = 0;
-      for (let i = 0; i < len2; i += MAX_CHUNK_LENGTH) {
-          parts[j++] = encodeChunk(lookup, view, i, (i + MAX_CHUNK_LENGTH) > len2 ? len2 : (i + MAX_CHUNK_LENGTH));
-      }
-      if (extraBytes === 1) {
-          const tmp = view.getUint8(len - 1);
-          parts[j] = (lookup[tmp >> 2] +
-              lookup[(tmp << 4) & 0x3f] +
-              pad + pad);
-      }
-      else if (extraBytes === 2) {
-          const tmp = (view.getUint8(len - 2) << 8) + view.getUint8(len - 1);
-          parts[j] = (lookup[tmp >> 10] +
-              lookup[(tmp >> 4) & 0x3f] +
-              lookup[(tmp << 2) & 0x3f] +
-              pad);
-      }
-      return parts.join('');
-  }
+export function ab2str(buf) {
+  return new TextDecoder().decode(buf);
 }
 
 /***********************************************************/
@@ -523,15 +348,15 @@ export async function downloadRoomData(roomId, rooms) {
     let dataJson = JSON.parse(dataString);
     let room_lockedKey_string = localStorage.getItem(roomId + "_lockedKey");
     let decKey_string = dataJson["encryptionKey"];
-    let decKey = await crypto.subtle.importKey("jwk", JSON.parse(decKey_string), { name: "AES-GCM" }, false, ["decrypt"]);
+    let decKey = await sbCrypto.importKey("jwk", JSON.parse(decKey_string), 'AES', false, ["decrypt"]);
     let room_lockedKey = null;
     if (room_lockedKey_string != null) {
       console.log("Found locked key in localstorage")
-      room_lockedKey = await crypto.subtle.importKey("jwk", JSON.parse(room_lockedKey_string), { name: "AES-GCM" }, false, ["decrypt"]);
+      room_lockedKey = await sbCrypto.importKey("jwk", JSON.parse(room_lockedKey_string), 'AES', false, ["decrypt"]);
     }
     console.log("Imported decryption keys", decKey, room_lockedKey)
     let imageData = await getImageIds(dataJson, decKey, room_lockedKey);
-    imageData["target"] = "s4.privacy.app";
+    imageData["target"] = window.location.hostname;
     let imagedataString = JSON.stringify(imageData);
     const name = rooms[roomId]?.name ? rooms[roomId]?.name : 'Snackabra';
     downloadFile(imagedataString, name + "_storage.txt")
@@ -559,7 +384,7 @@ export async function getImageIds(messages, decKey, lockedKey) {
         // console.log(_json_msg)
         if (_json_msg.hasOwnProperty('control')) {
           console.log(_json_msg)
-          unwrapped_messages[_json_msg["id"] + "." + (_json_msg.hasOwnProperty("type") ? _json_msg["type"] : "")] = _json_msg['verificationToken'];
+          unwrapped_messages[_json_msg["id"] + "." + (_json_msg.hasOwnProperty("type") ? _json_msg["type"] : "p")] = _json_msg['verificationToken'];
         }
       }
     } catch (e) {
@@ -573,14 +398,8 @@ export async function getImageIds(messages, decKey, lockedKey) {
 export async function decrypt(secretKey, contents, outputType = "string") {
   let ciphertext, iv
   try {
-    // const ciphertext = typeof contents.content === 'string' ? base64ToArrayBuffer(decodeURIComponent(contents.content)) : contents.content;
-    ciphertext = typeof contents.content === 'string' ? base64ToArrayBuffer(contents.content) : contents.content;
-    // const iv = typeof contents.iv === 'string' ? base64ToArrayBuffer(decodeURIComponent(contents.iv)) : contents.iv;
-    // const iv = typeof contents.iv === 'string' ? base64ToArrayBuffer(contents.iv) : contents.iv;
-    console.log(contents.iv)
-    iv = typeof contents.iv === 'string'
-      ? base64ToArrayBuffer(contents.iv)
-      : new Uint8Array(Array.from(Object.values(contents.iv))); // sigh want snackabra.ts soon ...
+    const ciphertext = typeof contents.content === 'string' ? SB.base64ToArrayBuffer(decodeURIComponent(contents.content)) : contents.content;
+    const iv = typeof contents.iv === 'string' ? SB.base64ToArrayBuffer(decodeURIComponent(contents.iv)) : contents.iv;
     let decrypted = await window.crypto.subtle.decrypt(
       {
         name: "AES-GCM",

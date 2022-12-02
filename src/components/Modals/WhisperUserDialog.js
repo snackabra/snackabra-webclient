@@ -3,10 +3,8 @@ import ResponsiveDialog from "../ResponsiveDialog";
 import { Grid, TextField } from "@mui/material";
 import { StyledButton } from "../../styles/Buttons";
 import { useContext, useState, useEffect } from "react";
-import ActiveChatContext from "../../contexts/ActiveChatContext";
 
 export default function WhisperUserDialog(props) {
-  const activeChatContext = useContext(ActiveChatContext)
 
   const [open, setOpen] = useState(props.open);
 
@@ -23,7 +21,7 @@ export default function WhisperUserDialog(props) {
 
   const sendWhisper = () => {
     if(text.length > 0){
-      activeChatContext.sendMessage(text, true);
+      // activeChatContext.sendMessage(text, true);
       setText('')
       setError(false)
       props.onClose()
@@ -34,7 +32,7 @@ export default function WhisperUserDialog(props) {
   }
 
   const getWhisperText = () => {
-    return activeChatContext?.replyTo ? activeChatContext.getWhisperToText() : '';
+    // return activeChatContext?.replyTo ? activeChatContext.getWhisperToText() : '';
   }
 
   return (

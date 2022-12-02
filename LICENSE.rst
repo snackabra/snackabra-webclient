@@ -1,7 +1,7 @@
 LICENSE
 -------
 
-Copyright (c) 2016-2021 Magnusson Institute, All Rights Reserved.
+Copyright (c) 2016-2022 Magnusson Institute, All Rights Reserved.
 
 "Snackabra" is a registered trademark
 

@@ -1,6 +1,7 @@
 import * as React from "react"
 import config from "../config";
 import * as utils from "../utils/utils";
+import { areKeysSame, deriveKey, encrypt, importKey, sign } from "../utils/crypto";
 
 const RoomContext = React.createContext(undefined);
 let ROOM_API = config.ROOM_API
@@ -10,9 +11,26 @@ export const RoomProvider = ({ children }) => {
   const reserved_paths = ['', 'guide', 'settings'];
 
   const [rooms, setRooms] = React.useState({});
-  const [roomMetadata, setRoomMetadata]  = React.useState({});
+  const [roomMetadata, setRoomMetadata] = React.useState({});
+  const [loadingMore, setLoadingMore] = React.useState(false);
+  const [moreMessages, setMoreMessages] = React.useState(true);
+  const [motd, setMotd] = React.useState('');
+  const [locked, setLocked] = React.useState(false);
+  const [isVerifiedGuest, setIsVerifiedGuest] = React.useState(false);
+  const [replyTo, setReplyTo] = React.useState(null);
+  const [replyEncryptionKey, setReplyEncryptionKey] = React.useState({});
+  const [username, setUsername] = React.useState({});
+  const [ownerRotation, setOwnerRotation] = React.useState(null);
+  const [roomCapacity, setRoomCapacity] = React.useState(2);
   const [activeRoom, setActiveRoom] = React.useState("");
   const [activeRooms, setActiveRooms] = React.useState([]);
+  const [adminError, setAdminError] = React.useState(false);
+  const [roomOwner, setRoomOwner] = React.useState(false);
+  const [keys, setKeys] = React.useState({});
+  const [changeUsername, setChangeUsername] = React.useState('');
+  const [joinRequests, setJoinRequests] = React.useState({});
+  const [roomAdmin, setRoomAdmin] = React.useState(false);
+  const [messages, setMessages] = React.useState({});
   const [showAdminTab, setShowAdminTab] = React.useState(false);
   const [contacts, setContacts] = React.useState(localStorage.getItem('contacts') ? JSON.parse(localStorage.getItem('contacts')) : {});
 
@@ -71,16 +89,12 @@ export const RoomProvider = ({ children }) => {
     }
   }
 
-  const goToRoom = (roomId) => {
+  const goToRoom = (roomId, isAdmin) => {
     if (isValidRoomId(roomId) && !activeRooms.includes(roomId)) {
       setActiveRooms([...activeRooms, roomId]);
     }
     setActiveRoom(roomId);
-    setShowAdminTab(isValidRoomId(activeRoom) && document.cookie.split('; ').find(row => row.startsWith('token_' + activeRoom)) !== undefined)
-  }
-
-  const isValidPath = (path) => {
-    return isValidRoomId(path) || reserved_paths.includes(path);
+    setShowAdminTab(isValidRoomId(roomId) && isAdmin)
   }
 
   const isValidRoomId = (roomId) => {
@@ -171,6 +185,186 @@ export const RoomProvider = ({ children }) => {
     }
   }
 
+  // #######################   MISC HELPER FUNCTIONS   ###############################
+
+
+  const getRoomCapacity = () => {
+    fetch(config.ROOM_SERVER + activeRoom + "/getRoomCapacity", { credentials: 'include' })
+      .then(resp => resp.json()
+        .then(data => data.capacity ? setRoomCapacity(data.capacity) : setAdminError(true))
+      );
+  }
+
+
+  const updateRoomCapacity = (roomCapacity) => {
+    fetch(config.ROOM_SERVER + activeRoom + "/updateRoomCapacity?capacity=" + roomCapacity, { credentials: 'include' })
+      .then(data => console.log('this worked!'));
+  }
+
+
+  const getAdminData = async () => {
+    let request = { credentials: "include" };
+    if (process.env.REACT_APP_ROOM_SERVER !== 's_socket.privacy.app' && roomOwner) {
+      let token_data = new Date().getTime().toString();
+      let token_sign = await sign(keys.personal_signKey, token_data);
+      request.headers = { authorization: token_data + "." + token_sign }
+    }
+
+    const capacity = await document.cacheDb.getItem(`${activeRoom}_capacity`)
+    const join_requests = await document.cacheDb.getItem(`${activeRoom}_join_requests`)
+    if (capacity && join_requests) {
+      console.log('Loading cached room data')
+      setRoomCapacity(capacity);
+      setJoinRequests(join_requests)
+    }
+
+
+    fetch(config.ROOM_SERVER + activeRoom + "/getAdminData", request)
+      .then(resp => resp.json().then(data => {
+          if (data.error) {
+            setAdminError(true)
+          } else {
+            document.cacheDb.setItem(`${activeRoom}_capacity`, data.capacity)
+            document.cacheDb.setItem(`${activeRoom}_join_requests`, data.join_requests)
+            setRoomCapacity(data.capacity);
+            setJoinRequests(data.join_requests)
+          }
+        })
+      )
+  }
+
+  const saveUsername = (newUsername) => {
+    try {
+      let user = changeUsername
+      const user_pubKey = JSON.parse(user._id);
+      let _messages = Object.assign(messages);
+      _messages.forEach(message => {
+        if (message.user._id === user._id) {
+          message.user.name = message.user.name.replace('(' + contacts[user_pubKey.x + ' ' + user_pubKey.y] + ')', '(' + newUsername + ')');
+        }
+      });
+      contacts[user_pubKey.x + ' ' + user_pubKey.y] = newUsername;
+      setChangeUsername({ _id: '', name: '' })
+      setMessages(_messages)
+      updateContacts(contacts);
+    } catch (e) {
+      console.error(e);
+      return { error: e };
+    }
+  }
+
+
+  const getUsername = () => {
+    const username = localStorage.getItem(activeRoom + '_username');
+    return username === null ? '' : username;
+  }
+
+
+  const acceptVisitor = async (pubKey) => {
+    try {
+      let updatedRequests = joinRequests;
+      updatedRequests.splice(joinRequests.indexOf(pubKey), 1);
+      // console.log(pubKey);
+      const shared_key = await deriveKey(keys.privateKey, await importKey("jwk", JSON.parse(pubKey), "ECDH", false, []), "AES", false, ["encrypt", "decrypt"]);
+      setJoinRequests(updatedRequests)
+      const _encrypted_locked_key = await encrypt(JSON.stringify(keys.exportable_locked_key), shared_key, "string")
+      fetch(config.ROOM_SERVER + activeRoom + "/acceptVisitor", {
+        method: "POST",
+        body: JSON.stringify({ pubKey: pubKey, lockedKey: JSON.stringify(_encrypted_locked_key) }),
+        headers: {
+          "Content-Type": "application/json"
+        },
+        credentials: 'include'
+      });
+    } catch (e) {
+      console.error(e);
+      return { error: e };
+    }
+  }
+
+
+  const lockRoom = async () => {
+    try {
+      if (keys.locked_key == null && roomAdmin) {
+        const _locked_key = await window.crypto.subtle.generateKey({
+          name: "AES-GCM",
+          length: 256
+        }, true, ["encrypt", "decrypt"]);
+        const _exportable_locked_key = await window.crypto.subtle.exportKey("jwk", _locked_key);
+        localStorage.setItem(activeRoom + '_lockedKey', JSON.stringify(_exportable_locked_key));
+        const lock_success = (await (await fetch(config.ROOM_SERVER + activeRoom + "/lockRoom", { credentials: 'include' })).json()).locked;
+        console.log(lock_success);
+        if (lock_success) {
+          await (await acceptVisitor(JSON.stringify(keys.exportable_pubKey))).json();
+          setLocked(true)
+          window.location.reload();  // Need a better way to reload
+          // await getJoinRequests();
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      return { error: e };
+    }
+  }
+
+
+  const isRoomLocked = async () => {
+    try {
+      const locked_json = (await (await fetch(config.ROOM_SERVER + activeRoom + "/roomLocked", { credentials: 'include' })).json());
+      return locked_json.locked;
+    } catch (e) {
+      console.error(e);
+      return { error: e };
+    }
+  }
+
+
+  const getJoinRequests = async () => {
+    try {
+      const joinRequests = (await (await fetch(config.ROOM_SERVER + activeRoom + "/getJoinRequests", { credentials: 'include' })).json())
+      // console.log(joinRequests)
+      joinRequests.error ? setAdminError(true) : setJoinRequests(joinRequests.join_requests);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  // TODO needs supporting function from component
+  const setMOTD = (motd) => {
+    try {
+      if (roomOwner) {
+        fetch(config.ROOM_SERVER + activeRoom + "/motd", {
+          method: "POST",
+          body: JSON.stringify({ motd: motd }),
+          headers: {
+            "Content-Type": "application/json"
+          }
+        });
+        setMotd(motd)
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  const getWhisperToText = () => {
+    return contacts[JSON.parse(replyTo._id).x + ' ' + JSON.parse(replyTo._id).y]
+  }
+
+  const loadRoom = async (data = null, sendSystemInfo, sendSystemMessage) => {
+    console.time('load-room')
+    setMotd(data?.motd);
+    setLocked(data?.roomLocked)
+    setOwnerRotation(data?.ownerRotation)
+    if (data.motd !== '') {
+      sendSystemInfo('Message of the Day: ' + data.motd);
+    } else {
+      sendSystemMessage('Connected');
+    }
+
+    console.timeEnd('load-room')
+  }
+
   return (<RoomContext.Provider value={{
     rooms,
     updateRoomNames,
@@ -187,7 +381,8 @@ export const RoomProvider = ({ children }) => {
     updateContacts,
     processLocalStorage,
     createNewRoom,
-    getRooms
+    getRooms,
+    loadRoom
   }}>{children} </RoomContext.Provider>)
 };
 
