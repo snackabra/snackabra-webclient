@@ -16,7 +16,8 @@ import FirstVisitDialog from "../Modals/FirstVisitDialog";
 import RenderSend from "./RenderSend";
 import RenderComposer from "./RenderComposer";
 import { observer } from "mobx-react"
-import { getStorePromises, retrieveData } from "../../utils/ImageProcessor";
+import { getStorePromises /* , retrieveData */ } from "../../utils/ImageProcessor";
+
 const SB = require('snackabra')
 
 @observer
@@ -142,7 +143,9 @@ class ChatRoom extends React.Component {
   openImageOverlay = (message) => {
     this.setState({ img: message.image, openPreview: true })
     try {
-      retrieveData(message, this.state.controlMessages).then((data) => {
+      console.log("**** this.sbContext:")
+      console.log(this.sbContext)
+      this.sbContext.SB.storage.retrieveImage(message, this.state.controlMessages).then((data) => {
         console.log(data)
         if (data.hasOwnProperty('error')) {
           //activeChatContext.sendSystemMessage('Could not open image: ' + data['error']);

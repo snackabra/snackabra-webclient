@@ -1,7 +1,9 @@
 import * as React from "react"
 import config from "../config";
-import * as utils from "../utils/utils";
-import { areKeysSame, deriveKey, encrypt, importKey, sign } from "../utils/crypto";
+// import * as utils from "../utils/utils";
+// import { areKeysSame, deriveKey, encrypt, importKey, sign } from "../utils/crypto";
+
+import { base64ToArrayBuffer, arrayBufferToBase64, areKeysSame, deriveKey, encrypt, importKey, sign } from "snackabra";
 
 const RoomContext = React.createContext(undefined);
 let ROOM_API = config.ROOM_API
@@ -137,97 +139,99 @@ export const RoomProvider = ({ children }) => {
   }
 
   const generateRoomId = async (x, y) => {
-    let xBytes = utils.base64ToArrayBuffer(utils.decodeB64Url(x));
-    let yBytes = utils.base64ToArrayBuffer(utils.decodeB64Url(y));
-    let roomBytes = utils._appendBuffer(xBytes, yBytes);
-    let roomBytesHash = await window.crypto.subtle.digest("SHA-384", roomBytes);
-    return utils.encodeB64Url(utils.arrayBufferToBase64(roomBytesHash));
+    console.trace("generateRoomId() should not be called")
+    // let xBytes = utils.base64ToArrayBuffer(utils.decodeB64Url(x));
+    // let yBytes = utils.base64ToArrayBuffer(utils.decodeB64Url(y));
+    // let roomBytes = utils._appendBuffer(xBytes, yBytes);
+    // let roomBytesHash = await window.crypto.subtle.digest("SHA-384", roomBytes);
+    // return utils.encodeB64Url(utils.arrayBufferToBase64(roomBytesHash));
   }
 
   const createNewRoom = async (serverSecret) => {
-    let ownerKeyPair = await window.crypto.subtle.generateKey({
-      name: "ECDH",
-      namedCurve: "P-384"
-    }, true, ["deriveKey"]);
-    let exportable_privateKey = await window.crypto.subtle.exportKey("jwk", ownerKeyPair.privateKey);
-    let exportable_pubKey = await window.crypto.subtle.exportKey("jwk", ownerKeyPair.publicKey);
-    let roomId = await generateRoomId(exportable_pubKey.x, exportable_pubKey.y);
-    let encryptionKey = await window.crypto.subtle.generateKey({
-      name: "AES-GCM",
-      length: 256
-    }, true, ["encrypt", "decrypt"]);
-    let exportable_encryptionKey = await window.crypto.subtle.exportKey("jwk", encryptionKey);
-    let signKeyPair = await window.crypto.subtle.generateKey({
-      name: "ECDH",
-      namedCurve: "P-384"
-    }, true, ["deriveKey"]);
-    let exportable_signKey = await window.crypto.subtle.exportKey("jwk", signKeyPair.privateKey);
-    // let ledgerKey = await window.crypto.subtle.generateKey({ name: "RSA-OAEP", modulusLength: 4096, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" }, true, ["encrypt", "decrypt"] );
-    // let exportable_ledgerKey = await window.crypto.subtle.exportKey("jwk", ledgerKey.publicKey);
-    let roomData = {
-      roomId: roomId,
-      ownerKey: JSON.stringify(exportable_pubKey),
-      encryptionKey: JSON.stringify(exportable_encryptionKey),
-      signKey: JSON.stringify(exportable_signKey)
-    }
-    roomData["SERVER_SECRET"] = serverSecret;
-    let data = new TextEncoder().encode(JSON.stringify(roomData));
-    let req = await fetch(config.ROOM_SERVER + roomId + "/uploadRoom", {
-      method: "POST",
-      body: data
-    });
-    let resp = await req.json();
-    if (resp.hasOwnProperty("success") && resp["success"] === true) {
-      localStorage.setItem(roomId, JSON.stringify(exportable_privateKey));
-    }
+    console.trace("createNewRoom() should not be called")
+    // let ownerKeyPair = await window.crypto.subtle.generateKey({
+    //   name: "ECDH",
+    //   namedCurve: "P-384"
+    // }, true, ["deriveKey"]);
+    // let exportable_privateKey = await window.crypto.subtle.exportKey("jwk", ownerKeyPair.privateKey);
+    // let exportable_pubKey = await window.crypto.subtle.exportKey("jwk", ownerKeyPair.publicKey);
+    // let roomId = await generateRoomId(exportable_pubKey.x, exportable_pubKey.y);
+    // let encryptionKey = await window.crypto.subtle.generateKey({
+    //   name: "AES-GCM",
+    //   length: 256
+    // }, true, ["encrypt", "decrypt"]);
+    // let exportable_encryptionKey = await window.crypto.subtle.exportKey("jwk", encryptionKey);
+    // let signKeyPair = await window.crypto.subtle.generateKey({
+    //   name: "ECDH",
+    //   namedCurve: "P-384"
+    // }, true, ["deriveKey"]);
+    // let exportable_signKey = await window.crypto.subtle.exportKey("jwk", signKeyPair.privateKey);
+    // // let ledgerKey = await window.crypto.subtle.generateKey({ name: "RSA-OAEP", modulusLength: 4096, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" }, true, ["encrypt", "decrypt"] );
+    // // let exportable_ledgerKey = await window.crypto.subtle.exportKey("jwk", ledgerKey.publicKey);
+    // let roomData = {
+    //   roomId: roomId,
+    //   ownerKey: JSON.stringify(exportable_pubKey),
+    //   encryptionKey: JSON.stringify(exportable_encryptionKey),
+    //   signKey: JSON.stringify(exportable_signKey)
+    // }
+    // roomData["SERVER_SECRET"] = serverSecret;
+    // let data = new TextEncoder().encode(JSON.stringify(roomData));
+    // let req = await fetch(config.ROOM_SERVER + roomId + "/uploadRoom", {
+    //   method: "POST",
+    //   body: data
+    // });
+    // let resp = await req.json();
+    // if (resp.hasOwnProperty("success") && resp["success"] === true) {
+    //   localStorage.setItem(roomId, JSON.stringify(exportable_privateKey));
+    // }
   }
 
   // #######################   MISC HELPER FUNCTIONS   ###############################
 
 
   const getRoomCapacity = () => {
-    fetch(config.ROOM_SERVER + activeRoom + "/getRoomCapacity", { credentials: 'include' })
-      .then(resp => resp.json()
-        .then(data => data.capacity ? setRoomCapacity(data.capacity) : setAdminError(true))
-      );
+    console.trace("getRoomCapacity() should not be called")
+    // fetch(config.ROOM_SERVER + activeRoom + "/getRoomCapacity", { credentials: 'include' })
+    //   .then(resp => resp.json()
+    //     .then(data => data.capacity ? setRoomCapacity(data.capacity) : setAdminError(true))
+    //   );
   }
 
 
   const updateRoomCapacity = (roomCapacity) => {
-    fetch(config.ROOM_SERVER + activeRoom + "/updateRoomCapacity?capacity=" + roomCapacity, { credentials: 'include' })
-      .then(data => console.log('this worked!'));
+    console.trace("updateRoomCapacity() should not be called")
+    // fetch(config.ROOM_SERVER + activeRoom + "/updateRoomCapacity?capacity=" + roomCapacity, { credentials: 'include' })
+    //   .then(data => console.log('this worked!'));
   }
 
 
   const getAdminData = async () => {
-    let request = { credentials: "include" };
-    if (process.env.REACT_APP_ROOM_SERVER !== 's_socket.privacy.app' && roomOwner) {
-      let token_data = new Date().getTime().toString();
-      let token_sign = await sign(keys.personal_signKey, token_data);
-      request.headers = { authorization: token_data + "." + token_sign }
-    }
-
-    const capacity = await document.cacheDb.getItem(`${activeRoom}_capacity`)
-    const join_requests = await document.cacheDb.getItem(`${activeRoom}_join_requests`)
-    if (capacity && join_requests) {
-      console.log('Loading cached room data')
-      setRoomCapacity(capacity);
-      setJoinRequests(join_requests)
-    }
-
-
-    fetch(config.ROOM_SERVER + activeRoom + "/getAdminData", request)
-      .then(resp => resp.json().then(data => {
-          if (data.error) {
-            setAdminError(true)
-          } else {
-            document.cacheDb.setItem(`${activeRoom}_capacity`, data.capacity)
-            document.cacheDb.setItem(`${activeRoom}_join_requests`, data.join_requests)
-            setRoomCapacity(data.capacity);
-            setJoinRequests(data.join_requests)
-          }
-        })
-      )
+    console.trace("getAdminData() should not be called")
+    // let request = { credentials: "include" };
+    // if (process.env.REACT_APP_ROOM_SERVER !== 's_socket.privacy.app' && roomOwner) {
+    //   let token_data = new Date().getTime().toString();
+    //   let token_sign = await sign(keys.personal_signKey, token_data);
+    //   request.headers = { authorization: token_data + "." + token_sign }
+    // }
+    // const capacity = await document.cacheDb.getItem(`${activeRoom}_capacity`)
+    // const join_requests = await document.cacheDb.getItem(`${activeRoom}_join_requests`)
+    // if (capacity && join_requests) {
+    //   console.log('Loading cached room data')
+    //   setRoomCapacity(capacity);
+    //   setJoinRequests(join_requests)
+    // }
+    // fetch(config.ROOM_SERVER + activeRoom + "/getAdminData", request)
+    //   .then(resp => resp.json().then(data => {
+    //       if (data.error) {
+    //         setAdminError(true)
+    //       } else {
+    //         document.cacheDb.setItem(`${activeRoom}_capacity`, data.capacity)
+    //         document.cacheDb.setItem(`${activeRoom}_join_requests`, data.join_requests)
+    //         setRoomCapacity(data.capacity);
+    //         setJoinRequests(data.join_requests)
+    //       }
+    //     })
+    //   )
   }
 
   const saveUsername = (newUsername) => {
@@ -258,90 +262,95 @@ export const RoomProvider = ({ children }) => {
 
 
   const acceptVisitor = async (pubKey) => {
-    try {
-      let updatedRequests = joinRequests;
-      updatedRequests.splice(joinRequests.indexOf(pubKey), 1);
-      // console.log(pubKey);
-      const shared_key = await deriveKey(keys.privateKey, await importKey("jwk", JSON.parse(pubKey), "ECDH", false, []), "AES", false, ["encrypt", "decrypt"]);
-      setJoinRequests(updatedRequests)
-      const _encrypted_locked_key = await encrypt(JSON.stringify(keys.exportable_locked_key), shared_key, "string")
-      fetch(config.ROOM_SERVER + activeRoom + "/acceptVisitor", {
-        method: "POST",
-        body: JSON.stringify({ pubKey: pubKey, lockedKey: JSON.stringify(_encrypted_locked_key) }),
-        headers: {
-          "Content-Type": "application/json"
-        },
-        credentials: 'include'
-      });
-    } catch (e) {
-      console.error(e);
-      return { error: e };
-    }
+    console.trace("acceptVisitor() should not be called")
+    // try {
+    //   let updatedRequests = joinRequests;
+    //   updatedRequests.splice(joinRequests.indexOf(pubKey), 1);
+    //   // console.log(pubKey);
+    //   const shared_key = await deriveKey(keys.privateKey, await importKey("jwk", JSON.parse(pubKey), "ECDH", false, []), "AES", false, ["encrypt", "decrypt"]);
+    //   setJoinRequests(updatedRequests)
+    //   const _encrypted_locked_key = await encrypt(JSON.stringify(keys.exportable_locked_key), shared_key, "string")
+    //   fetch(config.ROOM_SERVER + activeRoom + "/acceptVisitor", {
+    //     method: "POST",
+    //     body: JSON.stringify({ pubKey: pubKey, lockedKey: JSON.stringify(_encrypted_locked_key) }),
+    //     headers: {
+    //       "Content-Type": "application/json"
+    //     },
+    //     credentials: 'include'
+    //   });
+    // } catch (e) {
+    //   console.error(e);
+    //   return { error: e };
+    // }
   }
 
 
   const lockRoom = async () => {
-    try {
-      if (keys.locked_key == null && roomAdmin) {
-        const _locked_key = await window.crypto.subtle.generateKey({
-          name: "AES-GCM",
-          length: 256
-        }, true, ["encrypt", "decrypt"]);
-        const _exportable_locked_key = await window.crypto.subtle.exportKey("jwk", _locked_key);
-        localStorage.setItem(activeRoom + '_lockedKey', JSON.stringify(_exportable_locked_key));
-        const lock_success = (await (await fetch(config.ROOM_SERVER + activeRoom + "/lockRoom", { credentials: 'include' })).json()).locked;
-        console.log(lock_success);
-        if (lock_success) {
-          await (await acceptVisitor(JSON.stringify(keys.exportable_pubKey))).json();
-          setLocked(true)
-          window.location.reload();  // Need a better way to reload
-          // await getJoinRequests();
-        }
-      }
-    } catch (e) {
-      console.error(e);
-      return { error: e };
-    }
+    console.trace("lockRoom() should not be called")
+    // try {
+    //   if (keys.locked_key == null && roomAdmin) {
+    //     const _locked_key = await window.crypto.subtle.generateKey({
+    //       name: "AES-GCM",
+    //       length: 256
+    //     }, true, ["encrypt", "decrypt"]);
+    //     const _exportable_locked_key = await window.crypto.subtle.exportKey("jwk", _locked_key);
+    //     localStorage.setItem(activeRoom + '_lockedKey', JSON.stringify(_exportable_locked_key));
+    //     const lock_success = (await (await fetch(config.ROOM_SERVER + activeRoom + "/lockRoom", { credentials: 'include' })).json()).locked;
+    //     console.log(lock_success);
+    //     if (lock_success) {
+    //       await (await acceptVisitor(JSON.stringify(keys.exportable_pubKey))).json();
+    //       setLocked(true)
+    //       window.location.reload();  // Need a better way to reload
+    //       // await getJoinRequests();
+    //     }
+    //   }
+    // } catch (e) {
+    //   console.error(e);
+    //   return { error: e };
+    // }
   }
 
 
   const isRoomLocked = async () => {
-    try {
-      const locked_json = (await (await fetch(config.ROOM_SERVER + activeRoom + "/roomLocked", { credentials: 'include' })).json());
-      return locked_json.locked;
-    } catch (e) {
-      console.error(e);
-      return { error: e };
-    }
+    console.trace("isRoomLocked() should not be called")
+    // try {
+    //   const locked_json = (await (await fetch(config.ROOM_SERVER + activeRoom + "/roomLocked", { credentials: 'include' })).json());
+    //   return locked_json.locked;
+    // } catch (e) {
+    //   console.error(e);
+    //   return { error: e };
+    // }
   }
 
 
   const getJoinRequests = async () => {
-    try {
-      const joinRequests = (await (await fetch(config.ROOM_SERVER + activeRoom + "/getJoinRequests", { credentials: 'include' })).json())
-      // console.log(joinRequests)
-      joinRequests.error ? setAdminError(true) : setJoinRequests(joinRequests.join_requests);
-    } catch (e) {
-      console.error(e);
-    }
+    console.trace("getJoinRequests() should not be called")
+    // try {
+    //   const joinRequests = (await (await fetch(config.ROOM_SERVER + activeRoom + "/getJoinRequests", { credentials: 'include' })).json())
+    //   // console.log(joinRequests)
+    //   joinRequests.error ? setAdminError(true) : setJoinRequests(joinRequests.join_requests);
+    // } catch (e) {
+    //   console.error(e);
+    // }
   }
 
   // TODO needs supporting function from component
   const setMOTD = (motd) => {
-    try {
-      if (roomOwner) {
-        fetch(config.ROOM_SERVER + activeRoom + "/motd", {
-          method: "POST",
-          body: JSON.stringify({ motd: motd }),
-          headers: {
-            "Content-Type": "application/json"
-          }
-        });
-        setMotd(motd)
-      }
-    } catch (e) {
-      console.error(e);
-    }
+    console.trace("setMOTD() should not be called")
+    // try {
+    //   if (roomOwner) {
+    //     fetch(config.ROOM_SERVER + activeRoom + "/motd", {
+    //       method: "POST",
+    //       body: JSON.stringify({ motd: motd }),
+    //       headers: {
+    //         "Content-Type": "application/json"
+    //       }
+    //     });
+    //     setMotd(motd)
+    //   }
+    // } catch (e) {
+    //   console.error(e);
+    // }
   }
 
   const getWhisperToText = () => {

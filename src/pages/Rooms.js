@@ -23,7 +23,7 @@ import ChatRoom from "../components/Chat/ChatRoom";
 import CreateRoomDialog from "../components/Modals/CreateRoomDialog";
 import JoinDialog from "../components/Modals/JoinDialog";
 import AdminDialog from "../components/Modals/AdminDialog";
-import { downloadRoomData } from "../utils/utils";
+// import { downloadRoomData } from "../utils/utils";
 import Fab from '@mui/material/Fab';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import NotificationContext from "../contexts/NotificationContext";
@@ -57,7 +57,11 @@ const ResponsiveDrawer = observer((props) => {
   };
 
   const getRoomData = (roomId) => {
-    downloadRoomData(roomId, sbContext.roomMetadata)
+    console.trace("WARNING: should not be calling getRoomData()")
+    console.log("parameters are (roomId, sbContext.roomMetadata):")
+    console.log(roomId)
+    console.log(sbContext.roomMetadata)
+    // downloadRoomData(roomId, sbContext.roomMetadata)
   }
 
   const editRoom = (roomId) => {

@@ -6,12 +6,14 @@
 // TODO - can be optimized (asynchronized more) to return the hashes once calculated
 // and then do all the encryption stuff.
 
-import * as utils from "./utils";
-import config from "../config";
-import { encrypt, getImageKey } from "./crypto";
-import { decrypt } from "./utils";
+// import * as utils from "./utils";
+// import config from "../config";
+// import { encrypt, getImageKey } from "./crypto";
+// import { decrypt } from "./utils";
+
 import ImageWorker from './ImageWorker.js';
 
+import { _appendBuffer, arrayBufferToBase64 } from "snackabra";
 
 export async function getStorePromises(sbImage, roomId) {
   const t3 = new Date().getTime();
@@ -40,7 +42,7 @@ export function processImage(sbImage) {
     restrictPhoto(sbImage, 15360) // Full 15MB
   ]
   // let metadata = {}
-  let results;
+
   return new Promise((resolve) => {
     Promise.all(promisesArray).then(async (results) => {
       console.log(results)
@@ -93,60 +95,59 @@ export function processImage(sbImage) {
 }
 
 
-async function uploadImage(storageToken, encrypt_data, type, image_id, data) {
-  return await fetch(config.STORAGE_SERVER + "/storeData?type=" + type + "&key=" + encodeURIComponent(image_id),
-    {
-      method: "POST",
-      body: utils.assemblePayload({
-        iv: encrypt_data.iv,
-        salt: encrypt_data.salt,
-        image: data.content,
-        storageToken: (new TextEncoder()).encode(storageToken),
-        vid: window.crypto.getRandomValues(new Uint8Array(48))
-      })
-    });
-}
+// async function uploadImage(storageToken, encrypt_data, type, image_id, data) {
+//   return await fetch(config.STORAGE_SERVER + "/storeData?type=" + type + "&key=" + encodeURIComponent(image_id),
+//     {
+//       method: "POST",
+//       body: assemblePayload({
+//         iv: encrypt_data.iv,
+//         salt: encrypt_data.salt,
+//         image: data.content,
+//         storageToken: (new TextEncoder()).encode(storageToken),
+//         vid: window.crypto.getRandomValues(new Uint8Array(48))
+//       })
+//     });
+// }
 
 export async function storeImage(image, image_id, keyData, type, roomId) {
-  try {
-    const storeReqResp = await (await fetch(config.STORAGE_SERVER + "/storeRequest?name=" + image_id)).arrayBuffer();
-    const encrypt_data = utils.extractPayload(storeReqResp);
-    const key = await getImageKey(keyData, encrypt_data.salt);
-    let storageToken, verificationToken;
-    const data = await encrypt(image, key, "arrayBuffer", encrypt_data.iv);
-    const storageTokenReq = await (await fetch(config.ROOM_SERVER + roomId + '/storageRequest?size=' + data.content.byteLength)).json();
-    if (storageTokenReq.hasOwnProperty('error')) {
-      return { error: storageTokenReq.error }
-    }
-    storageToken = JSON.stringify(storageTokenReq);
-
-    const resp = await uploadImage(storageToken, encrypt_data, type, image_id, data)
-    const status = resp.status;
-    const resp_json = await resp.json();
-
-    if (status !== 200) {
-      return { error: 'Error: storeImage() failed (' + resp_json.error + ')' };
-    }
-
-    verificationToken = resp_json.verification_token;
-    return { verificationToken: verificationToken, id: resp_json.image_id, type: type };
-  } catch (e) {
-    console.error(e)
-    return image_id;
-
-  }
-
+  console.trace("WARNING: storeImage() should not be called");
+  // try {
+  //   const storeReqResp = await (await fetch(config.STORAGE_SERVER + "/storeRequest?name=" + image_id)).arrayBuffer();
+  //   const encrypt_data = extractPayload(storeReqResp);
+  //   const key = await getImageKey(keyData, encrypt_data.salt);
+  //   let storageToken, verificationToken;
+  //   const data = await encrypt(image, key, "arrayBuffer", encrypt_data.iv);
+  //   const storageTokenReq = await (await fetch(config.ROOM_SERVER + roomId + '/storageRequest?size=' + data.content.byteLength)).json();
+  //   if (storageTokenReq.hasOwnProperty('error')) {
+  //     return { error: storageTokenReq.error }
+  //   }
+  //   storageToken = JSON.stringify(storageTokenReq);
+  //   const resp = await uploadImage(storageToken, encrypt_data, type, image_id, data)
+  //   const status = resp.status;
+  //   const resp_json = await resp.json();
+  //   if (status !== 200) {
+  //     return { error: 'Error: storeImage() failed (' + resp_json.error + ')' };
+  //   }
+  //   verificationToken = resp_json.verification_token;
+  //   return { verificationToken: verificationToken, id: resp_json.image_id, type: type };
+  // } catch (e) {
+  //   console.error(e)
+  //   return image_id;
+  // }
 }
 
 
 export async function generateImageHash(image) {
+  console.trace("WARNING: generateImageHash() should not be called");
   try {
     const digest = await crypto.subtle.digest('SHA-512', image);
     const _id = digest.slice(0, 32);
     const _key = digest.slice(32);
     return {
-      id: encodeURIComponent(utils.arrayBufferToBase64(_id)),
-      key: encodeURIComponent(utils.arrayBufferToBase64(_key))
+      // id: encodeURIComponent(utils.arrayBufferToBase64(_id)),
+      id: arrayBufferToBase64(_id),
+      // key: encodeURIComponent(utils.arrayBufferToBase64(_key))
+      key: arrayBufferToBase64(_key)
     };
   } catch (e) {
     console.log(e);
@@ -154,41 +155,42 @@ export async function generateImageHash(image) {
   }
 }
 
-async function downloadImage(control_msg, image_id, cache) {
-  const imageFetch = await (await fetch(config.STORAGE_SERVER + "/fetchData?id=" + encodeURIComponent(control_msg.id) + '&verification_token=' + control_msg.verificationToken[0].verificationToken)).arrayBuffer();
-  let data = utils.extractPayload(imageFetch);
-  document.cacheDb.setItem(`${image_id}_cache`, data)
-  return data;
-}
+// async function downloadImage(control_msg, image_id, cache) {
+//   console.log("WARNING: downloadImage() should be replaced with a call to fetchData()")
+//   const imageFetch = await (await fetch(config.STORAGE_SERVER + "/fetchData?id=" + encodeURIComponent(control_msg.id) + '&verification_token=' + control_msg.verificationToken[0].verificationToken)).arrayBuffer();
+//   let data = extractPayload(imageFetch);
+//   document.cacheDb.setItem(`${image_id}_cache`, data)
+//   return data;
+// }
 
 
-export async function retrieveData(message, controlMessages, cache) {
-  const imageMetaData = message.imageMetaData;
-  const image_id = imageMetaData.previewId;
-  const control_msg = controlMessages.find(msg => msg.hasOwnProperty('id') && msg.id.startsWith(image_id));
-  if (!control_msg) {
-    return { 'error': 'Failed to fetch data - missing control message for that image' };
-  }
-  const cached = await document.cacheDb.getItem(`${image_id}_cache`);
-  let data;
-  if (cached === null) {
-    data = await downloadImage(control_msg, image_id, cache);
-  } else {
-    console.log('Loading image data from cache')
-    data = cached;
-  }
-  const iv = data.iv;
-  const salt = data.salt;
-  const image_key = await getImageKey(imageMetaData.previewKey, salt);
-  const encrypted_image = data.image;
-  const padded_img = await decrypt(image_key, { content: encrypted_image, iv: iv }, "arrayBuffer");
-  const img = unpadData(padded_img.plaintext);
-  if (img.error) {
-    console.log('(Image error: ' + img.error + ')');
-    throw new Error('Failed to fetch data - authentication or formatting error');
-  }
-  return { 'url': "data:image/jpeg;base64," + utils.arrayBufferToBase64(img) };
-}
+// export async function retrieveData(message, controlMessages, cache) {
+//   const imageMetaData = message.imageMetaData;
+//   const image_id = imageMetaData.previewId;
+//   const control_msg = controlMessages.find(msg => msg.hasOwnProperty('id') && msg.id.startsWith(image_id));
+//   if (!control_msg) {
+//     return { 'error': 'Failed to fetch data - missing control message for that image' };
+//   }
+//   const cached = await document.cacheDb.getItem(`${image_id}_cache`);
+//   let data;
+//   if (cached === null) {
+//     data = await downloadImage(control_msg, image_id, cache);
+//   } else {
+//     console.log('Loading image data from cache')
+//     data = cached;
+//   }
+//   const iv = data.iv;
+//   const salt = data.salt;
+//   const image_key = await getImageKey(imageMetaData.previewKey, salt);
+//   const encrypted_image = data.image;
+//   const padded_img = await decrypt(image_key, { content: encrypted_image, iv: iv }, "arrayBuffer");
+//   const img = unpadData(padded_img.plaintext);
+//   if (img.error) {
+//     console.log('(Image error: ' + img.error + ')');
+//     throw new Error('Failed to fetch data - authentication or formatting error');
+//   }
+//   return { 'url': "data:image/jpeg;base64," + arrayBufferToBase64(img, '64') };
+// }
 
 
 export async function getFileData(file, outputType) {
@@ -238,6 +240,7 @@ export async function _restrictPhoto(maxSize, _c, _b1) {
     _old_c = _c;
     _c = scaleCanvas(_c, .3);
     _b1 = await new Promise((resolve) => {
+      // TODO: lint reports this as unsafe use of reference to _c
       _c.toBlob(resolve, imageType, qualityArgument);
     });
     _old_size = _size;
@@ -245,7 +248,6 @@ export async function _restrictPhoto(maxSize, _c, _b1) {
     // workingDots();
     const t3 = new Date().getTime();
     console.log(`... reduced to W ${_c.width} x H ${_c.height} (to size ${_size}) ... total time ${t3 - t2} milliseconds`);
-
   }
 
   // we assume that within this width interval, storage is roughly prop to area,
@@ -259,6 +261,7 @@ export async function _restrictPhoto(maxSize, _c, _b1) {
   const t4 = new Date().getTime();
   let goodRatio = false
   do {
+    // TODO: lint reports this as unsafe reference to _final_c
     _final_c = scaleCanvas(_old_c, Math.sqrt(_ratio) * 0.95); // always overshoot
     _b1 = await new Promise((resolve) => {
       _final_c.toBlob(resolve, imageType, qualityArgument);
@@ -363,8 +366,8 @@ export function padImage(image_buffer) {
   // _padding_array.push(image_size);
   const _padding = new Uint8Array(_padding_array).buffer;
   // console.log('Padding size: ', _padding.byteLength)
-  let final_data = utils._appendBuffer(image_buffer, _padding);
-  final_data = utils._appendBuffer(final_data, new Uint32Array([image_size]).buffer);
+  let final_data = _appendBuffer(image_buffer, _padding);
+  final_data = _appendBuffer(final_data, new Uint32Array([image_size]).buffer);
   // console.log('AFTER PADDING: ', final_data.byteLength)
   return final_data;
 }
@@ -390,27 +393,27 @@ let script_02 =
 // image.
 function readJpegHeader(bytes) {
   // JPEG magick
-  if (bytes[0] != 0xff) return;
-  if (bytes[1] != 0xd8) return;
+  if (bytes[0] !== 0xff) return;
+  if (bytes[1] !== 0xd8) return;
   // Go through all markers
   var pos = 2;
   var dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   while (pos + 4 < bytes.byteLength) {
     // Scan for the next start marker (if the image is corrupt, this marker may not be where it is expected)
-    if (bytes[pos] != 0xff) {
+    if (bytes[pos] !== 0xff) {
       pos += 1;
       continue;
     }
     var type = bytes[pos + 1];
     // Short marker
     pos += 2;
-    if (bytes[pos] == 0xff) continue;
+    if (bytes[pos] === 0xff) continue;
     // SOFn marker
     var length = dv.getUint16(pos);
     if (pos + length > bytes.byteLength) return;
-    if (length >= 7 && (type == 0xc0 || type == 0xc2)) {
+    if (length >= 7 && (type === 0xc0 || type === 0xc2)) {
       var data = {};
-      data.progressive = type == 0xc2;
+      data.progressive = type === 0xc2;
       data.bitDepth = bytes[pos + 2];
       data.height = dv.getUint16(pos + 3);
       data.width = dv.getUint16(pos + 5);
@@ -525,7 +528,7 @@ export class SBImage {
     this.img = new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = (e) => {
-        var img = new Image;
+        var img = new Image();
         img.onload = function () {
           this.width = img.width;
           this.height = img.height;
