@@ -145,7 +145,9 @@ class ChatRoom extends React.Component {
     try {
       console.log("**** this.sbContext:")
       console.log(this.sbContext)
-      this.sbContext.SB.storage.retrieveImage(message, this.state.controlMessages).then((data) => {
+      console.log("image metadata")
+      console.log(message.imageMetaData)
+      this.sbContext.SB.storage.retrieveImage(message.imageMetaData, this.state.controlMessages).then((data) => {
         console.log(data)
         if (data.hasOwnProperty('error')) {
           //activeChatContext.sendSystemMessage('Could not open image: ' + data['error']);
