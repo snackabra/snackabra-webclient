@@ -1,8 +1,0 @@
-{
-  "globals": {
-    // these are JS globals that tooling do not know about
-    "Atomics": "readonly",
-    "SharedArrayBuffer": "readonly",
-    "crossOriginIsolated": "readonly"
-  }
-}

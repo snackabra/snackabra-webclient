@@ -342,8 +342,8 @@ class ChatRoom extends React.Component {
     this.setState({ files: [] })
   }
 
-  showLoading = () => {
-    this.setState({ loading: false })
+  showLoading = (bool) => {
+    this.setState({ loading: bool })
   }
 
   saveUsername = (newUsername, _id) => {

@@ -3,7 +3,7 @@ import { IconButton } from "@mui/material";
 import AttachmentIcon from '@mui/icons-material/Attachment';
 import { SBImage } from "../../utils/ImageProcessor";
 
-const getSbImage = (file) => {
+const getSbImage = (file, props) => {
   return new Promise((resolve) => {
     const sbImage = new SBImage(file);
     queueMicrotask(() => {
@@ -11,6 +11,7 @@ const getSbImage = (file) => {
       sbImage.loadToCanvas(SBImageCanvas).then((c) => {
         sbImage.aspectRatio.then((r) => {
           sbImage.aspectRatio = r
+          props.showLoading(false)
           resolve(sbImage)
         });
       });
@@ -20,14 +21,13 @@ const getSbImage = (file) => {
 }
 
 function RenderAttachmentIcon(props) {
-
   const selectFiles = async (e) => {
-    props.showLoading()
+    props.showLoading(true)
     try {
       const files = []
       for (let i in e.target.files) {
         if (typeof e.target.files[i] === 'object') {
-          const attachment = await getSbImage(e.target.files[i])
+          const attachment = await getSbImage(e.target.files[i], props)
           files.push(attachment)
 
         }
