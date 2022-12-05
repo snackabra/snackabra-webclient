@@ -45,12 +45,12 @@ const RenderChatFooter = (props) => {
 
   /** @param {SBImage} file */
   const setHeight = (file) => {
-      const imageElement = document.getElementsByClassName("previewImage");
-      const height = imageElement.width / file.aspectRatio;
-      // file.aspectRatio.then(())
-      if (height > containerHeight) {
-        setContainerHeight(height)
-      }
+    const imageElement = document.getElementsByClassName("previewImage");
+    const height = imageElement.width / file.aspectRatio;
+    // file.aspectRatio.then(())
+    if (height > containerHeight) {
+      setContainerHeight(height)
+    }
   }
 
   if (loading) {
