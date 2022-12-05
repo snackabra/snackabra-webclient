@@ -12,7 +12,7 @@
 // import { SBImage, _restrictPhoto } from '../utils/ImageProcessor.js';
 
 export default(i) => {  // eslint-disable-line
-    console.log(`starting worker number ${i}`);
+    console.log(`starting image worker number ${i}`);
   
     // const IW_blob = new Blob([`(${IW_code})(maxSize, _c, _b1)`]);
     // const IW_blob = new Blob([`(${IW_code})`]);

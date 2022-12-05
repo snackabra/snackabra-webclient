@@ -12,6 +12,7 @@
 // import { decrypt } from "./utils";
 
 import ImageWorker from './ImageWorker.js';
+import ArrayBufferWorker from './ArrayBufferWorker.js';
 
 import { _appendBuffer, arrayBufferToBase64, Snackabra } from "snackabra";
 
@@ -351,16 +352,6 @@ export function unpadData(data_buffer) {
   return data_buffer.slice(0, _size);
 }
 
-let script_02 =
-  `data:text/javascript,
-    function fileToAB(file) {
-      file.arrayBuffer().then((a) => postMessage(a, [a]));
-    }
-    onmessage = function(event){
-        fileToAB(event.data);
-    };
-    `;
-
 // code by Thomas Lochmatter, thomas.lochmatter@viereck.ch
 // Returns an object with the width and height of the JPEG image
 // stored in bytes, or null if the bytes do not represent a JPEG
@@ -423,11 +414,10 @@ export class SBImage {
       this.processingResolve = resolve;
     });
 
-    var resolveAspectRatio;
 
     this.aspectRatio = new Promise((resolve) => {
       // block on getting width and height...
-      resolveAspectRatio = resolve;
+      this.resolveAspectRatio = resolve;
     });
 
     // Fetch the original image
@@ -465,14 +455,14 @@ export class SBImage {
                     _self.width = h.width;
                     _self.height = h.height;
                     console.log(`got the size of the image!!  ${_self.width} x ${_self.height}`);
-                    resolveAspectRatio(_self.width / _self.height);
+                    _self.resolveAspectRatio(_self.width / _self.height);
                   } else {
                     console.warn("PROBLEM ***** ... could not parse jpeg header");
                     console.warn("Loading file to get demensions");
                     this.img.then((el) => {
                       this.width = el.width;
                       this.height = el.height;
-                      resolveAspectRatio(_self.width / _self.height);
+                      _self.resolveAspectRatio(_self.width / _self.height);
                     })
                   }
                 }
@@ -531,15 +521,24 @@ export class SBImage {
     });
 
 
-    this.blob = new Promise((resolve) => {
+    this.blob = new Promise((resolve, reject) => {
       // spin up worker
-      let worker = new Worker(script_02);
-      worker.onmessage = (event) => {
-        console.log("Got blob from worker:");
-        console.log(event.data);
-        resolve(new Blob([event.data])); // convert arraybuffer to blob
+      try{
+        const code = ArrayBufferWorker.toString();
+        const blob = new Blob([`(${code})(${0})`]);
+        let worker = new Worker(URL.createObjectURL(blob));
+        console.warn('worker', worker)
+        worker.onmessage = (event) => {
+          console.warn("Got blob from worker:");
+          console.warn(event.data);
+          resolve(new Blob([event.data])); // convert arraybuffer to blob
+        }
+        worker.postMessage(image);
+      }catch(e){
+        console.error(e)
+        reject(e)
       }
-      worker.postMessage(image);
+
     });
 
     // this requests some worker to load the file into a sharedarraybuffer
@@ -603,27 +602,36 @@ export class SBImage {
         console.log("~~~~~~~~~~~~~~~~ got WxH", this.width, this.height);
         canvas.width = this.width;
         canvas.height = this.height;
+
         this.imageSAB.then((imageSAB) => {
-          if (OffscreenCanvas) {
-            console.log("%%%%%%%%%%%%%%%% we are here");
-            console.log(imageSAB);
-            // const canvas = document.createElement('canvas'); // test to give it from caller
-            // var ctx = canvas.getContext('2d');
-            // var imageData = ctx.createImageData(400, 400);
-            const offscreen = canvas.transferControlToOffscreen();
-            // const ctx = offscreen.getContext('2d');
-            // doImageTask(['testCanvas', imageData.data.buffer], [imageData.data.buffer]).then((m) => console.log(m));
-            doImageTask(['testCanvas', offscreen, imageSAB], [offscreen]).then((m) => {
-              console.log("**************** Returned message:", m);
-              console.log("**************** offscreen:", canvas);
-              console.log("**************** offscreen:", offscreen);
-              resolve(canvas);
-            });
-          } else {
+          try {
+            console.log('After SAB Promise', OffscreenCanvas)
+            if (OffscreenCanvas) {
+              console.log("%%%%%%%%%%%%%%%% we are here");
+              console.log(imageSAB);
+              // const canvas = document.createElement('canvas'); // test to give it from caller
+              // var ctx = canvas.getContext('2d');
+              // var imageData = ctx.createImageData(400, 400);
+              const offscreen = canvas.transferControlToOffscreen();
+              // const ctx = offscreen.getContext('2d');
+              // doImageTask(['testCanvas', imageData.data.buffer], [imageData.data.buffer]).then((m) => console.log(m));
+              doImageTask(['testCanvas', offscreen, imageSAB], [offscreen]).then((m) => {
+                console.log("**************** Returned message:", m);
+                console.log("**************** offscreen:", canvas);
+                console.log("**************** offscreen:", offscreen);
+                resolve(canvas);
+              });
+            } else {
+              console.log("**************** THIS feature only works with OffscreenCanvas");
+              console.log("                 (TODO: make the code work as promise as fallback");
+            }
+          } catch (e) {
             console.log("**************** THIS feature only works with OffscreenCanvas");
             console.log("                 (TODO: make the code work as promise as fallback");
+            console.log(e)
+            resolve(canvas);
           }
-        });
+        }).catch(console.error)
       });
     });
   }
