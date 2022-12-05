@@ -110,7 +110,9 @@ export function processImage(sbImage) {
 // }
 
 export async function storeImage(image, image_id, keyData, type, roomId) {
-  console.trace("WARNING: storeImage() should not be called");
+  console.trace("ERROR: storeImage() should not be called");
+  throw new Error('... fix storeImage() ... ');
+
   // try {
   //   const storeReqResp = await (await fetch(config.STORAGE_SERVER + "/storeRequest?name=" + image_id)).arrayBuffer();
   //   const encrypt_data = extractPayload(storeReqResp);
@@ -138,7 +140,7 @@ export async function storeImage(image, image_id, keyData, type, roomId) {
 
 
 export async function generateImageHash(image) {
-  console.trace("WARNING: generateImageHash() should not be called");
+  console.log("**** WARNING: generateImageHash() in ImageProcessor.js should not be called");
   try {
     const digest = await crypto.subtle.digest('SHA-512', image);
     const _id = digest.slice(0, 32);
@@ -443,16 +445,9 @@ export const getImageDimensions = (url) => {
 };
 
 export class SBImage {
+  resolveAspectRatio;
   constructor(image) {
     this.image = image; // file
-
-    var resolveAspectRatio;
-
-    this.aspectRatio = new Promise((resolve) => {
-      // block on getting width and height...
-      resolveAspectRatio = resolve;
-    });
-
     // Fetch the original image
     console.log("Fetching file:");
     console.log(image);
@@ -606,6 +601,12 @@ export class SBImage {
     });
   }
 
+  /** @return {Promise<number>} */
+  aspectRatio = () => new Promise((resolve) => {
+    // block on getting width and height...
+    this.resolveAspectRatio = resolve;
+  });
+
 }
 
 
@@ -620,8 +621,8 @@ export class BlobWorker extends Worker {
 
 let image_workers = [];
 let next_worker = 0;
-let max_workers = window.navigator.hardwareConcurrency;
-
+let max_workers = window.navigator.hardwareConcurrency / 2; // dialing back to not overload
+max_workers = max_workers >= 1 ? max_workers : 1 // just a safeguardd
 console.log(`setting up ${max_workers} image helper workers`);
 
 // const IW_code = _restrictPhoto.toString();
