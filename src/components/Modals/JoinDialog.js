@@ -18,8 +18,8 @@ const JoinDialog = (props) => {
   }
 
   const connect = () => {
-    console.log(window.location.origin + "/rooms/" + roomId)
-    window.location.replace(window.location.origin + "/rooms/" + roomId)
+    console.log(window.location.origin + "/" + roomId)
+    window.location.replace(window.location.origin + "/" + roomId)
     setRoomId("");
     props.onClose()
   }
