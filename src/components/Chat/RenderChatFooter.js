@@ -20,9 +20,8 @@ const RenderChatFooter = (props) => {
         setHeight(file)
         filesPromises.push(file.processImage())
       }
+      // Does all image processing 15kb thumbnail, 2MB Preview and 16MB Fullsize
       Promise.all(filesPromises).then((files) => {
-        console.log(files)
-        setFiles(files)
         props.setFiles(files)
       })
     }
@@ -42,6 +41,7 @@ const RenderChatFooter = (props) => {
     setUploading(props.uploading)
   }, [props.uploading])
 
+  
   const setHeight = (file) => {
       const imageElement = document.getElementsByClassName("previewImage");
       const height = imageElement.width / file.aspectRatio;

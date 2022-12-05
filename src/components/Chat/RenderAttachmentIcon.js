@@ -6,17 +6,19 @@ import { SBImage } from "../../utils/ImageProcessor";
 const getSbImage = (file, props) => {
   return new Promise((resolve) => {
     const sbImage = new SBImage(file);
-    queueMicrotask(() => {
-      const SBImageCanvas = document.createElement('canvas');
-      sbImage.loadToCanvas(SBImageCanvas).then((c) => {
-        sbImage.aspectRatio.then((r) => {
-          sbImage.aspectRatio = r
-          props.showLoading(false)
-          resolve(sbImage)
+    sbImage.img.then((i)=>{
+      sbImage.url = i.src
+      queueMicrotask(() => {
+        const SBImageCanvas = document.createElement('canvas');
+        sbImage.loadToCanvas(SBImageCanvas).then((c) => {
+          sbImage.aspectRatio.then((r) => {
+            sbImage.aspectRatio = r
+            props.showLoading(false)
+            resolve(sbImage)
+          });
         });
       });
-    });
-
+    })
   })
 }
 
