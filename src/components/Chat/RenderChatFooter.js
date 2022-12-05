@@ -1,7 +1,9 @@
+//@ts-check
+
 import React from 'react'
 import { Grid, CircularProgress, Paper, IconButton, LinearProgress } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
-import { restrictPhoto, getFileData } from "../../utils/ImageProcessor";
+import { restrictPhoto, getFileData, SBImage } from "../../utils/ImageProcessor";
 
 const RenderChatFooter = (props) => {
 
@@ -42,9 +44,11 @@ const RenderChatFooter = (props) => {
     setUploading(props.uploading)
   }, [props.uploading])
 
+  /** @param {SBImage} file */
   const setHeight = (file) => {
       const imageElement = document.getElementsByClassName("previewImage");
       const height = imageElement.width / file.aspectRatio;
+      // file.aspectRatio.then(())
       if (height > containerHeight) {
         setContainerHeight(height)
       }
