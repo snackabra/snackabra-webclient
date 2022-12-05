@@ -208,38 +208,42 @@ class ChatRoom extends React.Component {
     this.setState({ messages: [...this.state.messages, ...fileMessages] })
     for (let x in filesArray) {
       const sbImage = filesArray[x]
-      const storePromises = await getStorePromises(sbImage, this.sbContext.activeroom)
-      let sbm = new SB.SBMessage(this.sbContext.socket)
-      // populate
-      sbm.contents.image = this.state.files[x].url
-      const imageMetaData = {
-        imageId: sbImage.fullId,
-        imageKey: sbImage.fullKey,
-        previewId: sbImage.previewId,
-        previewKey: sbImage.previewKey,
-      }
-      sbm.contents.imageMetaData = imageMetaData;
-      sbm.send(); // and no we don't need to wait
-      Promise.all([storePromises.previewStorePromise]).then((previewVerification) => {
-        console.log(previewVerification)
-        console.info('Preview image uploaded')
-        // now the preview (up to 2MiB) has been safely stored
-        let controlMessage = new SB.SBMessage(this.sbContext.socket);
-        // controlMessage.imageMetaData = imageMetaData;
-        controlMessage.contents.control = true;
-        controlMessage.contents.verificationToken = previewVerification;
-        controlMessage.contents.id = imageMetaData.previewId;
-        controlMessage.send();
-      }).finally(() => {
-        queueMicrotask(() => {
-          storePromises.fullStorePromise.then(() => {
-            console.info('Full image uploaded')
-          })
-        });
-        if (Number(x) === filesArray.length - 1) {
-          this.setState({ uploading: false })
-          this.removeInputFiles()
+      sbImage.thumbnailReady.then(async ()=>{
+        const storePromises = await sbImage.getStorePromises(this.sbContext.activeroom)
+        let sbm = new SB.SBMessage(this.sbContext.socket)
+        // populate
+        sbm.contents.image = this.state.files[x].thumbnail
+        const imageMetaData = {
+          imageId: sbImage.objectMetadata.full.id,
+          imageKey: sbImage.objectMetadata.full.key,
+          previewId: sbImage.objectMetadata.preview.id,
+          previewKey: sbImage.objectMetadata.preview.key,
         }
+        sbm.contents.imageMetaData = imageMetaData;
+        sbm.send(); // and no we don't need to wait
+        Promise.all([storePromises.previewStorePromise]).then((previewVerification) => {
+          console.log()
+          console.info('Preview image uploaded')
+          previewVerification[0].verification.then((verification) => {
+            // now the preview (up to 2MiB) has been safely stored
+            let controlMessage = new SB.SBMessage(this.sbContext.socket);
+            // controlMessage.imageMetaData = imageMetaData;
+            controlMessage.contents.control = true;
+            controlMessage.contents.verificationToken = verification;
+            controlMessage.contents.id = imageMetaData.previewId;
+            controlMessage.send();
+          })
+        }).finally(() => {
+          queueMicrotask(() => {
+            storePromises.fullStorePromise.then(() => {
+              console.info('Full image uploaded')
+            })
+          });
+          if (Number(x) === filesArray.length - 1) {
+            this.setState({ uploading: false })
+            this.removeInputFiles()
+          }
+        })
       })
     }
     // const files = await saveImage()

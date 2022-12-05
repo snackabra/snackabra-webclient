@@ -1,5 +1,3 @@
-//@ts-check
-
 import React from 'react'
 import { Grid, CircularProgress, Paper, IconButton, LinearProgress } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
@@ -19,11 +17,14 @@ const RenderChatFooter = (props) => {
 
       for (let x in props.files) {
         let file = props.files[x]
-        setHeight(file)
-        filesPromises.push(file.processImage())
+        // setHeight(file)
+        filesPromises.push(file.processThumbnail())
       }
       // Does all image processing 15kb thumbnail, 2MB Preview and 16MB Fullsize
       Promise.all(filesPromises).then((files) => {
+        files.forEach((file)=>{
+          file.processImage()
+        })
         props.setFiles(files)
       })
     }
@@ -46,7 +47,7 @@ const RenderChatFooter = (props) => {
   /** @param {SBImage} file */
   const setHeight = (file) => {
     const imageElement = document.getElementsByClassName("previewImage");
-    const height = imageElement.width / file.aspectRatio;
+    const height = imageElement.width / file.aspect;
     // file.aspectRatio.then(())
     if (height > containerHeight) {
       setContainerHeight(height)
@@ -92,13 +93,13 @@ const RenderChatFooter = (props) => {
             alignItems="flex-start"
           >
             {files.map((file, index) => {
-              if (file.url) {
+              if (file.url || file.thumbnail) {
                 return (
                   <img key={index + 'img'} className='previewImage'
                     width='150px'
                     style={{ padding: 8 }}
-                    src={file.url}
-                    alt='Image preview' />
+                    src={file.url ? file.url : file.thumbnail}
+                    alt='Thumbnail Preview' />
                 )
               } else {
                 return (<Grid key={index + 'grid'} className='previewImage' sx={{ width: containerHeight - 8, minHeight: containerHeight - 8, padding: 8 }}

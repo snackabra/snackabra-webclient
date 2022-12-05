@@ -13,86 +13,37 @@
 
 import ImageWorker from './ImageWorker.js';
 
-import { _appendBuffer, arrayBufferToBase64 } from "snackabra";
+import { _appendBuffer, arrayBufferToBase64, Snackabra } from "snackabra";
 
-export async function getStorePromises(sbImage, roomId) {
-  const t3 = new Date().getTime();
-  const previewStorePromise = storeImage(sbImage.previewImage, sbImage.previewId, sbImage.previewKey, 'p', roomId).then(_x => {
-    const t5 = new Date().getTime();
-    console.log(`#### previewStorePromise took ${t5 - t3} milliseconds (asynchronous)`);
-    return _x;
-  });
-  const t4 = new Date().getTime();
-  const fullStorePromise = storeImage(sbImage.fullImage, sbImage.fullId, sbImage.fullKey, 'f', roomId).then(_x => {
-    const t5 = new Date().getTime();
-    console.log(`#### fullStorePromise took ${t5 - t4} milliseconds (but asynchronous)`);
-    return _x;
-  });
-  return {
-    fullStorePromise: fullStorePromise,
-    previewStorePromise: previewStorePromise
-  };
-}
-
-export function processImage(sbImage) {
-  const t0 = new Date().getTime();
-  let promisesArray = [
-    restrictPhoto(sbImage, 15), // Thumbnail
-    restrictPhoto(sbImage, 2048), // Preview 2MB
-    restrictPhoto(sbImage, 15360) // Full 15MB
-  ]
-  // let metadata = {}
-
-  return new Promise((resolve) => {
-    Promise.all(promisesArray).then(async (results) => {
-      console.log(results)
-      const previewImage = padImage(await results[1].arrayBuffer());
-      const previewHash = await generateImageHash(previewImage);
-      const fullImage = padImage(await results[2].arrayBuffer());
-      const fullHash = await generateImageHash(fullImage);
-      const t1 = new Date().getTime();
-      console.warn(`#### image processing total ${t1 - t0} milliseconds (blocking)`);
-      resolve({
-        url: await getFileData(results[0], 'url'),
-        previewImage: previewImage,
-        fullImage: fullImage,
-        fullId: fullHash.id,
-        previewId: previewHash.id,
-        fullKey: fullHash.key,
-        previewKey: previewHash.key
-      })
-    }).catch(console.error)
-  })
-  // const t0 = new Date().getTime();
-  // const url = await getFileData(await restrictPhoto(sbImage, 15), 'url');
-  // const t1 = new Date().getTime();
-  // console.warn(`#### url took total ${t1 - t0} milliseconds (blocking)`);
-  // const t02 = new Date().getTime();
-  // const previewImage = padImage(await (await restrictPhoto(sbImage, 2048)).arrayBuffer());
-  // const t03 = new Date().getTime();
-  // console.warn(`#### previewImage load total ${t03 - t02} milliseconds (blocking)`);
-  // const t00 = new Date().getTime();
-  // const previewHash = await generateImageHash(previewImage);
-  // const t01 = new Date().getTime();
-  // console.warn(`#### previewHash took total ${t01 - t00} milliseconds (blocking)`);
-  // // only if the file is over 15 MB do we restrict the full file - 15360 here is 15360 KB which is 15 MB
-  // console.log(sbImage.image.size)
-  // const t2 = new Date().getTime();
-  // console.warn(`#### fullImage load took total ${t2 - t1} milliseconds (blocking)`);
-  // const fullHash = await generateImageHash(fullImage);
-  // const t3 = new Date().getTime();
-  // console.warn(`#### fullHash took total ${t3 - t2} milliseconds (blocking)`);
-  // // return { full: { id: fullHash.id, key: fullHash.key }, preview: { id: previewHash.id, key: previewHash.key } }
-  // return {
-  //   url: url,
-  //   previewImage: previewImage,
-  //   fullImage: fullImage,
-  //   fullId: fullHash.id,
-  //   previewId: previewHash.id,
-  //   fullKey: fullHash.key,
-  //   previewKey: previewHash.key
-  // };
-}
+// const t0 = new Date().getTime();
+// const url = await getFileData(await restrictPhoto(sbImage, 15), 'url');
+// const t1 = new Date().getTime();
+// console.warn(`#### url took total ${t1 - t0} milliseconds (blocking)`);
+// const t02 = new Date().getTime();
+// const previewImage = padImage(await (await restrictPhoto(sbImage, 2048)).arrayBuffer());
+// const t03 = new Date().getTime();
+// console.warn(`#### previewImage load total ${t03 - t02} milliseconds (blocking)`);
+// const t00 = new Date().getTime();
+// const previewHash = await generateImageHash(previewImage);
+// const t01 = new Date().getTime();
+// console.warn(`#### previewHash took total ${t01 - t00} milliseconds (blocking)`);
+// // only if the file is over 15 MB do we restrict the full file - 15360 here is 15360 KB which is 15 MB
+// console.log(sbImage.image.size)
+// const t2 = new Date().getTime();
+// console.warn(`#### fullImage load took total ${t2 - t1} milliseconds (blocking)`);
+// const fullHash = await generateImageHash(fullImage);
+// const t3 = new Date().getTime();
+// console.warn(`#### fullHash took total ${t3 - t2} milliseconds (blocking)`);
+// // return { full: { id: fullHash.id, key: fullHash.key }, preview: { id: previewHash.id, key: previewHash.key } }
+// return {
+//   url: url,
+//   previewImage: previewImage,
+//   fullImage: fullImage,
+//   fullId: fullHash.id,
+//   previewId: previewHash.id,
+//   fullKey: fullHash.key,
+//   previewKey: previewHash.key
+// };
 
 
 // async function uploadImage(storageToken, encrypt_data, type, image_id, data) {
@@ -222,7 +173,9 @@ export async function getFileData(file, outputType) {
 // maxSize: target (max) size in KB
 // _c: full image on starting point canvas (eg sbImage.canvas)
 // _b1: blob version (eg sbImage.blob)
-export async function _restrictPhoto(maxSize, _c, _b1) {
+
+//MTG: this needs futher optimizations
+export async function _restrictPhoto(maxSize, _c, _b1, scale) {
   const t2 = new Date().getTime();
   const imageType = "image/jpeg";
   const qualityArgument = 0.92;
@@ -235,58 +188,77 @@ export async function _restrictPhoto(maxSize, _c, _b1) {
   console.log(`Reduce size by scaling canvas - start size is W ${_c.width} x H ${_c.height}`)
   // compression wasn't enough, so let's resize until we're getting close
 
-  let _old_size;
-  let _old_c;
+  // let _old_size;
+  // let _old_c;
 
   while (_size > maxSize) {
-    _old_c = _c;
-    _c = scaleCanvas(_c, .3);
+    // _old_c = _c;
+    _c = scaleCanvas(_c, scale);
     _b1 = await new Promise((resolve) => {
       // TODO: lint reports this as unsafe use of reference to _c
       _c.toBlob(resolve, imageType, qualityArgument);
     });
-    _old_size = _size;
+    // _old_size = _size;
     _size = _b1.size;
     // workingDots();
     const t3 = new Date().getTime();
     console.log(`... reduced to W ${_c.width} x H ${_c.height} (to size ${_size}) ... total time ${t3 - t2} milliseconds`);
   }
 
-  // we assume that within this width interval, storage is roughly prop to area,
-  // with a little tuning downwards
-  let _ratio = (maxSize / _old_size) * 0.95; // overshoot a bit
-  let _maxIteration = 3;  // to be safe
-  console.log("_old_c is:")
-  console.log(_old_c);
-  console.log(`... stepping back up to W ${_old_c.width} x H ${_old_c.height} and will then try scale ${_ratio.toFixed(4)}`);
-  let _final_c;
-  const t4 = new Date().getTime();
-  let goodRatio = false
-  do {
-    // TODO: lint reports this as unsafe reference to _final_c
-    _final_c = scaleCanvas(_old_c, Math.sqrt(_ratio) * 0.95); // always overshoot
-    _b1 = await new Promise((resolve) => {
-      _final_c.toBlob(resolve, imageType, qualityArgument);
-      console.log(`(generating blob of requested type ${imageType})`);
-    });
-    // workingDots();
-    console.log(`... fine-tuning to W ${_final_c.width} x H ${_final_c.height} (size ${_b1.size})`);
-    _ratio *= (maxSize / _b1.size);
-    const t5 = new Date().getTime();
-    console.log(`... resulting _ratio is ${_ratio} ... total time here ${t5 - t4} milliseconds`);
-    console.log(` ... we're within ${(Math.abs(_b1.size - maxSize) / maxSize)} of cap (${maxSize})`);
-    goodRatio = ((Math.abs(_b1.size - maxSize) / maxSize) < .9 && (Math.abs(_b1.size - maxSize) / maxSize) > .8)
-  } while ((((_b1.size >= maxSize) || ((Math.abs(_b1.size - maxSize) / maxSize) > 0.10)) && (--_maxIteration > 0)) && !goodRatio);  // we're pretty tolerant here
+  // // we assume that within this width interval, storage is roughly prop to area,
+  // // with a little tuning downwards
+  // let _ratio = (maxSize / _old_size) * 0.3; // overshoot a bit
+  // let _maxIteration = 3;  // to be safe
+  // console.log("_old_c is:")
+  // console.log(_old_c);
+  // console.log(`... stepping back up to W ${_old_c.width} x H ${_old_c.height} and will then try scale ${_ratio.toFixed(4)}`);
+  // let _final_c;
+  // const t4 = new Date().getTime();
+  // let goodRatio = false
+  // do {
+  //   // TODO: lint reports this as unsafe reference to _final_c
+  //   _final_c = scaleCanvas(_old_c, Math.sqrt(_ratio) * 0.3); // always overshoot
+  //   _b1 = await new Promise((resolve) => {
+  //     _final_c.toBlob(resolve, imageType, qualityArgument);
+  //     console.log(`(generating blob of requested type ${imageType})`);
+  //   });
+  //   // workingDots();
+  //   console.log(`... fine-tuning to W ${_final_c.width} x H ${_final_c.height} (size ${_b1.size})`);
+  //   _ratio *= (maxSize / _b1.size);
+  //   const t5 = new Date().getTime();
+  //   console.log(`... resulting _ratio is ${_ratio} ... total time here ${t5 - t4} milliseconds`);
+  //   console.log(` ... we're within ${(Math.abs(_b1.size - maxSize) / maxSize)} of cap (${maxSize})`);
+  //   goodRatio = ((Math.abs(_b1.size - maxSize) / maxSize) < .9 && (Math.abs(_b1.size - maxSize) / maxSize) > .8)
+  // } while ((((_b1.size >= maxSize) || ((Math.abs(_b1.size - maxSize) / maxSize) > 0.10)) && (--_maxIteration > 0)) && !goodRatio);  // we're pretty tolerant here
 
   return _b1;
 }
 
 
 
-export async function restrictPhoto(sbImage, maxSize) {
+export async function restrictPhoto(sbImage, maxSize, type) {
   console.log("################################################################");
   console.log("#################### inside restrictPhoto() ####################");
   console.log("################################################################");
+  let scale = .5
+
+  switch (type) {
+    case 'thumbnail':
+      scale = .15;
+      console.log(type, scale)
+      break;
+    case 'preview':
+      scale = .3;
+      break;
+    case 'full':
+      scale = .4
+      break;
+    default:
+      scale = .5
+      break;
+
+  }
+  console.log(type, scale)
   const t0 = new Date().getTime();
   // imageType default should be 'image/jpeg'
   // qualityArgument should be 0.92 for jpeg and 0.8 for png (MDN default)
@@ -311,7 +283,7 @@ export async function restrictPhoto(sbImage, maxSize) {
   console.log(`#### getting photo into a blob took ${t2 - t1} milliseconds`);
   // workingDots();
 
-  let _final_b1 = _restrictPhoto(maxSize, _c, _b1);
+  let _final_b1 = _restrictPhoto(maxSize, _c, _b1, scale);
 
   // workingDots();
   console.log(`... ok looks like we're good now ... final size is ${_b1.size} (which is ${((_b1.size * 100) / maxSize).toFixed(2)}% of cap)`);
@@ -367,7 +339,7 @@ export function padImage(image_buffer) {
   }
   // _padding_array.push(image_size);
   const _padding = new Uint8Array(_padding_array).buffer;
-  // console.log('Padding size: ', _padding.byteLength)
+  console.log('Padding size: ', _padding.byteLength)
   let final_data = _appendBuffer(image_buffer, _padding);
   final_data = _appendBuffer(final_data, new Uint32Array([image_size]).buffer);
   // console.log('AFTER PADDING: ', final_data.byteLength)
@@ -428,26 +400,36 @@ function readJpegHeader(bytes) {
   return;
 }
 
-export const getImageDimensions = (url) => {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve({
-      width: img.width,
-      height: img.height,
-    });
-    img.onerror = (error) => {
-      console.error(error)
-      reject(error)
-    }
-    console.log(url)
-    img.src = url;
-  });
-};
 
 export class SBImage {
-  resolveAspectRatio;
-  constructor(image) {
+  SB;
+  /**
+   * 
+   * @param {File} image 
+   * @param {Snackabra} SB 
+   */
+  constructor(image, SB) {
+    this.SB = SB
     this.image = image; // file
+
+
+    this.thumbnailReady = new Promise((resolve) => {
+      // block on getting width and height...
+      this.thumbnailResolve = resolve;
+    });
+
+    this.processingReady = new Promise((resolve) => {
+      // block on getting width and height...
+      this.processingResolve = resolve;
+    });
+
+    var resolveAspectRatio;
+
+    this.aspectRatio = new Promise((resolve) => {
+      // block on getting width and height...
+      resolveAspectRatio = resolve;
+    });
+
     // Fetch the original image
     console.log("Fetching file:");
     console.log(image);
@@ -564,9 +546,54 @@ export class SBImage {
     this.imageSAB = doImageTask(['loadSB', image], false);
   }
 
+  getStorePromises = (roomId) => {
+    return new Promise(resolve => {
+      this.processingReady.then(() => {
+        const previewStorePromise = this.SB.storage.storeObject(this.objectMetadata.preview.paddedBuffer, 'p', roomId, this.objectMetadata.preview)
+        const fullStorePromise = this.SB.storage.storeObject(this.objectMetadata.full.paddedBuffer, 'f', roomId, this.objectMetadata.full)
+        resolve({
+          fullStorePromise: fullStorePromise,
+          previewStorePromise: previewStorePromise
+        });
+      })
+    })
 
-  processImage() {
-    return processImage(this)
+  }
+
+  processThumbnail = () => {
+    const t0 = new Date().getTime();
+    return new Promise((resolve) => {
+      restrictPhoto(this, 15, 'thumbnail').then(async (photo) => {
+        const t1 = new Date().getTime();
+        console.warn(`#### thumbnail processing total ${t1 - t0} milliseconds (blocking)`);
+        this.thumbnail = await getFileData(photo, 'url');
+        this.thumbnailResolve();
+        resolve(this)
+      }).catch(console.error)
+    })
+  }
+
+  processImage = () => {
+    const t0 = new Date().getTime();
+    let promisesArray = [
+      restrictPhoto(this, 2048, 'preview'), // Preview 2MB
+      restrictPhoto(this, 15360, 'full') // Full 15MB
+    ]
+    return new Promise((resolve) => {
+      Promise.all(promisesArray).then(async (results) => {
+        console.log(results)
+        const p = await this.SB.storage.getObjectMetadata(await results[0].arrayBuffer(), 'p')
+        const f = await this.SB.storage.getObjectMetadata(await results[1].arrayBuffer(), 'f')
+        const t1 = new Date().getTime();
+        console.warn(`#### image processing total ${t1 - t0} milliseconds (blocking)`);
+        this.objectMetadata = {
+          preview: p,
+          full: f
+        }
+        this.processingResolve();
+        resolve(this)
+      }).catch(console.error)
+    })
   }
 
   loadToCanvas(canvas) {
@@ -600,12 +627,6 @@ export class SBImage {
       });
     });
   }
-
-  /** @return {Promise<number>} */
-  aspectRatio = () => new Promise((resolve) => {
-    // block on getting width and height...
-    this.resolveAspectRatio = resolve;
-  });
 
 }
 
@@ -666,3 +687,103 @@ function doImageTask(vars, transfer) {
     }
   });
 }
+
+
+// OLD CODE FOR REFERENCE 
+
+
+// async restrictPhoto(photo, maxSize, imageType, qualityArgument) {
+//   // imageType default should be 'image/jpeg'
+//   // qualityArgument should be 0.92 for jpeg and 0.8 for png (MDN default)
+//   maxSize = maxSize * 1024; // KB
+//   // console.log(`Target size is ${maxSize} bytes`);
+//   let _c = await this.readPhoto(photo);
+//   var _b1 = await new Promise((resolve) => {
+//     _c.toBlob(resolve, imageType, qualityArgument);
+//   });
+//   // workingDots();
+//   // console.log(`start canvas W ${_c.width} x H ${_c.height}`)
+//   let _size = _b1.size;
+//   if (_size <= maxSize) {
+//     // console.log(`Starting size ${_size} is fine`);
+//     return _b1;
+//   }
+//   // console.log(`Starting size ${_size} too large, start by reducing image size`);
+//   // compression wasn't enough, so let's resize until we're getting close
+//   let _old_size;
+//   let _old_c;
+//   while (_size > maxSize) {
+//     _old_c = _c;
+//     _c = this.scaleCanvas(_c, .5);
+//     _b1 = await new Promise((resolve) => {
+//       _c.toBlob(resolve, imageType, qualityArgument);
+//     });
+//     _old_size = _size;
+//     _size = _b1.size;
+//     // workingDots();
+//     // console.log(`... reduced to W ${_c.width} x H ${_c.height} (to size ${_size})`);
+//   }
+
+//   // we assume that within this width interval, storage is roughly prop to area,
+//   // with a little tuning downards
+//   let _ratio = maxSize / _old_size;
+//   let _maxIteration = 12;  // to be safe
+//   // console.log(`... stepping back up to W ${_old_c.width} x H ${_old_c.height} and will then try scale ${_ratio.toFixed(4)}`);
+//   let _final_c;
+//   do {
+//     _final_c = this.scaleCanvas(_old_c, Math.sqrt(_ratio) * 0.99);  // we're targeting within 1%
+//     _b1 = await new Promise((resolve) => {
+//       _final_c.toBlob(resolve, imageType, qualityArgument);
+//       // console.log(`(generating blob of requested type ${imageType})`);
+//     });
+//     // workingDots();
+//     // console.log(`... fine-tuning to W ${_final_c.width} x H ${_final_c.height} (size ${_b1.size})`);
+//     _ratio *= (maxSize / _b1.size);
+//   } while (((_b1.size > maxSize) || ((Math.abs(_b1.size - maxSize) / maxSize) > 0.02)) && (--_maxIteration > 0));  // it's ok within 2%
+
+//   // workingDots();
+//   // console.log(`... ok looks like we're good now ... final size is ${_b1.size} (which is ${((_b1.size * 100) / maxSize).toFixed(2)}% of cap)`);
+
+//   // document.getElementById('the-original-image').width = _final_c.width;  // a bit of a hack
+//   return _b1;
+// }
+
+
+// async readPhoto(photo) {
+//   const canvas = document.createElement('canvas');
+//   const img = document.createElement('img');
+
+//   // create img element from File object
+//   img.src = await new Promise((resolve) => {
+//     const reader = new FileReader();
+//     reader.onload = (e) => resolve(e.target.result);
+//     reader.readAsDataURL(photo);
+//   });
+//   await new Promise((resolve) => {
+//     img.onload = resolve;
+//   });
+
+//   // console.log("img object");
+//   // console.log(img);
+//   // console.log("canvas object");
+//   // console.log(canvas);
+
+//   // draw image in canvas element
+//   canvas.width = img.width;
+//   canvas.height = img.height;
+//   canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+//   return canvas;
+// };
+
+
+// scaleCanvas(canvas, scale) {
+//   const scaledCanvas = document.createElement('canvas');
+//   scaledCanvas.width = canvas.width * scale;
+//   scaledCanvas.height = canvas.height * scale;
+//   // console.log(`#### scaledCanvas target W ${scaledCanvas.width} x H ${scaledCanvas.height}`);
+//   scaledCanvas
+//     .getContext('2d')
+//     .drawImage(canvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
+//   // console.log(`#### scaledCanvas actual W ${scaledCanvas.width} x H ${scaledCanvas.height}`);
+//   return scaledCanvas;
+// };

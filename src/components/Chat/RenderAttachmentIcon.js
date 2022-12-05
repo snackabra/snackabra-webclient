@@ -2,34 +2,34 @@ import * as React from 'react';
 import { IconButton } from "@mui/material";
 import AttachmentIcon from '@mui/icons-material/Attachment';
 import { SBImage } from "../../utils/ImageProcessor";
+import { observer } from "mobx-react"
+import { SnackabraContext } from "mobx-snackabra-store";
 
-const getSbImage = (file, props) => {
+const getSbImage = (file, props, sbContext) => {
   return new Promise((resolve) => {
-    const sbImage = new SBImage(file);
-    sbImage.img.then((i)=>{
+    const sbImage = new SBImage(file, sbContext.SB);
+    sbImage.img.then((i) => {
       sbImage.url = i.src
       queueMicrotask(() => {
         const SBImageCanvas = document.createElement('canvas');
         sbImage.loadToCanvas(SBImageCanvas).then((c) => {
-          sbImage.aspectRatio.then((r) => {
-            sbImage.aspectRatio = r
-            props.showLoading(false)
-            resolve(sbImage)
-          });
+          props.showLoading(false)
+          resolve(sbImage)
         });
       });
     })
   })
 }
 
-function RenderAttachmentIcon(props) {
+const RenderAttachmentIcon = observer((props) => {
+  const sbContext = React.useContext(SnackabraContext);
   const selectFiles = async (e) => {
     props.showLoading(true)
     try {
       const files = []
       for (let i in e.target.files) {
         if (typeof e.target.files[i] === 'object') {
-          const attachment = await getSbImage(e.target.files[i], props)
+          const attachment = await getSbImage(e.target.files[i], props, sbContext)
           files.push(attachment)
 
         }
@@ -52,6 +52,6 @@ function RenderAttachmentIcon(props) {
       />
     </IconButton>
   )
-}
+})
 
 export default RenderAttachmentIcon;
