@@ -62,7 +62,7 @@ class ChatRoom extends React.Component {
       }
       this.setState({ visibility: document.visibilityState })
     })
-    if (!this.sbContext.rooms[this.props.roomId]?.key) {
+    if (!this.sbContext.rooms[this.props.roomId]?.key && this.sbContext.socket?.status === 'OPEN') {
       console.log(JSON.stringify(this.sbContext.activeroom))
       console.log(this.sbContext.rooms[this.props.roomId]?.key)
       this.setState({ openFirstVisit: true })
@@ -111,6 +111,14 @@ class ChatRoom extends React.Component {
 
         })
       })
+    }).catch((e) => {
+      console.info(e)
+      if(e.match(/^No such channel on this server/)){
+        this.notify(e + ` Channel ID: ${this.props.roomId}} redirecting you in 5 seconds`, 'error')
+        setTimeout(()=>{
+          window.location.replace(window.location.origin)
+        }, 5000)
+      }
     })
   }
 
@@ -208,7 +216,7 @@ class ChatRoom extends React.Component {
     this.setState({ messages: [...this.state.messages, ...fileMessages] })
     for (let x in filesArray) {
       const sbImage = filesArray[x]
-      sbImage.thumbnailReady.then(async ()=>{
+      sbImage.thumbnailReady.then(async () => {
         const storePromises = await sbImage.getStorePromises(this.sbContext.activeroom)
         let sbm = new SB.SBMessage(this.sbContext.socket)
         // populate
