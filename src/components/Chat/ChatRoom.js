@@ -16,7 +16,6 @@ import FirstVisitDialog from "../Modals/FirstVisitDialog";
 import RenderSend from "./RenderSend";
 import RenderComposer from "./RenderComposer";
 import { observer } from "mobx-react"
-import { getStorePromises /* , retrieveData */ } from "../../utils/ImageProcessor";
 
 const SB = require('snackabra')
 
@@ -63,8 +62,6 @@ class ChatRoom extends React.Component {
       this.setState({ visibility: document.visibilityState })
     })
     if (!this.sbContext.rooms[this.props.roomId]?.key) {
-      console.log(JSON.stringify(this.sbContext.activeroom))
-      console.log(this.sbContext.rooms[this.props.roomId]?.key)
       this.setState({ openFirstVisit: true })
     } else {
       this.connect();
@@ -116,7 +113,8 @@ class ChatRoom extends React.Component {
       if(e.match(/^No such channel on this server/)){
         let i = 5
         setInterval(()=>{
-
+          this.notify(e + ` Channel ID: ${this.props.roomId}} redirecting you in ${i} seconds`, 'error')
+          i--
         }, 1000)
         
         setTimeout(()=>{
@@ -258,46 +256,6 @@ class ChatRoom extends React.Component {
         })
       })
     }
-    // const files = await saveImage()
-    // Promise.all(arrayBufferPromises).then((a) => {
-    //   a.forEach((ab, i) => {
-    //     // resize needs to be done
-    //     Promise.all([
-    //       // these return SBObjectHandle
-    //       this.sbContext.SB.storage.storeObject(ab, 'f', this.sbContext.activeroom),
-    //       this.sbContext.SB.storage.storeObject(ab, 'p', this.sbContext.activeroom)
-    //     ]).then((o) => {
-    //       // mtg: We are sending the message here missing the id of the image, I think we can use the signature 
-    //       let sbm = new SB.SBMessage(this.sbContext.socket)
-    //       // populate
-    //       sbm.contents.image = this.state.files[i].restrictedUrl
-    //       const imageMetaData = {
-    //         imageId: o[0].id,
-    //         imageKey: o[0].key,
-    //         previewId: o[1].id,
-    //         previewKey: o[1].key,
-    //       }
-    //       sbm.contents.imageMetaData = imageMetaData;
-    //       sbm.send(); // and no we don't need to wait
-    //       o[1].verification.then((previewVerification) => {
-    //         // now the preview (up to 2MiB) has been safely stored
-    //         let controlMessage = new SB.SBMessage(this.sbContext.socket);
-    //         // controlMessage.imageMetaData = imageMetaData;
-    //         controlMessage.contents.control = true;
-    //         controlMessage.contents.verificationToken = previewVerification;
-    //         controlMessage.contents.id = o[1].id;
-    //         controlMessage.send();
-    //       }).finally(() => {
-    //         if (i === arrayBufferPromises.length - 1) {
-    //           this.setState({ uploading: false })
-    //           this.removeInputFiles()
-    //         }
-    //       })
-    //     })
-
-    //   })
-
-    // })
   }
 
   sendMessages = async (giftedMessage) => {
@@ -387,10 +345,6 @@ class ChatRoom extends React.Component {
       this.setState({ messages: _messages, changeUserNameProps: {} })
       this.sbContext.messages = _messages;
     });
-    // setTimeout(()=>{
-    //   window.location.reload()
-    // }, 1000)
-
   }
 
   updateFiles = (files) => {
