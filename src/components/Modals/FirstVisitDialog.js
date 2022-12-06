@@ -22,22 +22,11 @@ const FirstVisitDialog = observer((props) => {
   }
 
   const submit = async () => {
-    setSubmitClick(true)
-    // localStorage.setItem(props.roomId + '_username', text)
-    //activeChatContext.selectRoom(props.roomId);
     props.onClose(text);
-    setTimeout(() => {
-      //page.reload();
-    }, 1000)
-
   }
 
   const onClose = () => {
-    if (!submitClick) {
-      setOpen(true)
-    } else {
-      setOpen(false)
-    }
+    submit()
   }
 
   return (
