@@ -52,7 +52,7 @@ const FirstVisitDialog = observer((props) => {
         <Grid item xs={12}>
           <Typography variant={'body1'}>
             Welcome! If this is the first time you've been to this room, enter
-              your username for this room and press 'Ok' and we we will generate fresh cryptographic keys that are
+              your username (optional) for this room and press 'Ok' and we we will generate fresh cryptographic keys that are
               unique to you and to this room.
           </Typography>
         </Grid>

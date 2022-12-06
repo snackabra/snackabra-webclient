@@ -62,7 +62,7 @@ class ChatRoom extends React.Component {
       }
       this.setState({ visibility: document.visibilityState })
     })
-    if (!this.sbContext.rooms[this.props.roomId]?.key && this.sbContext.socket?.status === 'OPEN') {
+    if (!this.sbContext.rooms[this.props.roomId]?.key) {
       console.log(JSON.stringify(this.sbContext.activeroom))
       console.log(this.sbContext.rooms[this.props.roomId]?.key)
       this.setState({ openFirstVisit: true })
@@ -114,7 +114,11 @@ class ChatRoom extends React.Component {
     }).catch((e) => {
       console.info(e)
       if(e.match(/^No such channel on this server/)){
-        this.notify(e + ` Channel ID: ${this.props.roomId}} redirecting you in 5 seconds`, 'error')
+        let i = 5
+        setInterval(()=>{
+
+        }, 1000)
+        
         setTimeout(()=>{
           window.location.replace(window.location.origin)
         }, 5000)

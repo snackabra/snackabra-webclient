@@ -27,15 +27,19 @@ const ChangeNameDialog = observer((props) => {
   const setMe = () => {
     setUsername('Me')
     sbContext.username = username
-    props.onClose()
+    props.onClose(sbContext.username, props._id)
   }
 
   const saveUserName = () => {
     props.onClose(username, props._id)
   }
 
+  const close = () =>{
+    props.onClose(username, props._id)
+  }
+
   return (
-    <ResponsiveDialog title={'Change Username'} open={open} onClose={props.onClose}>
+    <ResponsiveDialog title={'Change Username'} open={open} onClose={close} showActions>
       <Grid container
         direction="row"
         justifyContent="space-between"

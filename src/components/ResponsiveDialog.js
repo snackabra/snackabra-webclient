@@ -11,6 +11,7 @@ export default function ResponsiveDialog(props) {
   const [open, setOpen] = React.useState(props.open);
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
+
   React.useEffect(() => {
     setOpen(props.open)
   }, [props.open])
