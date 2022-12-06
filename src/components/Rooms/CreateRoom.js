@@ -6,6 +6,13 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { useState, useContext } from "react"
 import NotificationContext from "../../contexts/NotificationContext";
 import FirstVisitDialog from "../Modals/FirstVisitDialog";
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import InputLabel from '@mui/material/InputLabel';
+import InputAdornment from '@mui/material/InputAdornment';
+import FormControl from '@mui/material/FormControl';
+import OutlinedInput from '@mui/material/OutlinedInput';
+import IconButton from '@mui/material/IconButton';
 import { observer } from "mobx-react"
 import { SnackabraContext } from "mobx-snackabra-store";
 
@@ -17,6 +24,7 @@ const CreateRoom = observer((props) => {
   const [roomId, setRoomId] = useState('');
   const [creating, setCreating] = useState(false);
   const [openFirstVisit, setOpenFirstVisit] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const success = (roomId) => {
     if (typeof props?.onClose === 'function') {
@@ -65,6 +73,14 @@ const CreateRoom = observer((props) => {
 
   }
 
+  const handleMouseDownPassword = (event) => {
+    event.preventDefault();
+  };
+
+  const handleClickShowPassword = () => {
+    setShowPassword(!showPassword)
+  };
+
   return (
     <Grid spacing={2}
       container
@@ -73,14 +89,29 @@ const CreateRoom = observer((props) => {
       alignItems="flex-start">
 
       <Grid xs={12} item>
-        <TextField
-          fullWidth
+
+        <FormControl fullWidth variant="outlined">
+          <OutlinedInput
           placeholder={'Server Secret'}
-          value={secret}
-          onChange={(e) => {
-            setSecret(e.target.value)
-          }}
-        />
+            type={showPassword ? 'text' : 'password'}
+            value={secret}
+            onChange={(e) => {
+              setSecret(e.target.value)
+            }}
+            endAdornment={
+              <InputAdornment position="end">
+                <IconButton
+                  aria-label="toggle password visibility"
+                  onClick={handleClickShowPassword}
+                  onMouseDown={handleMouseDownPassword}
+                  edge="end"
+                >
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </InputAdornment>
+            }
+          />
+        </FormControl>
       </Grid>
       <Grid xs={12} item>
         {creating ?
@@ -96,7 +127,7 @@ const CreateRoom = observer((props) => {
 
       </Grid>
       <FirstVisitDialog open={openFirstVisit} sbContext={sbContext} onClose={(username) => {
-        saveUsername(username).then(()=>{
+        saveUsername(username).then(() => {
           setOpenFirstVisit(false)
           success(roomId);
         })
