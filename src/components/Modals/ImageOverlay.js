@@ -23,6 +23,14 @@ export default function ImageOverlay(props) {
 
   React.useEffect(() => {
     setImage(props.img)
+    // window.pinchZoomEvent = document.addEventListener('touchmove', function (event) {
+
+    // }, { passive: false });
+    // return () =>{
+    //   window.pinchZoomEvent = document.addEventListener('touchmove', function (event) {
+    //     if (event.scale !== 1) { event.preventDefault(); }
+    //   }, { passive: false });
+    // }
   }, [props.img])
 
   React.useEffect(() => {
