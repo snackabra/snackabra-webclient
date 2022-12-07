@@ -68,9 +68,7 @@ const CreateRoom = observer((props) => {
       const user_pubKey = JSON.parse(_id);
       contacts[user_pubKey.x + ' ' + user_pubKey.y] = newUsername === '' ? 'Unnamed' : newUsername;
       sbContext.contacts = contacts;
-      setTimeout(() => {
-        resolve(true)
-      }, 60000)
+      resolve(true)
 
     })
 
