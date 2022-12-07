@@ -146,10 +146,6 @@ const RenderBubble = (props) => {
       currentMessage.user &&
       diffMessage.user._id === currentMessage.user._id);
   }
-  if (isMe && props.currentMessage.sender_username === 'Unnamed') {
-    props.currentMessage.user.name = 'Me'
-    console.log('here')
-  }
   return (
     <Grid style={{ width: '50%' }}>
       {(isSameUser(props.currentMessage, props.previousMessage) && isSameDay(props.currentMessage, props.previousMessage))

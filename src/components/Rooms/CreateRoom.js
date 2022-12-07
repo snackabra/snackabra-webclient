@@ -1,6 +1,6 @@
 import * as React from "react"
 import { Trans } from "@lingui/macro";
-import { Grid, TextField } from "@mui/material";
+import { Grid } from "@mui/material";
 import { StyledButton } from "../../styles/Buttons";
 import CircularProgress from '@mui/material/CircularProgress';
 import { useState, useContext } from "react"
@@ -8,7 +8,6 @@ import NotificationContext from "../../contexts/NotificationContext";
 import FirstVisitDialog from "../Modals/FirstVisitDialog";
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import InputLabel from '@mui/material/InputLabel';
 import InputAdornment from '@mui/material/InputAdornment';
 import FormControl from '@mui/material/FormControl';
 import OutlinedInput from '@mui/material/OutlinedInput';
@@ -61,14 +60,18 @@ const CreateRoom = observer((props) => {
   }
 
   const saveUsername = (newUsername) => {
+    console.trace('saveUsername')
     return new Promise((resolve) => {
       const _id = sbContext.user._id;
       sbContext.username = newUsername;
-      const contacts = sbContext.contacts
-      const user_pubKey = _id;
-      contacts[user_pubKey.x + ' ' + user_pubKey.y] = newUsername;
+      const contacts = {}
+      const user_pubKey = JSON.parse(_id);
+      contacts[user_pubKey.x + ' ' + user_pubKey.y] = newUsername === '' ? 'Unnamed' : newUsername;
       sbContext.contacts = contacts;
-      resolve(true)
+      setTimeout(() => {
+        resolve(true)
+      }, 60000)
+
     })
 
   }
@@ -92,7 +95,7 @@ const CreateRoom = observer((props) => {
 
         <FormControl fullWidth variant="outlined">
           <OutlinedInput
-          placeholder={'Server Secret'}
+            placeholder={'Server Secret'}
             type={showPassword ? 'text' : 'password'}
             value={secret}
             onChange={(e) => {

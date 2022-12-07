@@ -33,7 +33,6 @@ import { SnackabraContext } from "mobx-snackabra-store";
 
 
 const drawerWidth = 240;
-
 const ResponsiveDrawer = observer((props) => {
   const sbContext = React.useContext(SnackabraContext);
   const Notifications = useContext(NotificationContext)
@@ -48,21 +47,52 @@ const ResponsiveDrawer = observer((props) => {
   const [editingRoomId, setEditingRoomId] = React.useState(false);
   const [updatedName, setUpdatedName] = React.useState(false);
 
-  React.useEffect(()=>{
-      setRoomId(room_id)
-  },[room_id])
+  React.useEffect(() => {
+    setRoomId(room_id)
+  }, [room_id])
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
 
-  const getRoomData = (roomId) => {
-    console.trace("WARNING: should not be calling getRoomData()")
-    console.log("parameters are (roomId, sbContext.roomMetadata):")
-    console.log(roomId)
-    console.log(sbContext.roomMetadata)
-    // downloadRoomData(roomId, sbContext.roomMetadata)
+  const getRoomData = () => {
+    sbContext.downloadRoomData().then((data) => {
+      console.log(data)
+      downloadFile(JSON.stringify(data.storage), sbContext.rooms[roomId].name + "_storage.txt")
+      downloadFile(JSON.stringify(data.channel), sbContext.rooms[roomId].name + "_data.txt");
+    })
   }
+
+  const exportKeys = () => {
+    const data = {roomData: {}, contacts: {}, roomMetadata: {}}
+    data.roomData[roomId] = {
+      key: sbContext.rooms[roomId].key,
+      lastSeenMessage: sbContext.rooms[roomId].lastSeenMessage
+    }
+    data.contacts = sbContext.rooms[roomId].contacts
+    data.roomMetadata[roomId] = {
+      name: sbContext.rooms[roomId].name,
+      lastMessageTime: sbContext.rooms[roomId].lastMessageTime,
+      unread: false
+    }
+    data.pem = false;
+    downloadFile(JSON.stringify(data), sbContext.rooms[roomId].name + "_keys.txt");
+  }
+
+  const downloadFile = (text, file) => {
+    try {
+      let element = document.createElement('a');
+      element.setAttribute('href', 'data:text/plain;charset=utf-8, ' + encodeURIComponent(text));
+      element.setAttribute('download', file);
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+
 
   const editRoom = (roomId) => {
     setEditingRoomId(roomId)
@@ -184,6 +214,9 @@ const ResponsiveDrawer = observer((props) => {
                       }}
                       getRoomData={() => {
                         getRoomData(room)
+                      }}
+                      exportKeys={() => {
+                        exportKeys(room)
                       }}
                     />
                   </Grid>

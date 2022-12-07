@@ -9,9 +9,6 @@ import { observer } from "mobx-react"
 const FirstVisitDialog = observer((props) => {
   const [open, setOpen] = useState(props.open);
   const [text, setText] = useState('');
-  const [submitClick, setSubmitClick] = useState(false);
-
-
 
   React.useEffect(() => {
     setOpen(props.open)

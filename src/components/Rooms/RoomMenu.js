@@ -68,15 +68,29 @@ const RoomMenu = (props) => {
             </ListItemIcon>
             <ListItemText>Edit Name</ListItemText>
           </MenuItem>
-          <MenuItem onClick={() => {
-            handleClose()
-            props.getRoomData()
-          }}>
-            <ListItemIcon>
-              <FileDownloadOutlinedIcon />
-            </ListItemIcon>
-            <ListItemText>Download Room Data</ListItemText>
-          </MenuItem>
+          {props.socket?.status === 'OPEN' && props.selected ?
+            <MenuItem onClick={() => {
+              handleClose()
+              props.getRoomData()
+            }}>
+              <ListItemIcon>
+                <FileDownloadOutlinedIcon />
+              </ListItemIcon>
+              <ListItemText>Download Data</ListItemText>
+            </MenuItem> : ''
+          }
+
+          {props.socket?.status === 'OPEN' && props.selected ?
+            <MenuItem onClick={() => {
+              handleClose()
+              props.exportKeys()
+            }}>
+              <ListItemIcon>
+                <FileDownloadOutlinedIcon />
+              </ListItemIcon>
+              <ListItemText>Export Keys</ListItemText>
+            </MenuItem> : ''
+          }
           <MenuItem onClick={toggle}>
             <ListItemIcon>
               <IosShareOutlinedIcon />
@@ -86,7 +100,7 @@ const RoomMenu = (props) => {
         </MenuList>
       </Menu>
       {props.selected ?
-        <ConnectionStatus socket={props.socket}/> 
+        <ConnectionStatus socket={props.socket} />
         : ''
 
       }

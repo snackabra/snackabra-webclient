@@ -110,14 +110,14 @@ class ChatRoom extends React.Component {
       })
     }).catch((e) => {
       console.info(e)
-      if(e.match(/^No such channel on this server/)){
+      if (e.match(/^No such channel on this server/)) {
         let i = 5
-        setInterval(()=>{
+        setInterval(() => {
           this.notify(e + ` Channel ID: ${this.props.roomId}} redirecting you in ${i} seconds`, 'error')
           i--
         }, 1000)
-        
-        setTimeout(()=>{
+
+        setTimeout(() => {
           window.location.replace(window.location.origin)
         }, 5000)
       }
@@ -241,14 +241,26 @@ class ChatRoom extends React.Component {
             controlMessage.contents.control = true;
             controlMessage.contents.verificationToken = verification;
             controlMessage.contents.id = imageMetaData.previewId;
-            controlMessage.send();
+            controlMessage.send().then(() => {
+              console.log('Control message for preview image sent!')
+            })
+            queueMicrotask(() => {
+              storePromises.fullStorePromise.then((verificationPromise) => {
+                console.log(verificationPromise)
+                verificationPromise.verification.then((verification) => {
+                  console.info('Full image uploaded')
+                  let controlMessage = new SB.SBMessage(this.sbContext.socket);
+                  controlMessage.contents.control = true;
+                  controlMessage.contents.verificationToken = verification;
+                  controlMessage.contents.id = imageMetaData.imageId;
+                  controlMessage.send().then(() => {
+                    console.log('Control message for full image sent!')
+                  })
+                });
+              });
+            })
           })
         }).finally(() => {
-          queueMicrotask(() => {
-            storePromises.fullStorePromise.then(() => {
-              console.info('Full image uploaded')
-            })
-          });
           if (Number(x) === filesArray.length - 1) {
             this.setState({ uploading: false })
             this.removeInputFiles()

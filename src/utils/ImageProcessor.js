@@ -14,138 +14,7 @@
 import ImageWorker from './ImageWorker.js';
 import ArrayBufferWorker from './ArrayBufferWorker.js';
 
-import { _appendBuffer, arrayBufferToBase64, Snackabra } from "snackabra";
-
-// const t0 = new Date().getTime();
-// const url = await getFileData(await restrictPhoto(sbImage, 15), 'url');
-// const t1 = new Date().getTime();
-// console.warn(`#### url took total ${t1 - t0} milliseconds (blocking)`);
-// const t02 = new Date().getTime();
-// const previewImage = padImage(await (await restrictPhoto(sbImage, 2048)).arrayBuffer());
-// const t03 = new Date().getTime();
-// console.warn(`#### previewImage load total ${t03 - t02} milliseconds (blocking)`);
-// const t00 = new Date().getTime();
-// const previewHash = await generateImageHash(previewImage);
-// const t01 = new Date().getTime();
-// console.warn(`#### previewHash took total ${t01 - t00} milliseconds (blocking)`);
-// // only if the file is over 15 MB do we restrict the full file - 15360 here is 15360 KB which is 15 MB
-// console.log(sbImage.image.size)
-// const t2 = new Date().getTime();
-// console.warn(`#### fullImage load took total ${t2 - t1} milliseconds (blocking)`);
-// const fullHash = await generateImageHash(fullImage);
-// const t3 = new Date().getTime();
-// console.warn(`#### fullHash took total ${t3 - t2} milliseconds (blocking)`);
-// // return { full: { id: fullHash.id, key: fullHash.key }, preview: { id: previewHash.id, key: previewHash.key } }
-// return {
-//   url: url,
-//   previewImage: previewImage,
-//   fullImage: fullImage,
-//   fullId: fullHash.id,
-//   previewId: previewHash.id,
-//   fullKey: fullHash.key,
-//   previewKey: previewHash.key
-// };
-
-
-// async function uploadImage(storageToken, encrypt_data, type, image_id, data) {
-//   return await fetch(config.STORAGE_SERVER + "/storeData?type=" + type + "&key=" + encodeURIComponent(image_id),
-//     {
-//       method: "POST",
-//       body: assemblePayload({
-//         iv: encrypt_data.iv,
-//         salt: encrypt_data.salt,
-//         image: data.content,
-//         storageToken: (new TextEncoder()).encode(storageToken),
-//         vid: window.crypto.getRandomValues(new Uint8Array(48))
-//       })
-//     });
-// }
-
-export async function storeImage(image, image_id, keyData, type, roomId) {
-  console.trace("ERROR: storeImage() should not be called");
-  throw new Error('... fix storeImage() ... ');
-
-  // try {
-  //   const storeReqResp = await (await fetch(config.STORAGE_SERVER + "/storeRequest?name=" + image_id)).arrayBuffer();
-  //   const encrypt_data = extractPayload(storeReqResp);
-  //   const key = await getImageKey(keyData, encrypt_data.salt);
-  //   let storageToken, verificationToken;
-  //   const data = await encrypt(image, key, "arrayBuffer", encrypt_data.iv);
-  //   const storageTokenReq = await (await fetch(config.ROOM_SERVER + roomId + '/storageRequest?size=' + data.content.byteLength)).json();
-  //   if (storageTokenReq.hasOwnProperty('error')) {
-  //     return { error: storageTokenReq.error }
-  //   }
-  //   storageToken = JSON.stringify(storageTokenReq);
-  //   const resp = await uploadImage(storageToken, encrypt_data, type, image_id, data)
-  //   const status = resp.status;
-  //   const resp_json = await resp.json();
-  //   if (status !== 200) {
-  //     return { error: 'Error: storeImage() failed (' + resp_json.error + ')' };
-  //   }
-  //   verificationToken = resp_json.verification_token;
-  //   return { verificationToken: verificationToken, id: resp_json.image_id, type: type };
-  // } catch (e) {
-  //   console.error(e)
-  //   return image_id;
-  // }
-}
-
-
-export async function generateImageHash(image) {
-  console.log("**** WARNING: generateImageHash() in ImageProcessor.js should not be called");
-  try {
-    const digest = await crypto.subtle.digest('SHA-512', image);
-    const _id = digest.slice(0, 32);
-    const _key = digest.slice(32);
-    return {
-      // id: encodeURIComponent(utils.arrayBufferToBase64(_id)),
-      id: arrayBufferToBase64(_id),
-      // key: encodeURIComponent(utils.arrayBufferToBase64(_key))
-      key: arrayBufferToBase64(_key)
-    };
-  } catch (e) {
-    console.log(e);
-    return {};
-  }
-}
-
-// async function downloadImage(control_msg, image_id, cache) {
-//   console.log("WARNING: downloadImage() should be replaced with a call to fetchData()")
-//   const imageFetch = await (await fetch(config.STORAGE_SERVER + "/fetchData?id=" + encodeURIComponent(control_msg.id) + '&verification_token=' + control_msg.verificationToken[0].verificationToken)).arrayBuffer();
-//   let data = extractPayload(imageFetch);
-//   document.cacheDb.setItem(`${image_id}_cache`, data)
-//   return data;
-// }
-
-
-// export async function retrieveData(message, controlMessages, cache) {
-//   const imageMetaData = message.imageMetaData;
-//   const image_id = imageMetaData.previewId;
-//   const control_msg = controlMessages.find(msg => msg.hasOwnProperty('id') && msg.id.startsWith(image_id));
-//   if (!control_msg) {
-//     return { 'error': 'Failed to fetch data - missing control message for that image' };
-//   }
-//   const cached = await document.cacheDb.getItem(`${image_id}_cache`);
-//   let data;
-//   if (cached === null) {
-//     data = await downloadImage(control_msg, image_id, cache);
-//   } else {
-//     console.log('Loading image data from cache')
-//     data = cached;
-//   }
-//   const iv = data.iv;
-//   const salt = data.salt;
-//   const image_key = await getImageKey(imageMetaData.previewKey, salt);
-//   const encrypted_image = data.image;
-//   const padded_img = await decrypt(image_key, { content: encrypted_image, iv: iv }, "arrayBuffer");
-//   const img = unpadData(padded_img.plaintext);
-//   if (img.error) {
-//     console.log('(Image error: ' + img.error + ')');
-//     throw new Error('Failed to fetch data - authentication or formatting error');
-//   }
-//   return { 'url': "data:image/jpeg;base64," + arrayBufferToBase64(img, '64') };
-// }
-
+import { _appendBuffer } from "snackabra";
 
 export async function getFileData(file, outputType) {
   try {
@@ -259,7 +128,6 @@ export async function restrictPhoto(sbImage, maxSize, type) {
       break;
 
   }
-  console.log(type, scale)
   const t0 = new Date().getTime();
   // imageType default should be 'image/jpeg'
   // qualityArgument should be 0.92 for jpeg and 0.8 for png (MDN default)
@@ -394,6 +262,7 @@ function readJpegHeader(bytes) {
 
 export class SBImage {
   SB;
+  imageBuffer;
   /**
    * 
    * @param {File} image 
@@ -493,16 +362,21 @@ export class SBImage {
     })
 
     this.img = new Promise((resolve) => {
+      if(this.url){
+        resolve(this.url)
+      }
       const reader = new FileReader();
       reader.onload = (e) => {
         var img = new Image();
         img.onload = function () {
           this.width = img.width;
           this.height = img.height;
+          this.url = img;
           resolve(img);
         };
         img.src = reader.result;
       }
+      console.warn(this.image.size)
       reader.readAsDataURL(this.image);
     });
 
@@ -513,10 +387,17 @@ export class SBImage {
         const canvas = document.createElement('canvas');
         canvas.width = this.width;
         canvas.height = this.height;
-        this.img.then((img) =>
+        if(!this.url){
+          this.img.then((img) =>
           canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height));
         // this will return right away with correctly-sized canvas
         resolve(canvas);
+        }else{
+          canvas.getContext('2d').drawImage(this.url, 0, 0, canvas.width, canvas.height);
+          // this will return right away with correctly-sized canvas
+          resolve(canvas);
+        }
+
       });
     });
 
@@ -587,6 +468,26 @@ export class SBImage {
         console.warn(`#### image processing total ${t1 - t0} milliseconds (blocking)`);
         this.objectMetadata = {
           preview: p,
+          full: f
+        }
+        this.processingResolve();
+        resolve(this)
+      }).catch(console.error)
+    })
+  }
+
+  processFullImage = () => {
+    const t0 = new Date().getTime();
+    let promisesArray = [
+      restrictPhoto(this, 15360, 'full') // Full 15MB
+    ]
+    return new Promise((resolve) => {
+      Promise.all(promisesArray).then(async (results) => {
+        console.log(results)
+        const f = await this.SB.storage.getObjectMetadata(await results[1].arrayBuffer(), 'f')
+        const t1 = new Date().getTime();
+        console.warn(`#### image processing total ${t1 - t0} milliseconds (blocking)`);
+        this.objectMetadata = {
           full: f
         }
         this.processingResolve();

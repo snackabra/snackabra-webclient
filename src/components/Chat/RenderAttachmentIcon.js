@@ -10,11 +10,12 @@ const getSbImage = (file, props, sbContext) => {
     const sbImage = new SBImage(file, sbContext.SB);
     sbImage.img.then((i) => {
       sbImage.url = i.src
+      props.showLoading(false)
+      resolve(sbImage)
       queueMicrotask(() => {
         const SBImageCanvas = document.createElement('canvas');
         sbImage.loadToCanvas(SBImageCanvas).then((c) => {
-          props.showLoading(false)
-          resolve(sbImage)
+
         });
       });
     })
