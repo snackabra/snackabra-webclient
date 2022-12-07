@@ -456,7 +456,7 @@ export class SBImage {
   processImage = () => {
     const t0 = new Date().getTime();
     let promisesArray = [
-      restrictPhoto(this, 2048, 'preview'), // Preview 2MB
+      restrictPhoto(this, 4096, 'preview'), // Preview 4MB
       restrictPhoto(this, 15360, 'full') // Full 15MB
     ]
     return new Promise((resolve) => {
