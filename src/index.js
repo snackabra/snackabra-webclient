@@ -26,6 +26,15 @@ Object.defineProperty(document, 'cacheDb', {
 if (process.env.NODE_ENV === 'production') {
 
   console.log(process.env.NODE_ENV + ' registering service worker')
-  serviceWorkerRegistration.register();
+
+  const updateServiceWorker = (registration) => {
+    registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+    registration.update();
+
+  };
+
+  serviceWorkerRegistration.register({
+    onUpdate: reg => updateServiceWorker(reg),
+  });
 }
 

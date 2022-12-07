@@ -24,8 +24,6 @@ const sbConfig = {
   storage_server: process.env.REACT_APP_STORAGE_SERVER
 }
 
-console.log(sbConfig)
-
 const App = () => {
   return (
     <I18nProvider i18n={i18n}>
