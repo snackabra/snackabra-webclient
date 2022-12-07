@@ -19,7 +19,7 @@ const ShareDialog = (props) => {
     }
     setTimeout(() => {
       props.onClose();
-    }, 1000)
+    }, 250)
 
   }
 

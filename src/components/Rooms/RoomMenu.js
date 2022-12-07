@@ -32,7 +32,10 @@ const RoomMenu = (props) => {
 
   return (
     <div>
-      <ShareDialog open={dialogOpen} roomId={props.roomId} onClose={toggle} />
+      <ShareDialog open={dialogOpen} roomId={props.roomId} onClose={()=>{
+        toggle()
+        handleClose()
+        }} />
       <IconButton
         aria-label="more"
         id="long-button"

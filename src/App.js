@@ -9,6 +9,7 @@ import AppRoutes from "./Routes";
 import theme from "./theme";
 import { ThemeProvider } from "@mui/material";
 import { NotificationProvider } from "./contexts/NotificationContext";
+import { LogProvider } from "./contexts/LogContext";
 import { SnackabraProvider } from "mobx-snackabra-store";
 import NotificationBar from "./components/NotificationBar";
 
@@ -30,7 +31,9 @@ const App = () => {
       <ThemeProvider theme={theme}>
         <SnackabraProvider config={sbConfig}>
           <NotificationProvider>
-            <AppRoutes />
+            <LogProvider>
+              <AppRoutes />
+            </LogProvider>
             <NotificationBar />
           </NotificationProvider>
         </SnackabraProvider>
