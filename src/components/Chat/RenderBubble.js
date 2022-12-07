@@ -1,11 +1,13 @@
 import React from 'react'
 import { Grid, Typography } from "@mui/material";
 import { Bubble } from "react-native-gifted-chat";
+import useMediaQuery from '@mui/material/useMediaQuery';
 const SB = require('snackabra')
 const sbCrypto = new SB.SBCrypto();
 
 const RenderBubble = (props) => {
-
+  const smDown = useMediaQuery((theme) => theme.breakpoints.down('sm'));
+  const lgDown = useMediaQuery((theme) => theme.breakpoints.down('lg'));
   const [isVerifiedGuest, setVerifiedGuest] = React.useState(false)
   const [isAdmin, setIsAdmin] = React.useState(false)
   const [isMe, setMe] = React.useState(false)
@@ -25,24 +27,28 @@ const RenderBubble = (props) => {
   }, [props.currentMessage.user._id, props.socket.api, props.socket.exportable_owner_pubKey, props.socket.exportable_pubKey])
 
   React.useEffect(() => {
-    if (props.currentMessage.encrypted) {
+    if (props.currentMessage.whispered) {
       setNewProps({
         wrapperStyle: {
           left: {
-            backgroundColor: "yellow",
+            backgroundColor: "#FEE251",
+            flexGrow: 1,
+            marginRight: 0
           },
           right: {
-            backgroundColor: "yellow",
+            backgroundColor: "#FEE251",
+            flexGrow: 1,
+            marginLeft: 0
           }
         },
         textStyle: {
           left: {
             fontStyle: "italic",
-            color: "Black",
+            color: "#000",
           },
           right: {
             fontStyle: "italic",
-            color: "black",
+            color: "#000",
           }
         }
       })
@@ -53,11 +59,15 @@ const RenderBubble = (props) => {
             borderColor: "red",
             borderStyle: "solid",
             borderWidth: "4px",
+            flexGrow: 1,
+            marginRight: 0
           },
           right: {
             borderColor: "red",
             borderStyle: "solid",
             borderWidth: "4px",
+            flexGrow: 1,
+            marginLeft: 0
           }
         }
       })
@@ -68,6 +78,8 @@ const RenderBubble = (props) => {
             borderColor: "black",
             borderStyle: "solid",
             borderWidth: "2px",
+            flexGrow: 1,
+            marginRight: 0
           }
         },
         textStyle: {
@@ -84,11 +96,15 @@ const RenderBubble = (props) => {
             borderColor: "gray",
             borderStyle: "solid",
             borderWidth: "4px",
+            flexGrow: 1,
+            marginRight: 0
           },
           right: {
             borderColor: "gray",
             borderStyle: "solid",
             borderWidth: "4px",
+            flexGrow: 1,
+            marginLeft: 0
           }
         }
       })
@@ -101,11 +117,15 @@ const RenderBubble = (props) => {
             borderColor: "#2ECC40",
             borderStyle: "solid",
             borderWidth: "4px",
+            flexGrow: 1,
+            marginRight: 0
           },
           right: {
             borderColor: "#2ECC40",
             borderStyle: "solid",
             borderWidth: "4px",
+            flexGrow: 1,
+            marginLeft: 0
           }
         }
       })
@@ -127,7 +147,7 @@ const RenderBubble = (props) => {
         }
       })
     }
-  }, [isVerifiedGuest, isAdmin, props.currentMessage.encrypted, props.currentMessage.info, props.currentMessage._id])
+  }, [isVerifiedGuest, isAdmin, props.currentMessage.encrypted, props.currentMessage.info, props.currentMessage._id, props.currentMessage.whispered])
 
 
   const isSameDay = (currentMessage, diffMessage) => {
@@ -156,17 +176,17 @@ const RenderBubble = (props) => {
           left: 0,
           fontSize: 12,
           backgroundColor: 'transparent',
-          color: props.currentMessage.whispered || props.position === 'left' ? '#aaa' : 'white'
+          color: props.position === 'left' ? '#aaa' : 'white'
         }}>
           {props.currentMessage.user.name}
         </Typography>}
       <Bubble
         textStyle={{
           right: {
-            color: 'white',
+            color: props.currentMessage.whispered ? '#aaa' : 'white',
           },
           left: {
-            color: 'black'
+            color: props.currentMessage.whispered ? '#aaa' : 'black'
           }
         }}
         {...props}

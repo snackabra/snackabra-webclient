@@ -14,6 +14,7 @@ import { View } from "react-native";
 import AttachMenu from "./AttachMenu";
 import FirstVisitDialog from "../Modals/FirstVisitDialog";
 import RenderSend from "./RenderSend";
+import WhisperUserDialog from "../Modals/WhisperUserDialog";
 import RenderComposer from "./RenderComposer";
 import { observer } from "mobx-react"
 
@@ -23,6 +24,7 @@ const SB = require('snackabra')
 class ChatRoom extends React.Component {
   sending = {}
   state = {
+    openWhisper: false,
     openPreview: false,
     openChangeName: false,
     openFirstVisit: false,
@@ -39,7 +41,8 @@ class ChatRoom extends React.Component {
     uploading: false,
     user: {},
     height: 0,
-    visibility: 'visible'
+    visibility: 'visible',
+    replyTo: null
   }
   sbContext = this.props.sbContext
 
@@ -183,8 +186,8 @@ class ChatRoom extends React.Component {
 
   handleReply = (user) => {
     try {
-      if (this.sbContext.roomOwner) {
-        this.sbContext.handleReply(user)
+      if (this.sbContext.owner) {
+        this.setState({replyTo: user._id, openWhisper: true})
       } else {
         this.notify('Whisper is only for room owners.', 'info')
       }
@@ -363,6 +366,9 @@ class ChatRoom extends React.Component {
     this.setState({ files: files })
   }
 
+  closeWhisper = () => {
+    this.setState({openWhisper: false})
+  }
   render() {
     const attachMenu = Boolean(this.state.anchorEl);
     return (
@@ -372,6 +378,7 @@ class ChatRoom extends React.Component {
         flexBasis: 'fit-content',
         height: this.state.height - 48
       }}>
+        <WhisperUserDialog replyTo={this.state.replyTo} open={this.state.openWhisper} onClose={this.closeWhisper} />
         <ImageOverlay open={this.state.openPreview} img={this.state.img} imgLoaded={this.state.imgLoaded}
           onClose={this.imageOverlayClosed} />
         <ChangeNameDialog {...this.state.changeUserNameProps} open={this.state.openChangeName} onClose={(userName, _id) => {
