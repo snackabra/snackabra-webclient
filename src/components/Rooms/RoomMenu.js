@@ -83,7 +83,7 @@ const RoomMenu = (props) => {
             </MenuItem> : ''
           }
 
-          {props.socket?.status === 'OPEN' && props.selected ?
+          {/* {props.socket?.status === 'OPEN' && props.selected ?
             <MenuItem onClick={() => {
               handleClose()
               props.exportKeys()
@@ -93,7 +93,7 @@ const RoomMenu = (props) => {
               </ListItemIcon>
               <ListItemText>Export Keys</ListItemText>
             </MenuItem> : ''
-          }
+          } */}
           <MenuItem onClick={toggle}>
             <ListItemIcon>
               <IosShareOutlinedIcon />

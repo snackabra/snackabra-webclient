@@ -6,11 +6,25 @@ import { useState, useContext } from "react"
 import NotificationContext from "../../contexts/NotificationContext";
 import { observer } from "mobx-react"
 import { SnackabraContext } from "mobx-snackabra-store";
+const SB = require("snackabra")
 
 const ImportRoomKeys = observer((props) => {
   const sbContext = React.useContext(SnackabraContext);
   const Notifications = useContext(NotificationContext)
-  const [key, setKey] = useState('No file selected');
+  const [key, setKey] = useState('');
+  const [data, setData] = useState(JSON.stringify({}));
+  const [asPem, setAsPem] = useState(false);
+
+  React.useEffect(() => {
+    try{
+      if(Object.keys(JSON.parse(data).roomData).length !== 0){
+        setKey(data)
+      }
+    }catch(e){
+      console.warn(e)
+    }
+
+  }, [data])
 
   let fileReader;
 
@@ -44,9 +58,14 @@ const ImportRoomKeys = observer((props) => {
     }
   }
 
-  const importKeys = () =>{
+  const importPem = (json) =>{
+    setData(json);
+    setAsPem(true)
+  }
+
+  const importKeys = async () =>{
     try {
-      sbContext.importRoom(JSON.parse(key))
+      await sbContext.importKeys(asPem ? await parseData(key) : JSON.parse(key))
       Notifications.setMessage('Key file imported!');
       Notifications.setSeverity('success');
       Notifications.setOpen(true)
@@ -56,6 +75,26 @@ const ImportRoomKeys = observer((props) => {
       Notifications.setSeverity('error');
       Notifications.setOpen(true)
     }
+  }
+  const parseData = async (keyData) => {
+    const metadata = JSON.parse(keyData)
+    Object.keys(metadata.roomData).forEach(async (roomId)=> {
+      metadata.roomData[roomId] = {
+        key: await exportPrivateCryptoKey(metadata.roomData[roomId].key),
+        lastSeenMessage: metadata.roomData[roomId].lastSeenMessage
+      }
+    })
+    metadata.pem = false;
+    return metadata
+  }
+  const exportPrivateCryptoKey = async (pem) => {
+    const pemHeader = '-----BEGIN PUBLIC KEY-----';
+    const pemFooter = '-----END PUBLIC KEY-----';
+    const start = pem.indexOf(pemHeader);
+    const end = pem.indexOf(pemFooter);
+    const pemContents = pem.slice(start + pemHeader.length, end);
+    const binaryDer = SB.base64ToArrayBuffer(pemContents.replace(/\n/, ''));
+    return crypto.subtle.importKey('spki', binaryDer, { name: 'RSA-OAEP', hash: 'SHA-256' }, true, ['encrypt']);
   }
 
   return (
@@ -85,12 +124,26 @@ const ImportRoomKeys = observer((props) => {
       <Grid xs={12} item>
         <TextField
           id="key_import_ta"
+          placeholder="Select a file or paste json"
           fullWidth
           multiline
           rows={10}
           value={key}
           onChange={(e) => {
-            setKey(e.target.value)
+            try{
+              if(Object.keys(JSON.parse(e.target.value).roomData).length !== 0){
+                if(!JSON.parse(e.target.value).pem){
+                  setData(e.target.value)
+                }else{
+                  importPem(e.target.value)
+                }
+                
+              }
+            }catch(e){
+              console.warn(e)
+              setKey('')
+            }
+
           }}
         />
       </Grid>

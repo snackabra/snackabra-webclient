@@ -9,24 +9,23 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import AddCommentIcon from '@mui/icons-material/AddComment';
-import FileUploadIcon from '@mui/icons-material/FileUpload';
+import FileUploadIcon from '@mui/icons-material/Folder';
 import AddCircleOutlinedIcon from '@mui/icons-material/AddCircleOutlined';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import InputAdornment from '@mui/material/InputAdornment';
 import CloseIcon from '@mui/icons-material/Close';
 import Toolbar from '@mui/material/Toolbar';
-import { useContext } from "react";
-import ImportDialog from "../components/Modals/ImportDialog";
 import { useParams } from "react-router-dom";
 import { Grid, Hidden, IconButton, TextField, Typography } from "@mui/material";
 import ChatRoom from "../components/Chat/ChatRoom";
 import CreateRoomDialog from "../components/Modals/CreateRoomDialog";
 import JoinDialog from "../components/Modals/JoinDialog";
 import AdminDialog from "../components/Modals/AdminDialog";
-// import { downloadRoomData } from "../utils/utils";
 import Fab from '@mui/material/Fab';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import NotificationContext from "../contexts/NotificationContext";
+import ImportDialog from "../components/Modals/ImportDialog";
+import DataOperationsDialog from "../components/Modals/DataOperationsDialog";
 import RoomMenu from "../components/Rooms/RoomMenu"
 import { observer } from "mobx-react"
 import { SnackabraContext } from "mobx-snackabra-store";
@@ -35,12 +34,13 @@ import { SnackabraContext } from "mobx-snackabra-store";
 const drawerWidth = 240;
 const ResponsiveDrawer = observer((props) => {
   const sbContext = React.useContext(SnackabraContext);
-  const Notifications = useContext(NotificationContext)
+  const Notifications = React.useContext(NotificationContext)
   let { room_id } = useParams();
   const { window } = props;
   const [roomId, setRoomId] = React.useState(false);
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [openImportDialog, setOpenImportDialog] = React.useState(false);
+  const [openDataOperations, setOpenDataOperations] = React.useState(false);
   const [openCreateDialog, setOpenCreateDialog] = React.useState(false);
   const [openAdminDialog, setOpenAdminDialog] = React.useState(false);
   const [openJoinDialog, setOpenJoinDialog] = React.useState(false);
@@ -138,7 +138,7 @@ const ResponsiveDrawer = observer((props) => {
             <ListItemText primary={'Create a room'} />
           </ListItemButton>
         </ListItem>
-        <ListItem disablePadding>
+        {/* <ListItem disablePadding>
           <ListItemButton onClick={() => {
             setOpenImportDialog(true)
           }}>
@@ -146,6 +146,16 @@ const ResponsiveDrawer = observer((props) => {
               <FileUploadIcon />
             </ListItemIcon>
             <ListItemText primary={'Import a room'} />
+          </ListItemButton>
+        </ListItem> */}
+        <ListItem disablePadding>
+          <ListItemButton onClick={() => {
+            setOpenDataOperations(true)
+          }}>
+            <ListItemIcon>
+              <FileUploadIcon />
+            </ListItemIcon>
+            <ListItemText primary={'Data Management'} />
           </ListItemButton>
         </ListItem>
         <Hidden xsUp={!sbContext.admin}>
@@ -235,6 +245,9 @@ const ResponsiveDrawer = observer((props) => {
   return (
     <Box sx={{ display: 'flex', p: 0 }}>
       <CssBaseline />
+      <DataOperationsDialog open={openDataOperations} onClose={() => {
+        setOpenDataOperations(false)
+      }} />
       <ImportDialog open={openImportDialog} onClose={() => {
         setOpenImportDialog(false)
       }} />
