@@ -7,12 +7,10 @@ import PhotoLibraryOutlinedIcon from '@mui/icons-material/PhotoLibraryOutlined';
 import CameraAltOutlinedIcon from '@mui/icons-material/CameraAltOutlined';
 import FolderOpenOutlinedIcon from '@mui/icons-material/FolderOpenOutlined';
 import Divider from "@mui/material/Divider";
-import ActiveChatContext from "../../contexts/ActiveChatContext";
 import { Hidden } from "@mui/material";
 
 
 export default function AttachMenu(props) {
-  const activeChatContext = React.useContext(ActiveChatContext)
   const [open, setOpen] = React.useState(false);
   const [file, setFile] = React.useState('No file selected');
   const anchorEl = document.getElementById('attach-menu');
@@ -31,7 +29,7 @@ export default function AttachMenu(props) {
       fileReader = new FileReader();
       fileReader.onloadend = handleFileRead;
       fileReader.readAsText(photo);
-      activeChatContext.previewImage(photo, e.target.files[0])
+      // activeChatContext.previewImage(photo, e.target.files[0])
       props.handleClose()
     } catch (e) {
       console.log(e)
@@ -64,6 +62,7 @@ export default function AttachMenu(props) {
             <PhotoLibraryOutlinedIcon />
           </ListItemIcon>
           <input
+            id='fileInput'
             onChange={selectPhoto}
             type="file"
             hidden

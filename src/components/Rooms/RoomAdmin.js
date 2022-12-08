@@ -129,7 +129,6 @@ const RoomAdmin = (props) => {
       <Hidden xsUp>
         <Typography variant={'h3'}><Trans id='room upload header'>Upload Room</Trans></Typography>
         <Grid id="uploadRoom"
-              xs={12}
               container
               direction="row"
               justifyContent="flex-start"
@@ -165,8 +164,7 @@ const RoomAdmin = (props) => {
         </Grid>
       </Hidden>
       <hr />
-      <Grid xs={12}
-            container
+      <Grid container
             direction="row"
             justifyContent="flex-start"
             alignItems="flex-start">
@@ -182,14 +180,13 @@ const RoomAdmin = (props) => {
             on your server.</Trans></Typography>
         </Grid>
 
-        <Grid xs={12} md={6}>
+        <Grid xs={12} md={6} item>
           <CreateRoom />
         </Grid>
       </Grid>
       <hr />
       <Hidden xsUp>
         <Grid id="uploadStorage"
-              xs={12}
               container
               direction="row"
               justifyContent="flex-start"
@@ -208,7 +205,6 @@ const RoomAdmin = (props) => {
         </Grid>
       </Hidden>
       <Grid id="authorizeRoom"
-            xs={12}
             container
             direction="row"
             justifyContent="flex-start"

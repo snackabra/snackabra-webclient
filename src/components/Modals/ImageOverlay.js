@@ -1,5 +1,4 @@
 import * as React from 'react';
-import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
@@ -24,6 +23,14 @@ export default function ImageOverlay(props) {
 
   React.useEffect(() => {
     setImage(props.img)
+    // window.pinchZoomEvent = document.addEventListener('touchmove', function (event) {
+
+    // }, { passive: false });
+    // return () =>{
+    //   window.pinchZoomEvent = document.addEventListener('touchmove', function (event) {
+    //     if (event.scale !== 1) { event.preventDefault(); }
+    //   }, { passive: false });
+    // }
   }, [props.img])
 
   React.useEffect(() => {

@@ -39,9 +39,8 @@ You need to copy the template ".env" file to the root:
 See below (Private Servers) for details: this file points your
 webclient to your preferred ``snackabra`` servers (room and storage).
 
-Note: if you are developing under Miniflare, just copy the
-``setup/miniflare.template.env`` file instead, it has the default
-settings for servers.
+Currently you also need to clone ''mobx-snackabra-store'' into the
+top directory (this will become an npm package).
 
 Once done, you can simply:
 
@@ -185,7 +184,7 @@ Following files should be in the git::
     │   │       ├── Snackabra.css
     │   │       └── Snackabra.js
     │   ├── index.css
-    │   ├── index.tsx
+    │   ├── index.js
     │   ├── locales
     │   │   └── en
     │   │       ├── messages.js

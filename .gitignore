@@ -12,3 +12,4 @@ build
 # this is local copy from the setup director
 .env
 /yarn.lock
+.vscode

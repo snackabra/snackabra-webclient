@@ -1,20 +1,36 @@
 {
-  "short_name": "Snackabra",
-  "name": "Snackabra",
-  "icons": [
-    {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
-    },
-    {
-      "src": "apple-touch-icon.png",
-      "sizes": "180x180",
-      "type": "image/png"
-    }
-  ],
-  "start_url": ".",
+  "id": "E9axF7di9FLpTo6BHFb1aETcBFXGx8i6nMusSbtmItMyUMX5wfOGsqU0fchXvVb3",
+  "start_url": "/",
   "display": "standalone",
   "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "background_color": "#ffffff",
+  "scope": "/",
+  "short_name": "Snackabra",
+  "name": "Snackabra",
+  "description": "A truly private chat client",
+  "icons": [
+    {
+        "src": "/android-chrome-192x192.png",
+        "sizes": "192x192",
+        "type": "image/png"
+    },
+    {
+        "src": "/android-chrome-512x512.png",
+        "sizes": "512x512",
+        "type": "image/png"
+    }
+],
+  "screenshots": [
+    {
+      "src": "/screenshot1.png",
+      "type": "image/png",
+      "sizes": "540x720"
+    },
+    {
+      "src": "/screenshot2.png",
+      "type": "image/png",
+      "sizes": "540x720"
+    }
+  ]
+
 }

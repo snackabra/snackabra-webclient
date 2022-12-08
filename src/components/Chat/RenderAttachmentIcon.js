@@ -1,45 +1,58 @@
 import * as React from 'react';
 import { IconButton } from "@mui/material";
 import AttachmentIcon from '@mui/icons-material/Attachment';
-import ActiveChatContext from "../../contexts/ActiveChatContext";
+import { SBImage } from "../../utils/ImageProcessor";
+import { observer } from "mobx-react"
+import { SnackabraContext } from "mobx-snackabra-store";
 
-function RenderAttachmentIcon(props) {
-  const activeChatContext = React.useContext(ActiveChatContext)
-  const [file, setFile] = React.useState('');
+const getSbImage = (file, props, sbContext) => {
+  return new Promise((resolve) => {
+    const sbImage = new SBImage(file, sbContext.SB);
+    sbImage.img.then((i) => {
+      sbImage.url = i.src
+      props.showLoading(false)
+      resolve(sbImage)
+      queueMicrotask(() => {
+        const SBImageCanvas = document.createElement('canvas');
+        sbImage.loadToCanvas(SBImageCanvas).then((c) => {
 
-  let fileReader;
+        });
+      });
+    })
+  })
+}
 
-  const selectPhoto = (e) => {
+const RenderAttachmentIcon = observer((props) => {
+  const sbContext = React.useContext(SnackabraContext);
+  const selectFiles = async (e) => {
+    props.showLoading(true)
     try {
-      const photo = e.target.files[0];
-      fileReader = new FileReader();
-      fileReader.onloadend = handleFileRead;
-      fileReader.readAsText(photo);
-      activeChatContext.previewImage(photo, e.target.files[0])
-      if(typeof props.handleClose === 'function'){
-        props.handleClose()
+      const files = []
+      for (let i in e.target.files) {
+        if (typeof e.target.files[i] === 'object') {
+          const attachment = await getSbImage(e.target.files[i], props, sbContext)
+          files.push(attachment)
+
+        }
       }
-      setFile('')
+      props.addFile(files)
     } catch (e) {
       console.log(e)
     }
   }
 
-  const handleFileRead = (e) => {
-    const content = fileReader.result;
-    setFile(content)
-  };
-
   return (
     <IconButton component="label" id={'attach-menu'} aria-label="attach" size="large">
       <AttachmentIcon />
       <input
-        onChange={selectPhoto}
+        id="fileInput"
+        onChange={selectFiles}
         type="file"
         hidden
+        multiple
       />
     </IconButton>
   )
-}
+})
 
 export default RenderAttachmentIcon;

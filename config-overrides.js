@@ -12,7 +12,8 @@ module.exports = function override(config, env) {
           '@babel/preset-react',
         ],
         plugins: ['macros',
-          '@babel/plugin-proposal-class-properties'
+          ["@babel/plugin-proposal-decorators", { "version": "2018-09", "decoratorsBeforeExport": true }],
+          ["@babel/plugin-proposal-class-properties", { "loose": true }]
         ],
       },
     },

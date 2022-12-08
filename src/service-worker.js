@@ -69,10 +69,53 @@ self.addEventListener('message', (event) => {
   }
 });
 
-self.addEventListener('statechange', e => {
-  if (e.target.state === 'activated') {
-    window.location.reload();
-  }
-});
+// self.addEventListener('statechange', e => {
+//   if (e.target.state === 'activated') {
+//     window.location.reload();
+//   }
+// });
 
 // Any other custom service worker logic can go here.
+// For push notifications
+self.addEventListener('push', (ev) => {
+  const data = ev.data.json()
+
+  console.log('Got push', data)
+
+  self.registration.showNotification(data.title, {
+    body: data.text
+  })
+})
+
+function getNotifications() {
+  return new Promise((resolve, reject) => {
+    self.registration.pushManager.getSubscription()
+      .then((subscription) => {
+        if (!subscription) {
+          // We aren't subscribed to push
+          resolve('not subscribed')
+        }
+        console.log('Existing sub:', subscription)
+        fetch('https://heylisten-384co.herokuapp.com/subscription', {
+          method: 'POST',
+          body: JSON.stringify(subscription),
+          headers: {
+            'content-type': 'application/json',
+          }
+        }).then(() => {
+          resolve('Success')
+        })
+      }).catch((e) => {
+        console.error(e)
+        reject(e)
+      })
+  })
+
+}
+
+self.addEventListener("periodicsync", (event) => {
+  console.log('test', event)
+  if (event.tag === "get-notifications") {
+    event.waitUntil(getNotifications());
+  }
+});

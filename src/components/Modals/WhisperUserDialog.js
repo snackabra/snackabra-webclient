@@ -2,12 +2,13 @@ import * as React from "react"
 import ResponsiveDialog from "../ResponsiveDialog";
 import { Grid, TextField } from "@mui/material";
 import { StyledButton } from "../../styles/Buttons";
-import { useContext, useState, useEffect } from "react";
-import ActiveChatContext from "../../contexts/ActiveChatContext";
+import { useState, useEffect } from "react";
+import { observer } from "mobx-react"
+import { SnackabraContext } from "mobx-snackabra-store";
+const SB = require('snackabra')
 
-export default function WhisperUserDialog(props) {
-  const activeChatContext = useContext(ActiveChatContext)
-
+const WhisperUserDialog = observer((props) => {
+  const sbContext = React.useContext(SnackabraContext);
   const [open, setOpen] = useState(props.open);
 
   const [text, setText] = useState('');
@@ -21,20 +22,27 @@ export default function WhisperUserDialog(props) {
     setText(e.target.value)
   }
 
-  const sendWhisper = () => {
-    if(text.length > 0){
-      activeChatContext.sendMessage(text, true);
+  const sendWhisper = async () => {
+    if (text.length > 0) {
+      const sbCrypto = new SB.SBCrypto();
+      console.log(sbContext)
+      const shared_key = props.replyTo ? await sbContext.replyEncryptionKey(props.replyTo) : sbContext.sharedKey
+      const cipherText = await sbCrypto.wrap(shared_key, text)
+      let sbm = new SB.SBMessage(sbContext.socket)
+      sbm.contents.whisper = cipherText
+      sbm.contents.encrypted = true;
+      sbm.contents.whispered = true;
+      if (props.replyTo) {
+        sbm.contents.reply_to = JSON.parse(props.replyTo);
+      }
+      sbm.send();
       setText('')
       setError(false)
       props.onClose()
-    }else{
+    } else {
       setError(true)
     }
 
-  }
-
-  const getWhisperText = () => {
-    return activeChatContext?.replyTo ? activeChatContext.getWhisperToText() : '';
   }
 
   return (
@@ -42,9 +50,9 @@ export default function WhisperUserDialog(props) {
       title={`Send a whisper`}
       open={open}>
       <Grid container
-            direction="row"
-            justifyContent="space-between"
-            alignItems="flex-start">
+        direction="row"
+        justifyContent="space-between"
+        alignItems="flex-start">
         <Grid item xs={12} sx={{ pb: 1, pt: 1 }}>
           <TextField
             id="whisper-text"
@@ -63,4 +71,6 @@ export default function WhisperUserDialog(props) {
     </ResponsiveDialog>
   )
 
-}
+})
+
+export default WhisperUserDialog
