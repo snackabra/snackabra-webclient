@@ -79,14 +79,14 @@ export async function _restrictPhoto(maxSize, _c, _b1, scale) {
   // with a little tuning downwards
   let _ratio = (maxSize / _old_size) * scale; // overshoot a bit
   let _maxIteration = 12;  // to be safe
-  console.log("scale is:")
-  console.log(scale);
+  console.warn("scale is:")
+  console.warn(scale);
   console.log("_old_c is:")
   console.log(_old_c);
   console.log(`... stepping back up to W ${_old_c.width} x H ${_old_c.height} and will then try scale ${_ratio.toFixed(4)}`);
   let _final_c;
   const t4 = new Date().getTime();
-  while (_b1.size >= maxSize || _maxIteration > 0) {
+  while (_b1.size >= maxSize) {
     // TODO: lint reports this as unsafe reference to _final_c
     _final_c = scaleCanvas(_old_c, Math.sqrt(_ratio) * scale); // always overshoot
     console.log(_final_c)
@@ -101,7 +101,6 @@ export async function _restrictPhoto(maxSize, _c, _b1, scale) {
     const t5 = new Date().getTime();
     console.log(`... resulting _ratio is ${_ratio} ... total time here ${t5 - t4} milliseconds`);
     console.log(` ... we're within ${(Math.abs(_b1.size - maxSize) / maxSize)} of cap (${maxSize})`);
-    _b1.size <= maxSize ? _maxIteration = 0 : _maxIteration--
   }
 
   return _b1;
@@ -117,8 +116,7 @@ export async function restrictPhoto(sbImage, maxSize, type) {
 
   switch (type) {
     case 'thumbnail':
-      scale = sbImage.size > 15560 * 1024 ? .7 : sbImage.size > 4096 * 1024 ? .95 : .99;
-      console.log(type, scale)
+      scale = sbImage.size > 4096 * 1024 ? .7 : .9;
       break;
     case 'preview':
       scale = .3;
@@ -446,7 +444,7 @@ export class SBImage {
   processThumbnail = () => {
     const t0 = new Date().getTime();
     return new Promise((resolve) => {
-      restrictPhoto(this, 15, 'thumbnail').then(async (photo) => {
+      restrictPhoto(this, 72, 'thumbnail').then(async (photo) => {
         const t1 = new Date().getTime();
         console.warn(`#### thumbnail processing total ${t1 - t0} milliseconds (blocking)`);
         this.thumbnail = await getFileData(photo, 'url');
