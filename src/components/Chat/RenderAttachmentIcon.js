@@ -50,6 +50,7 @@ const RenderAttachmentIcon = observer((props) => {
         type="file"
         hidden
         multiple
+        accept="image/*"
       />
     </IconButton>
   )

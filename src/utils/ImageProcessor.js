@@ -61,43 +61,48 @@ export async function _restrictPhoto(maxSize, _c, _b1, scale) {
   let _old_size;
   let _old_c;
 
-  while (_size > maxSize) {
-    _old_c = _c;
-    _c = scaleCanvas(_c, scale);
-    _b1 = await new Promise((resolve) => {
-      // TODO: lint reports this as unsafe use of reference to _c
-      _c.toBlob(resolve, imageType, qualityArgument);
-    });
-    _old_size = _size;
-    _size = _b1.size;
-    // workingDots();
-    const t3 = new Date().getTime();
-    console.log(`... reduced to W ${_c.width} x H ${_c.height} (to size ${_size}) ... total time ${t3 - t2} milliseconds`);
-  }
+  // while (_size > maxSize) {
+  _old_c = _c;
+  _c = scaleCanvas(_c, .95);
+  _b1 = await new Promise((resolve) => {
+    // TODO: lint reports this as unsafe use of reference to _c
+    _c.toBlob(resolve, imageType, qualityArgument);
+  });
+  _old_size = _size;
+  _size = _b1.size;
+  // workingDots();
+  const t3 = new Date().getTime();
+  console.log(`... reduced to W ${_c.width} x H ${_c.height} (to size ${_size}) ... total time ${t3 - t2} milliseconds`);
+  // }
 
   // we assume that within this width interval, storage is roughly prop to area,
   // with a little tuning downwards
-  let _ratio = (maxSize / _old_size) * 0.95; // overshoot a bit
+  let _ratio = (maxSize / _old_size) * scale; // overshoot a bit
   let _maxIteration = 12;  // to be safe
+  console.log("scale is:")
+  console.log(scale);
   console.log("_old_c is:")
   console.log(_old_c);
   console.log(`... stepping back up to W ${_old_c.width} x H ${_old_c.height} and will then try scale ${_ratio.toFixed(4)}`);
   let _final_c;
   const t4 = new Date().getTime();
-  do {
+  while (_b1.size >= maxSize || _maxIteration > 0) {
     // TODO: lint reports this as unsafe reference to _final_c
-    _final_c = scaleCanvas(_old_c, Math.sqrt(_ratio) * 0.95); // always overshoot
+    _final_c = scaleCanvas(_old_c, Math.sqrt(_ratio) * scale); // always overshoot
+    console.log(_final_c)
     _b1 = await new Promise((resolve) => {
       _final_c.toBlob(resolve, imageType, qualityArgument);
       console.log(`(generating blob of requested type ${imageType})`);
-    });
+    }).catch(console.error)
+    console.log(_b1)
     // workingDots();
     console.log(`... fine-tuning to W ${_final_c.width} x H ${_final_c.height} (size ${_b1.size})`);
     _ratio *= (maxSize / _b1.size);
     const t5 = new Date().getTime();
     console.log(`... resulting _ratio is ${_ratio} ... total time here ${t5 - t4} milliseconds`);
     console.log(` ... we're within ${(Math.abs(_b1.size - maxSize) / maxSize)} of cap (${maxSize})`);
-  } while ((((_b1.size >= maxSize) || ((Math.abs(_b1.size - maxSize) / maxSize) > 0.10)) && (--_maxIteration > 0)));  // we're pretty tolerant here
+    _b1.size <= maxSize ? _maxIteration = 0 : _maxIteration--
+  }
 
   return _b1;
 }
@@ -112,7 +117,7 @@ export async function restrictPhoto(sbImage, maxSize, type) {
 
   switch (type) {
     case 'thumbnail':
-      scale = sbImage.size > 15560 * 1024 ? .15 : .8;
+      scale = sbImage.size > 15560 * 1024 ? .7 : sbImage.size > 4096 * 1024 ? .95 : .99;
       console.log(type, scale)
       break;
     case 'preview':
@@ -360,7 +365,7 @@ export class SBImage {
     })
 
     this.img = new Promise((resolve) => {
-      if(this.url){
+      if (this.url) {
         resolve(this.url)
       }
       const reader = new FileReader();
@@ -385,12 +390,12 @@ export class SBImage {
         const canvas = document.createElement('canvas');
         canvas.width = this.width;
         canvas.height = this.height;
-        if(!this.url){
+        if (!this.url) {
           this.img.then((img) =>
-          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height));
-        // this will return right away with correctly-sized canvas
-        resolve(canvas);
-        }else{
+            canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height));
+          // this will return right away with correctly-sized canvas
+          resolve(canvas);
+        } else {
           canvas.getContext('2d').drawImage(this.url, 0, 0, canvas.width, canvas.height);
           // this will return right away with correctly-sized canvas
           resolve(canvas);
@@ -402,7 +407,7 @@ export class SBImage {
 
     this.blob = new Promise((resolve, reject) => {
       // spin up worker
-      try{
+      try {
         const code = ArrayBufferWorker.toString();
         const blob = new Blob([`(${code})(${0})`]);
         let worker = new Worker(URL.createObjectURL(blob));
@@ -413,7 +418,7 @@ export class SBImage {
           resolve(new Blob([event.data])); // convert arraybuffer to blob
         }
         worker.postMessage(image);
-      }catch(e){
+      } catch (e) {
         console.error(e)
         reject(e)
       }

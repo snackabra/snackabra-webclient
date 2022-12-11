@@ -11,7 +11,7 @@ import MotdDialog from "../Modals/MotdDialog";
 import RenderChatFooter from "./RenderChatFooter";
 import RenderTime from "./RenderTime";
 import { View } from "react-native";
-import AttachMenu from "./AttachMenu";
+// import AttachMenu from "./AttachMenu";
 import FirstVisitDialog from "../Modals/FirstVisitDialog";
 import RenderSend from "./RenderSend";
 import WhisperUserDialog from "../Modals/WhisperUserDialog";
@@ -386,7 +386,7 @@ class ChatRoom extends React.Component {
           this.setState({ openChangeName: false })
         }} />
         <MotdDialog open={this.state.openMotd} roomName={this.props.roomName} />
-        <AttachMenu open={attachMenu} handleClose={this.handleClose} />
+        {/* <AttachMenu open={attachMenu} handleClose={this.handleClose} /> */}
         <FirstVisitDialog open={this.state.openFirstVisit} sbContext={this.sbContext} messageCallback={this.recieveMessages} onClose={(username) => {
           this.setState({ openFirstVisit: false })
           this.connect(username)
