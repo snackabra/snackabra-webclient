@@ -64,7 +64,7 @@ const ResponsiveDrawer = observer((props) => {
   }
 
   const exportKeys = () => {
-    const data = {roomData: {}, contacts: {}, roomMetadata: {}}
+    const data = { roomData: {}, contacts: {}, roomMetadata: {} }
     data.roomData[roomId] = {
       key: sbContext.rooms[roomId].key,
       lastSeenMessage: sbContext.rooms[roomId].lastSeenMessage
@@ -158,18 +158,18 @@ const ResponsiveDrawer = observer((props) => {
             <ListItemText primary={'Data Management'} />
           </ListItemButton>
         </ListItem>
-        <Hidden xsUp={!sbContext.admin}>
-          <ListItem disablePadding>
-            <ListItemButton onClick={() => {
-              setOpenAdminDialog(true)
-            }}>
-              <ListItemIcon>
-                <AdminPanelSettingsIcon />
-              </ListItemIcon>
-              <ListItemText primary={'Administration'} />
-            </ListItemButton>
-          </ListItem>
-        </Hidden>
+
+        <ListItem sx={{display: !sbContext.admin ? 'none' : 'inherit'}} disablePadding>
+          <ListItemButton onClick={() => {
+            setOpenAdminDialog(true)
+          }}>
+            <ListItemIcon>
+              <AdminPanelSettingsIcon />
+            </ListItemIcon>
+            <ListItemText primary={'Administration'} />
+          </ListItemButton>
+        </ListItem>
+
         <Divider />
         {Object.keys(sbContext.rooms).map((room, index) => {
           const bgColor = room === roomId ? '#ff5c42' : 'inherit';
