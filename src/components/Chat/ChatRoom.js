@@ -48,13 +48,20 @@ class ChatRoom extends React.Component {
 
   componentDidMount() {
 
-    const handleResize = () => {
+    const handleResize = (e) => {
+      console.log('resize event', e)
       this.setState({ height: window.innerHeight })
 
     }
 
     window.addEventListener('resize', handleResize)
     window.addEventListener('orientationchange', handleResize)
+    window.addEventListener('touchmove', (e) => {
+      setTimeout(() => {
+        handleResize(e)
+      }, 400)
+
+    });
     handleResize();
 
     // reconnect when window comes into focus and the state of the socket is not opened
@@ -187,7 +194,7 @@ class ChatRoom extends React.Component {
   handleReply = (user) => {
     try {
       if (this.sbContext.owner) {
-        this.setState({replyTo: user._id, openWhisper: true})
+        this.setState({ replyTo: user._id, openWhisper: true })
       } else {
         this.notify('Whisper is only for room owners.', 'info')
       }
@@ -367,7 +374,7 @@ class ChatRoom extends React.Component {
   }
 
   closeWhisper = () => {
-    this.setState({openWhisper: false})
+    this.setState({ openWhisper: false })
   }
   render() {
     const attachMenu = Boolean(this.state.anchorEl);
