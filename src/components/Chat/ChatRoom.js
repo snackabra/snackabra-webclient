@@ -71,11 +71,13 @@ class ChatRoom extends React.Component {
       }
       this.setState({ visibility: document.visibilityState })
     })
-    if (!this.sbContext.rooms[this.props.roomId]?.key) {
-      this.setState({ openFirstVisit: true })
-    } else {
-      this.connect();
-    }
+    this.sbContext.getChannel(this.props.roomId).then((data)=>{
+      if (!data?.key) {
+        this.setState({ openFirstVisit: true })
+      } else {
+        this.connect();
+      }
+    })
   }
 
   connect = (username) => {
@@ -87,6 +89,7 @@ class ChatRoom extends React.Component {
       secret: null,
       messageCallback: this.recieveMessages
     }
+    console.log(options)
     this.sbContext.connect(options).then(() => {
       this.setState({ messages: this.sbContext.messages }, () => {
         this.sbContext.getOldMessages(0).then((r) => {

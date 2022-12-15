@@ -171,10 +171,10 @@ const ResponsiveDrawer = observer((props) => {
         </ListItem>
 
         <Divider />
-        {Object.keys(sbContext.rooms).map((room, index) => {
+        {Object.keys(sbContext.channels).map((room, index) => {
           const bgColor = room === roomId ? '#ff5c42' : 'inherit';
           const color = room === roomId ? '#fff' : 'inherit';
-          const roomName = sbContext.rooms[room].name
+          const roomName = sbContext.channels[room].name
           return (
             <ListItem key={index} disablePadding sx={{ backgroundColor: bgColor, color: color }}>
               <ListItemButton>
