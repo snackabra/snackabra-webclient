@@ -214,7 +214,7 @@ class ChatRoom extends React.Component {
     this.setState({ uploading: true })
     const fileMessages = [];
     const filesArray = [];
-    this.state.images.forEach(async (file, i) => {
+    this.state.files.forEach(async (file, i) => {
 
       const message = {
         createdAt: new Date().toString(),
@@ -371,7 +371,7 @@ class ChatRoom extends React.Component {
     });
   }
 
-  setImages = (files) => {
+  setImageFiles = (files) => {
     this.setState({ images: files })
   }
 

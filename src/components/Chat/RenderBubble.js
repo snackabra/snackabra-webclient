@@ -25,7 +25,6 @@ const RenderBubble = (props) => {
     }
     init();
   }, [props.currentMessage.user._id, props.socket.api, props.socket.exportable_owner_pubKey, props.socket.exportable_pubKey])
-
   React.useEffect(() => {
     if (props.currentMessage.whispered) {
       setNewProps({
@@ -33,7 +32,8 @@ const RenderBubble = (props) => {
           left: {
             backgroundColor: "#FEE251",
             flexGrow: 1,
-            marginRight: 0
+            marginRight: 0,
+            
           },
           right: {
             backgroundColor: "#FEE251",
@@ -138,11 +138,13 @@ const RenderBubble = (props) => {
             borderColor: "#B10DC9",
             borderStyle: "solid",
             borderWidth: "4px",
+            marginRight: 0
           },
           right: {
             borderColor: "#B10DC9",
             borderStyle: "solid",
             borderWidth: "4px",
+            marginLeft: 0
           }
         }
       })
