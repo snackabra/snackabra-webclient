@@ -80,12 +80,12 @@ export async function _restrictPhoto(maxSize, _c, _b1, scale) {
   let _ratio = (maxSize / _old_size) * scale; // overshoot a bit
   console.warn("scale is:")
   console.warn(scale);
-  console.log("_old_c is:")
-  console.log(_old_c);
   console.log(`... stepping back up to W ${_old_c.width} x H ${_old_c.height} and will then try scale ${_ratio.toFixed(4)}`);
   let _final_c;
   const t4 = new Date().getTime();
-  while (_b1.size >= maxSize) {
+  let iterations = 6
+  while (_b1.size >= maxSize && iterations > 0) {
+    iterations--
     // TODO: lint reports this as unsafe reference to _final_c
     _final_c = scaleCanvas(_old_c, Math.sqrt(_ratio) * scale); // always overshoot
     console.log(_final_c)
@@ -100,7 +100,8 @@ export async function _restrictPhoto(maxSize, _c, _b1, scale) {
     const t5 = new Date().getTime();
     console.log(`... resulting _ratio is ${_ratio} ... total time here ${t5 - t4} milliseconds`);
     console.log(` ... we're within ${(Math.abs(_b1.size - maxSize) / maxSize)} of cap (${maxSize})`);
-    if(_b1.size <= maxSize){
+    _final_c.remove();
+    if (_b1.size <= maxSize) {
       break;
     }
   }
@@ -136,15 +137,11 @@ export async function restrictPhoto(sbImage, maxSize, type) {
   // qualityArgument should be 0.92 for jpeg and 0.8 for png (MDN default)
   maxSize = maxSize * 1024; // KB
   // let _c = await readPhoto(photo);
-  let _c = await sbImage.img.then(() => sbImage.canvas);
-  console.log("Got sbImage as:");
-  console.log(sbImage);
-  console.log("And got sbImage.canvas as:");
-  console.log(_c);
+  let _c = await sbImage.img;
   const t1 = new Date().getTime();
   console.log(`#### readPhoto took ${t1 - t0} milliseconds`);
   // let _b1 = await new Promise((resolve) => _c.blob.then((b) => resolve(b)));
-  let _b1 = await sbImage.blob.then(() => sbImage.blob);
+  let _b1 = await sbImage.blob();
   console.log("got blob");
   console.log(_b1);
 
@@ -302,7 +299,6 @@ export class SBImage {
         return new ReadableStream({
           start(controller) {
             var foundSize = false;
-            return pump();
             function pump() {
               return reader.read().then(({ done, value }) => {
                 // When no more data needs to be consumed, close the stream
@@ -331,18 +327,19 @@ export class SBImage {
                   } else {
                     console.warn("PROBLEM ***** ... could not parse jpeg header");
                     console.warn("Loading file to get demensions");
-                    this.img.then((el) => {
-                      this.width = el.width;
-                      this.height = el.height;
+                    _self.img.then((el) => {
+                      _self.width = el.width;
+                      _self.height = el.height;
                       _self.resolveAspectRatio(_self.width / _self.height);
                     })
                   }
                 }
                 // Enqueue the next data chunk into our target stream
                 controller.enqueue(value);
-                return pump();
+                pump();
               });
             }
+            pump();
           }
         })
       })
@@ -404,8 +401,12 @@ export class SBImage {
       });
     });
 
+    // this requests some worker to load the file into a sharedarraybuffer
+    this.imageSAB = doImageTask(['loadSB', image], false);
+  }
 
-    this.blob = new Promise((resolve, reject) => {
+  blob = () => {
+    return new Promise((resolve, reject) => {
       // spin up worker
       try {
         const code = ArrayBufferWorker.toString();
@@ -414,19 +415,16 @@ export class SBImage {
         console.warn('worker', worker)
         worker.onmessage = (event) => {
           console.warn("Got blob from worker:");
-          console.warn(event.data);
+          console.trace(event.data);
           resolve(new Blob([event.data])); // convert arraybuffer to blob
         }
-        worker.postMessage(image);
+        worker.postMessage(this.image);
       } catch (e) {
         console.error(e)
         reject(e)
       }
 
     });
-
-    // this requests some worker to load the file into a sharedarraybuffer
-    this.imageSAB = doImageTask(['loadSB', image], false);
   }
 
   getStorePromises = (roomId) => {

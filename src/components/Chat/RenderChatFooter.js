@@ -11,7 +11,7 @@ const RenderChatFooter = (props) => {
   const [uploading, setUploading] = React.useState(props.uploading)
 
   React.useEffect(() => {
-    const getImageUrls = async () => {
+    const getImageUrls = () => {
       setFiles(props.files)
       let filesPromises = [];
 
@@ -22,13 +22,13 @@ const RenderChatFooter = (props) => {
       }
       // Does all image processing 15kb thumbnail, 2MB Preview and 16MB Fullsize
       Promise.all(filesPromises).then((files) => {
-        files.forEach((file)=>{
+        files.forEach((file) => {
           file.processImage()
         })
         props.setFiles(files)
       })
     }
-    if (files.length !== props.files.length && props.files.length !== 0) {
+    if (props.files.length > 0 && props.files.length !== files.length) {
       getImageUrls()
     } else {
       setFiles(props.files)
@@ -52,6 +52,14 @@ const RenderChatFooter = (props) => {
     if (height > containerHeight) {
       setContainerHeight(height)
     }
+  }
+
+  const removeFiles = () => {
+    for(let x in files){
+      delete files[x]
+    }
+    setFiles([])
+    props.removeInputFiles()
   }
 
   if (loading) {
@@ -117,7 +125,7 @@ const RenderChatFooter = (props) => {
 
             }
 
-            <IconButton sx={{ position: "absolute", right: 0 }} onClick={props.removeInputFiles} aria-label="close">
+            <IconButton sx={{ position: "absolute", right: 0 }} onClick={removeFiles} aria-label="close">
               <CloseIcon />
             </IconButton>
           </Grid>

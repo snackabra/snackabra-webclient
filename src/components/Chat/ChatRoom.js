@@ -17,6 +17,7 @@ import RenderSend from "./RenderSend";
 import WhisperUserDialog from "../Modals/WhisperUserDialog";
 import RenderComposer from "./RenderComposer";
 import { observer } from "mobx-react"
+import { SBImage } from '../../utils/ImageProcessor';
 
 const SB = require('snackabra')
 
@@ -37,6 +38,7 @@ class ChatRoom extends React.Component {
     controlMessages: [],
     roomId: this.props.roomId || 'offline',
     files: [],
+    images: [],
     loading: false,
     uploading: false,
     user: {},
@@ -69,7 +71,7 @@ class ChatRoom extends React.Component {
       }
       this.setState({ visibility: document.visibilityState })
     })
-    this.sbContext.getChannel(this.props.roomId).then((data)=>{
+    this.sbContext.getChannel(this.props.roomId).then((data) => {
       if (!data?.key) {
         this.setState({ openFirstVisit: true })
       } else {
@@ -212,7 +214,7 @@ class ChatRoom extends React.Component {
     this.setState({ uploading: true })
     const fileMessages = [];
     const filesArray = [];
-    this.state.files.forEach(async (file, i) => {
+    this.state.images.forEach(async (file, i) => {
 
       const message = {
         createdAt: new Date().toString(),
@@ -340,7 +342,7 @@ class ChatRoom extends React.Component {
 
       document.getElementById('fileInput').value = '';
     }
-    this.setState({ files: [] })
+    this.setState({ files: [], images:  [] })
   }
 
   showLoading = (bool) => {
@@ -369,8 +371,8 @@ class ChatRoom extends React.Component {
     });
   }
 
-  updateFiles = (files) => {
-    this.setState({ files: files })
+  setImages = (files) => {
+    this.setState({ images: files })
   }
 
   closeWhisper = () => {
@@ -429,7 +431,7 @@ class ChatRoom extends React.Component {
           renderChatFooter={() => {
             return <RenderChatFooter removeInputFiles={this.removeInputFiles}
               files={this.state.files}
-              setFiles={this.updateFiles}
+              setImages={this.setImages}
               uploading={this.state.uploading}
               loading={this.state.loading} />
           }}
