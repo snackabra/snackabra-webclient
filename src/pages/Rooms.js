@@ -97,15 +97,15 @@ const ResponsiveDrawer = observer((props) => {
   const editRoom = (roomId) => {
     setEditingRoomId(roomId)
     setTimeout(() => {
-      console.log(roomId)
       document.getElementById(roomId).focus()
     }, 250);
   }
 
   const submitName = (e) => {
     if (e.keyCode === 13) {
-      sbContext.roomName = updatedName
-      setEditingRoomId(false)
+      sbContext.updateChannelName({name: updatedName, channelId: editingRoomId}).then(()=>{
+        setEditingRoomId(false)
+      })
     }
   }
 

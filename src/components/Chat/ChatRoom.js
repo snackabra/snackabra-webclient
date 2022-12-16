@@ -49,9 +49,7 @@ class ChatRoom extends React.Component {
   componentDidMount() {
 
     const handleResize = (e) => {
-      console.log('resize event', e)
       this.setState({ height: window.innerHeight })
-
     }
 
     window.addEventListener('resize', handleResize)
@@ -80,8 +78,8 @@ class ChatRoom extends React.Component {
     })
   }
 
-  connect = (username) => {
-    const room = this.sbContext.getExistingRoom(this.props.roomId)
+  connect = async (username) => {
+    const room = await this.sbContext.getChannel(this.props.roomId)
     const options = {
       roomId: this.props.roomId,
       username: username ? username : 'Unnamed',
@@ -89,7 +87,6 @@ class ChatRoom extends React.Component {
       secret: null,
       messageCallback: this.recieveMessages
     }
-    console.log(options)
     this.sbContext.connect(options).then(() => {
       this.setState({ messages: this.sbContext.messages }, () => {
         this.sbContext.getOldMessages(0).then((r) => {
@@ -139,7 +136,7 @@ class ChatRoom extends React.Component {
 
   recieveMessages = (msg) => {
     if (msg) {
-      console.log(msg)
+      console.info(msg)
       if (!msg.control) {
         const messages = this.state.messages.reduce((acc, curr) => {
           if (!this.sending.hasOwnProperty(curr._id)) {
@@ -166,12 +163,12 @@ class ChatRoom extends React.Component {
   openImageOverlay = (message) => {
     this.setState({ img: message.image, openPreview: true })
     try {
-      console.log("**** this.sbContext:")
-      console.log(this.sbContext)
-      console.log("image metadata")
-      console.log(message.imageMetaData)
+      console.info("**** this.sbContext:")
+      console.info(this.sbContext)
+      console.info("image metadata")
+      console.info(message.imageMetaData)
       this.sbContext.SB.storage.retrieveImage(message.imageMetaData, this.state.controlMessages).then((data) => {
-        console.log(data)
+        console.info(data)
         if (data.hasOwnProperty('error')) {
           this.sendSystemMessage('Could not open image: ' + data['error']);
         } else {
@@ -179,7 +176,7 @@ class ChatRoom extends React.Component {
         }
       })
     } catch (error) {
-      console.log('openPreview() exception: ' + error.message);
+      console.info('openPreview() exception: ' + error.message);
       this.sendSystemMessage('Could not open image (' + error.message + ')');
       this.setState({ openPreview: false })
     }
@@ -202,7 +199,7 @@ class ChatRoom extends React.Component {
         this.notify('Whisper is only for room owners.', 'info')
       }
     } catch (e) {
-      console.log(e);
+      console.info(e);
       this.notify(e.message, 'error')
     }
   }
@@ -245,7 +242,7 @@ class ChatRoom extends React.Component {
         sbm.contents.imageMetaData = imageMetaData;
         sbm.send(); // and no we don't need to wait
         Promise.all([storePromises.previewStorePromise]).then((previewVerification) => {
-          console.log()
+          console.info()
           console.info('Preview image uploaded')
           previewVerification[0].verification.then((verification) => {
             // now the preview (up to 2MiB) has been safely stored
@@ -255,11 +252,11 @@ class ChatRoom extends React.Component {
             controlMessage.contents.verificationToken = verification;
             controlMessage.contents.id = imageMetaData.previewId;
             controlMessage.send().then(() => {
-              console.log('Control message for preview image sent!')
+              console.info('Control message for preview image sent!')
             })
             queueMicrotask(() => {
               storePromises.fullStorePromise.then((verificationPromise) => {
-                console.log(verificationPromise)
+                console.info(verificationPromise)
                 verificationPromise.verification.then((verification) => {
                   console.info('Full image uploaded')
                   let controlMessage = new SB.SBMessage(this.sbContext.socket);
@@ -267,7 +264,7 @@ class ChatRoom extends React.Component {
                   controlMessage.contents.verificationToken = verification;
                   controlMessage.contents.id = imageMetaData.imageId;
                   controlMessage.send().then(() => {
-                    console.log('Control message for full image sent!')
+                    console.info('Control message for full image sent!')
                   })
                 });
               });
@@ -352,7 +349,7 @@ class ChatRoom extends React.Component {
 
   saveUsername = (newUsername, _id) => {
     if (_id === this.sbContext.user._id) {
-      console.log('its me!!!')
+      console.info('its me!!!')
       this.sbContext.username = newUsername;
     }
     const contacts = this.sbContext.contacts
