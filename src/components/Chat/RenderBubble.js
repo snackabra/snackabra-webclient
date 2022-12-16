@@ -33,12 +33,13 @@ const RenderBubble = (props) => {
             backgroundColor: "#FEE251",
             flexGrow: 1,
             marginRight: 0,
-            
+            width: props.currentMessage.image !== "" ? "80%" : "inherit"
           },
           right: {
             backgroundColor: "#FEE251",
             flexGrow: 1,
-            marginLeft: 0
+            marginLeft: 0,
+            width: props.currentMessage.image !== "" ? "80%" : "inherit"
           }
         },
         textStyle: {
@@ -60,14 +61,16 @@ const RenderBubble = (props) => {
             borderStyle: "solid",
             borderWidth: "4px",
             flexGrow: 1,
-            marginRight: 0
+            marginRight: 0,
+            width: props.currentMessage.image !== "" ? "80%" : "inherit"
           },
           right: {
             borderColor: "red",
             borderStyle: "solid",
             borderWidth: "4px",
             flexGrow: 1,
-            marginLeft: 0
+            marginLeft: 0,
+            width: props.currentMessage.image !== "" ? "80%" : "inherit"
           }
         }
       })
@@ -79,7 +82,8 @@ const RenderBubble = (props) => {
             borderStyle: "solid",
             borderWidth: "2px",
             flexGrow: 1,
-            marginRight: 0
+            marginRight: 0,
+            width: props.currentMessage.image !== "" ? "80%" : "inherit"
           }
         },
         textStyle: {
@@ -97,14 +101,16 @@ const RenderBubble = (props) => {
             borderStyle: "solid",
             borderWidth: "4px",
             flexGrow: 1,
-            marginRight: 0
+            marginRight: 0,
+            width: props.currentMessage.image !== "" ? "80%" : "inherit"
           },
           right: {
             borderColor: "gray",
             borderStyle: "solid",
             borderWidth: "4px",
             flexGrow: 1,
-            marginLeft: 0
+            marginLeft: 0,
+            width: props.currentMessage.image !== "" ? "80%" : "inherit"
           }
         }
       })
@@ -118,14 +124,16 @@ const RenderBubble = (props) => {
             borderStyle: "solid",
             borderWidth: "4px",
             flexGrow: 1,
-            marginRight: 0
+            marginRight: 0,
+            width: props.currentMessage.image !== "" ? "80%" : "inherit"
           },
           right: {
             borderColor: "#2ECC40",
             borderStyle: "solid",
             borderWidth: "4px",
             flexGrow: 1,
-            marginLeft: 0
+            marginLeft: 0,
+            width: props.currentMessage.image !== "" ? "80%" : "inherit"
           }
         }
       })
@@ -138,13 +146,15 @@ const RenderBubble = (props) => {
             borderColor: "#B10DC9",
             borderStyle: "solid",
             borderWidth: "4px",
-            marginRight: 0
+            marginRight: 0,
+            width: props.currentMessage.image !== "" ? "80%" : "inherit"
           },
           right: {
             borderColor: "#B10DC9",
             borderStyle: "solid",
             borderWidth: "4px",
-            marginLeft: 0
+            marginLeft: 0,
+            width: props.currentMessage.image !== "" ? "80%" : "inherit"
           }
         }
       })
@@ -169,7 +179,7 @@ const RenderBubble = (props) => {
       diffMessage.user._id === currentMessage.user._id);
   }
   return (
-    <Grid style={{ width: '50%' }}>
+    <Grid style={{ width: '60%' }}>
       {(isSameUser(props.currentMessage, props.previousMessage) && isSameDay(props.currentMessage, props.previousMessage))
         ? ''
         : <Typography variant={'body1'} style={{
