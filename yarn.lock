@@ -8234,7 +8234,7 @@ mobx-react@^7.5.3:
     mobx-react-lite "^3.4.0"
 
 mobx-snackabra-store@../mobx-snackabra-store:
-  version "1.0.9"
+  version "1.0.10"
   dependencies:
     mobx "^6.7.0"
     react "^17.0.0 || ^18.0.0"

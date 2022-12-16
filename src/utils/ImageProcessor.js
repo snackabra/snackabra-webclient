@@ -444,7 +444,7 @@ export class SBImage {
   processThumbnail = () => {
     const t0 = new Date().getTime();
     return new Promise((resolve) => {
-      restrictPhoto(this, 72, 'thumbnail').then(async (photo) => {
+      restrictPhoto(this, 64, 'thumbnail').then(async (photo) => {
         const t1 = new Date().getTime();
         console.warn(`#### thumbnail processing total ${t1 - t0} milliseconds (blocking)`);
         this.thumbnail = await getFileData(photo, 'url');
