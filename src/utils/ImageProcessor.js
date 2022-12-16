@@ -78,7 +78,6 @@ export async function _restrictPhoto(maxSize, _c, _b1, scale) {
   // we assume that within this width interval, storage is roughly prop to area,
   // with a little tuning downwards
   let _ratio = (maxSize / _old_size) * scale; // overshoot a bit
-  let _maxIteration = 12;  // to be safe
   console.warn("scale is:")
   console.warn(scale);
   console.log("_old_c is:")
@@ -101,6 +100,9 @@ export async function _restrictPhoto(maxSize, _c, _b1, scale) {
     const t5 = new Date().getTime();
     console.log(`... resulting _ratio is ${_ratio} ... total time here ${t5 - t4} milliseconds`);
     console.log(` ... we're within ${(Math.abs(_b1.size - maxSize) / maxSize)} of cap (${maxSize})`);
+    if(_b1.size <= maxSize){
+      break;
+    }
   }
 
   return _b1;
@@ -116,13 +118,13 @@ export async function restrictPhoto(sbImage, maxSize, type) {
 
   switch (type) {
     case 'thumbnail':
-      scale = sbImage.size > 4096 * 1024 ? .7 : .9;
+      scale = .9;
       break;
     case 'preview':
-      scale = .3;
+      scale = .95;
       break;
     case 'full':
-      scale = .4
+      scale = .85
       break;
     default:
       scale = .5
