@@ -13,8 +13,11 @@ function RenderComposer(props) {
   }, [])
 
   const handleSend = () => {
+    setTimeout(()=>{
       setText('')
       props.onTextChanged('')
+    }, 100)
+
   }
 
   React.useEffect(() => {
