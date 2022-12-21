@@ -1,7 +1,7 @@
 import * as React from "react"
 import { Trans } from "@lingui/macro";
 import { FormControl, Grid, IconButton, InputAdornment, InputLabel, OutlinedInput, Typography } from "@mui/material";
-import DownloadIcon from '@mui/icons-material/Download';
+import InputIcon from '@mui/icons-material/Input';
 import ContentCopy from '@mui/icons-material/ContentCopy';
 import { useState } from "react"
 import { observer } from "mobx-react"
@@ -100,11 +100,14 @@ const ExportRoomKeys = observer((props) => {
                 endAdornment={
                   <InputAdornment position="end">
                     <IconButton
+                      style={{
+                        transform: 'rotate(90deg)'
+                      }}
                       aria-label="download file"
                       onClick={downloadKeys}
                       edge="end"
                     >
-                      <DownloadIcon />
+                      <InputIcon />
                     </IconButton>
                   </InputAdornment>
                 }
