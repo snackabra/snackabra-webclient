@@ -1,13 +1,10 @@
 import React from 'react'
 import { Grid, Typography } from "@mui/material";
 import { Bubble } from "react-native-gifted-chat";
-import useMediaQuery from '@mui/material/useMediaQuery';
 const SB = require('snackabra')
 const sbCrypto = new SB.SBCrypto();
 
 const RenderBubble = (props) => {
-  const smDown = useMediaQuery((theme) => theme.breakpoints.down('sm'));
-  const lgDown = useMediaQuery((theme) => theme.breakpoints.down('lg'));
   const [isVerifiedGuest, setVerifiedGuest] = React.useState(false)
   const [isAdmin, setIsAdmin] = React.useState(false)
   const [isMe, setMe] = React.useState(false)
@@ -46,10 +43,12 @@ const RenderBubble = (props) => {
           left: {
             fontStyle: "italic",
             color: "#000",
+            wordBreak: 'break-all',
           },
           right: {
             fontStyle: "italic",
             color: "#000",
+            wordBreak: 'break-all',
           }
         }
       })
@@ -90,20 +89,13 @@ const RenderBubble = (props) => {
           left: {
             fontStyle: "italic",
             color: "Black",
+            wordBreak: 'break-all',
           },
         }
       })
     } else if (props.currentMessage._id.match(/^sending_/)) {
       setNewProps({
         wrapperStyle: {
-          left: {
-            borderColor: "gray",
-            borderStyle: "solid",
-            borderWidth: "4px",
-            flexGrow: 1,
-            marginRight: 0,
-            width: props.currentMessage.image !== "" ? "80%" : "inherit"
-          },
           right: {
             borderColor: "gray",
             borderStyle: "solid",
@@ -112,6 +104,11 @@ const RenderBubble = (props) => {
             marginLeft: 0,
             width: props.currentMessage.image !== "" ? "80%" : "inherit"
           }
+        },
+        textStyle: {
+          right: {
+            wordBreak: 'break-all',
+          },
         }
       })
     }
@@ -135,6 +132,14 @@ const RenderBubble = (props) => {
             marginLeft: 0,
             width: props.currentMessage.image !== "" ? "80%" : "inherit"
           }
+        },
+        textStyle: {
+          right: {
+            wordBreak: 'break-all',
+          },
+          left: {
+            wordBreak: 'break-all',
+          }
         }
       })
     }
@@ -155,6 +160,14 @@ const RenderBubble = (props) => {
             borderWidth: "4px",
             marginLeft: 0,
             width: props.currentMessage.image !== "" ? "80%" : "inherit"
+          }
+        }, 
+        textStyle: {
+          right: {
+            wordBreak: 'break-all',
+          },
+          left: {
+            wordBreak: 'break-all',
           }
         }
       })
@@ -196,9 +209,11 @@ const RenderBubble = (props) => {
         textStyle={{
           right: {
             color: props.currentMessage.whispered ? '#aaa' : 'white',
+            wordBreak: 'break-all',
           },
           left: {
-            color: props.currentMessage.whispered ? '#aaa' : 'black'
+            color: props.currentMessage.whispered ? '#aaa' : 'black',
+            wordBreak: 'break-all',
           }
         }}
         {...props}
