@@ -9,14 +9,14 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import IosShareOutlinedIcon from '@mui/icons-material/IosShareOutlined';
-import ShareDialog from "../Modals/ShareDialog"
+import NotificationContext from "../../contexts/NotificationContext";
 import ConnectionStatus from "./ConnectionStatus"
 
 const ITEM_HEIGHT = 48;
 
 const RoomMenu = (props) => {
+  const Notifications = React.useContext(NotificationContext)
   const [anchorEl, setAnchorEl] = React.useState(null);
-  const [dialogOpen, setDialogOpen] = React.useState(false);
   const open = Boolean(anchorEl);
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -25,17 +25,22 @@ const RoomMenu = (props) => {
     setAnchorEl(null);
   };
 
-  const toggle = () => {
-    console.log('toggling')
-    setDialogOpen(!dialogOpen)
+  const copy = async () => {
+    console.log(window.location)
+    if ('clipboard' in navigator) {
+      await navigator.clipboard.writeText(window.location.origin + '/' + props.roomId);
+    } else {
+      document.execCommand('copy', true, window.location.origin + '/' + props.roomId);
+    }
+    Notifications.setMessage('Room URL copied to clipboard!');
+    Notifications.setSeverity('success');
+    Notifications.setOpen(true)
+    handleClose()
+
   }
 
   return (
     <div>
-      <ShareDialog open={dialogOpen} roomId={props.roomId} onClose={()=>{
-        toggle()
-        handleClose()
-        }} />
       <IconButton
         aria-label="more"
         id="long-button"
@@ -94,7 +99,7 @@ const RoomMenu = (props) => {
               <ListItemText>Export Keys</ListItemText>
             </MenuItem> : ''
           } */}
-          <MenuItem onClick={toggle}>
+          <MenuItem onClick={copy}>
             <ListItemIcon>
               <IosShareOutlinedIcon />
             </ListItemIcon>
