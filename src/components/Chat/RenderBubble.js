@@ -22,6 +22,25 @@ const RenderBubble = (props) => {
     }
     init();
   }, [props.currentMessage.user._id, props.socket.api, props.socket.exportable_owner_pubKey, props.socket.exportable_pubKey])
+
+  const getColor = (username) => {
+    let sumChars = 0;
+    for(let i = 0;i < username.length;i++){
+      sumChars += username.charCodeAt(i);
+    }
+
+    const colors = [
+      '#e67e22', // carrot
+      '#2ecc71', // emerald
+      '#3498db', // peter river
+      '#8e44ad', // wisteria
+      '#e74c3c', // alizarin
+      '#1abc9c', // turquoise
+      '#2c3e50', // midnight blue
+    ];
+    return colors[sumChars % colors.length];
+  }
+
   React.useEffect(() => {
     if (props.currentMessage.whispered) {
       setNewProps({
@@ -144,18 +163,18 @@ const RenderBubble = (props) => {
       })
     }
     //else if (props.currentMessage.user._id === JSON.stringify(state.keys.exportable_verifiedGuest_pubKey)) {
-    else if (isVerifiedGuest) {
+    else if (isVerifiedGuest && !isAdmin) {
       setNewProps({
         wrapperStyle: {
           left: {
-            borderColor: "#B10DC9",
+            borderColor: getColor(props.currentMessage.user.name),
             borderStyle: "solid",
             borderWidth: "4px",
             marginRight: 0,
             width: props.currentMessage.image !== "" ? "80%" : "inherit"
           },
           right: {
-            borderColor: "#B10DC9",
+            borderColor: getColor(props.currentMessage.user.name),
             borderStyle: "solid",
             borderWidth: "4px",
             marginLeft: 0,

@@ -1,6 +1,6 @@
 import * as React from "react"
 import Grid from '@mui/material/Grid';
-import InputIcon from '@mui/icons-material/Input';
+import DownloadIcon from '@mui/icons-material/Download';
 import { StyledButton } from "../../styles/Buttons";
 import { observer } from "mobx-react"
 import { SnackabraContext } from "mobx-snackabra-store";
@@ -40,14 +40,12 @@ const DownloadRoomData = observer(() => {
             spacing={2}>
             {Object.keys(sbContext.rooms).map((room) => {
                 return <Grid item key={room}>
-                    <StyledButton
-                        onClick={() => {
-                            getRoomData(room)
-                        }}
-                        variant="contained"
-                        endIcon={<InputIcon style={{
-                            transform: 'rotate(90deg)'
-                        }} />}>
+                    <StyledButton 
+                    onClick={()=>{
+                        getRoomData(room)
+                    }}
+                    variant="contained" 
+                    endIcon={<DownloadIcon />}>
                         {sbContext.rooms[room].name}
                     </StyledButton>
                 </Grid>
