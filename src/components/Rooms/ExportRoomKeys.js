@@ -1,33 +1,29 @@
 import * as React from "react"
 import { Trans } from "@lingui/macro";
-import { FormControl, Grid, IconButton, InputAdornment, InputLabel, OutlinedInput, TextField, Typography } from "@mui/material";
+import { FormControl, Grid, IconButton, InputAdornment, InputLabel, OutlinedInput, Typography } from "@mui/material";
 import DownloadIcon from '@mui/icons-material/Download';
-import { StyledButton } from "../../styles/Buttons";
+import ContentCopy from '@mui/icons-material/ContentCopy';
 import { useState } from "react"
 import { observer } from "mobx-react"
 import { SnackabraContext } from "mobx-snackabra-store";
-const SB = require("snackabra")
+import NotificationContext from "../../contexts/NotificationContext";
 
-const ExportRoomKeys = observer(() => {
+const ExportRoomKeys = observer((props) => {
   const sbContext = React.useContext(SnackabraContext);
+  const Notifications = React.useContext(NotificationContext)
   const [fileName, setFilename] = useState('SnackabraData');
   const [data, setData] = useState(JSON.stringify({}));
-  const [asPem, setAsPem] = useState(false);
 
   React.useEffect(() => {
     parseData()
   }, [sbContext.rooms])
-
-  React.useEffect(() => {
-    parseData()
-  }, [asPem])
 
   const parseData = async () => {
     const metadata = { roomData: {}, contacts: {}, roomMetadata: {} }
     for (let x in sbContext.rooms) {
       let roomId = sbContext.rooms[x].id
       metadata.roomData[roomId] = {
-        key: asPem ? await exportPublicCryptoKey(sbContext.rooms[roomId].key) : sbContext.rooms[roomId].key,
+        key: sbContext.rooms[roomId].key,
         lastSeenMessage: sbContext.rooms[roomId].lastSeenMessage
       }
       metadata.contacts = Object.assign(metadata.contacts, sbContext.rooms[roomId].contacts)
@@ -37,7 +33,7 @@ const ExportRoomKeys = observer(() => {
         unread: false
       }
     }
-    metadata.pem = asPem;
+    metadata.pem = false;
     console.log(metadata)
     setData(JSON.stringify(metadata, null, 2))
   }
@@ -59,17 +55,20 @@ const ExportRoomKeys = observer(() => {
     }
   }
 
-  const exportPublicCryptoKey = async (key) => {
-    const exported = await window.crypto.subtle.exportKey(
-      "pkcs8",
-      await window.crypto.subtle.importKey("jwk", key, { name: 'ECDH', namedCurve: 'P-384' }, true, ["deriveKey"])
-    );
-    const exportedAsBase64 = SB.partition(SB.arrayBufferToBase64(exported), 64).join('\n');
-    return `-----BEGIN PUBLIC KEY-----\n${exportedAsBase64}\n-----END PUBLIC KEY-----`;
-  }
+  const copy = async () => {
+    console.log(window.location)
+    if ('clipboard' in navigator) {
+      await navigator.clipboard.writeText(data);
+    } else {
+      document.execCommand('copy', true, data);
+    }
+    Notifications.setMessage('Keys copied to clipboard!');
+    Notifications.setSeverity('success');
+    Notifications.setOpen(true)
+    if(typeof props.onDone === 'function'){
+      props.onDone()
+    }
 
-  const togglePem = () => {
-    setAsPem(!asPem)
   }
 
   return (
@@ -120,12 +119,29 @@ const ExportRoomKeys = observer(() => {
             <Typography variant={'body1'} gutterBottom><Trans id='copy paste ls message'>You can also copy-paste the following:</Trans></Typography>
           </Grid>
           <Grid xs={12} item>
-            <TextField
+            <OutlinedInput
               id="key_import_ta"
               fullWidth
               multiline
               rows={10}
               value={data}
+              endAdornment={
+                <InputAdornment 
+                style={{
+                  position: 'absolute',
+                  right: 25,
+                  top: 35
+                }}
+                 position="end">
+                  <IconButton
+                    aria-label="copy key text"
+                    onClick={copy}
+                    edge="end"
+                  >
+                    <ContentCopy />
+                  </IconButton>
+                </InputAdornment>
+              }
             />
           </Grid>
 
