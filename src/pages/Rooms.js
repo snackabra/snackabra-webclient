@@ -291,7 +291,7 @@ const ResponsiveDrawer = observer((props) => {
           variant="permanent"
           sx={{
             display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth, mt: '48px' },
+            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth, pt: '48px', zIndex: 100 },
           }}
           open
         >

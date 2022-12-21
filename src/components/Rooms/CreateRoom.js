@@ -26,6 +26,10 @@ const CreateRoom = observer((props) => {
   const [showPassword, setShowPassword] = useState(false);
   const [errored, setError] = useState(false);
 
+  React.useEffect(()=>{
+    document.getElementById('sb-wc-server-secret').focus()
+  },[])
+
   const success = (roomId) => {
     if (typeof props?.onClose === 'function') {
       props.onClose()
