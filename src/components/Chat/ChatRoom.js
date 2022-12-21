@@ -213,72 +213,77 @@ class ChatRoom extends React.Component {
     this.setState({ uploading: true })
     const fileMessages = [];
     const filesArray = [];
-    this.state.files.forEach(async (file, i) => {
+    const _files = this.state.files;
+    this.setState({ files: [] }, () => {
 
-      const message = {
-        createdAt: new Date().toString(),
-        text: "",
-        image: file.url,
-        user: this.sbContext.user,
-        _id: 'sending_' + giftedMessage[0]._id
-      }
-      this.sending[message._id] = message._id
-      fileMessages.push(message)
-      filesArray.push(file)
-    })
-    this.setState({ messages: [...this.state.messages, ...fileMessages] })
-    for (let x in filesArray) {
-      const sbImage = filesArray[x]
-      sbImage.thumbnailReady.then(async () => {
-        const storePromises = await sbImage.getStorePromises(this.sbContext.activeroom)
-        let sbm = new SB.SBMessage(this.sbContext.socket)
-        // populate
-        sbm.contents.image = this.state.files[x].thumbnail
-        const imageMetaData = {
-          imageId: sbImage.objectMetadata.full.id,
-          imageKey: sbImage.objectMetadata.full.key,
-          previewId: sbImage.objectMetadata.preview.id,
-          previewKey: sbImage.objectMetadata.preview.key,
+
+      _files.forEach(async (file, i) => {
+
+        const message = {
+          createdAt: new Date().toString(),
+          text: "",
+          image: file.url,
+          user: this.sbContext.user,
+          _id: 'sending_' + giftedMessage[0]._id
         }
-        sbm.contents.imageMetaData = imageMetaData;
-        sbm.send(); // and no we don't need to wait
-        Promise.all([storePromises.previewStorePromise]).then((previewVerification) => {
-          console.info()
-          console.info('Preview image uploaded')
-          previewVerification[0].verification.then((verification) => {
-            // now the preview (up to 2MiB) has been safely stored
-            let controlMessage = new SB.SBMessage(this.sbContext.socket);
-            // controlMessage.imageMetaData = imageMetaData;
-            controlMessage.contents.control = true;
-            controlMessage.contents.verificationToken = verification;
-            controlMessage.contents.id = imageMetaData.previewId;
-            controlMessage.send().then(() => {
-              console.info('Control message for preview image sent!')
-            })
-            queueMicrotask(() => {
-              storePromises.fullStorePromise.then((verificationPromise) => {
-                console.info(verificationPromise)
-                verificationPromise.verification.then((verification) => {
-                  console.info('Full image uploaded')
-                  let controlMessage = new SB.SBMessage(this.sbContext.socket);
-                  controlMessage.contents.control = true;
-                  controlMessage.contents.verificationToken = verification;
-                  controlMessage.contents.id = imageMetaData.imageId;
-                  controlMessage.send().then(() => {
-                    console.info('Control message for full image sent!')
-                  })
-                });
-              });
-            })
-          })
-        }).finally(() => {
-          if (Number(x) === filesArray.length - 1) {
-            this.setState({ uploading: false })
-            this.removeInputFiles()
-          }
-        })
+        this.sending[message._id] = message._id
+        fileMessages.push(message)
+        filesArray.push(file)
       })
-    }
+      this.setState({ messages: [...this.state.messages, ...fileMessages] })
+      for (let x in filesArray) {
+        const sbImage = filesArray[x]
+        sbImage.thumbnailReady.then(async () => {
+          const storePromises = await sbImage.getStorePromises(this.sbContext.activeroom)
+          let sbm = new SB.SBMessage(this.sbContext.socket)
+          // populate
+          sbm.contents.image = _files[x].thumbnail
+          const imageMetaData = {
+            imageId: sbImage.objectMetadata.full.id,
+            imageKey: sbImage.objectMetadata.full.key,
+            previewId: sbImage.objectMetadata.preview.id,
+            previewKey: sbImage.objectMetadata.preview.key,
+          }
+          sbm.contents.imageMetaData = imageMetaData;
+          sbm.send(); // and no we don't need to wait
+          Promise.all([storePromises.previewStorePromise]).then((previewVerification) => {
+            console.info()
+            console.info('Preview image uploaded')
+            previewVerification[0].verification.then((verification) => {
+              // now the preview (up to 2MiB) has been safely stored
+              let controlMessage = new SB.SBMessage(this.sbContext.socket);
+              // controlMessage.imageMetaData = imageMetaData;
+              controlMessage.contents.control = true;
+              controlMessage.contents.verificationToken = verification;
+              controlMessage.contents.id = imageMetaData.previewId;
+              controlMessage.send().then(() => {
+                console.info('Control message for preview image sent!')
+              })
+              queueMicrotask(() => {
+                storePromises.fullStorePromise.then((verificationPromise) => {
+                  console.info(verificationPromise)
+                  verificationPromise.verification.then((verification) => {
+                    console.info('Full image uploaded')
+                    let controlMessage = new SB.SBMessage(this.sbContext.socket);
+                    controlMessage.contents.control = true;
+                    controlMessage.contents.verificationToken = verification;
+                    controlMessage.contents.id = imageMetaData.imageId;
+                    controlMessage.send().then(() => {
+                      console.info('Control message for full image sent!')
+                    })
+                  });
+                });
+              })
+            })
+          }).finally(() => {
+            if (Number(x) === filesArray.length - 1) {
+              this.setState({ uploading: false })
+              this.removeInputFiles()
+            }
+          })
+        })
+      }
+    })
   }
 
   sendMessages = async (giftedMessage) => {
@@ -419,13 +424,13 @@ class ChatRoom extends React.Component {
           //renderUsernameOnMessage={true}
           // infiniteScroll={true}   // This is not supported for web yet
           renderMessageImage={(props) => {
-            return <RenderImage 
-            {...props} 
-            openImageOverlay={this.openImageOverlay} 
-            downloadImage={this.downloadImage} 
-            controlMessages={this.state.controlMessages}
-            sendSystemMessage={this.sendSystemMessage} 
-            sbContext={this.sbContext} />
+            return <RenderImage
+              {...props}
+              openImageOverlay={this.openImageOverlay}
+              downloadImage={this.downloadImage}
+              controlMessages={this.state.controlMessages}
+              sendSystemMessage={this.sendSystemMessage}
+              sbContext={this.sbContext} />
           }}
           // renderMessageText={RenderMessageContainer}
           scrollToBottom={true}

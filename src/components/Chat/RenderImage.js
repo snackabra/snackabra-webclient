@@ -1,6 +1,6 @@
 import React from 'react';
 import { CircularProgress, Grid, IconButton } from "@mui/material";
-import InputIcon from '@mui/icons-material/Input';
+import InputIcon from '@mui/icons-material/Download';
 
 
 const styles = {
@@ -34,6 +34,7 @@ const RenderImage = (props) => {
         setIsDownloading(false)
       }, 30000)
     } catch (error) {
+      setIsDownloading(false)
       console.info('openPreview() exception: ' + error.message);
       props.sendSystemMessage('Could not open image (' + error.message + ')');
     }
@@ -42,11 +43,11 @@ const RenderImage = (props) => {
   if (typeof props.currentMessage.image === 'string') {
     return (<Grid sx={{ cursor: 'pointer' }} >
       {!isDling ?
-        <IconButton style={{ position: 'absolute', transform: 'rotate(90deg)', ...styles[props.position], top: '47%' }} onClick={() => { downloadImage(props.currentMessage) }} component="div"
+        <IconButton style={{ position: 'absolute', ...styles[props.position], top: '47%' }} onClick={() => { downloadImage(props.currentMessage) }} component="div"
           aria-label="attach" size="large">
           <InputIcon color={'primary'} />
         </IconButton> :
-        <IconButton style={{ position: 'absolute', transform: 'rotate(90deg)', ...styles[props.position], top: '47%' }} disabled component="div"
+        <IconButton style={{ position: 'absolute', ...styles[props.position], top: '47%' }} disabled component="div"
           aria-label="attach" size="large">
           <CircularProgress size={30} />
         </IconButton>
