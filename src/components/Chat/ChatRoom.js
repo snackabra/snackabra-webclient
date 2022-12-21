@@ -161,26 +161,6 @@ class ChatRoom extends React.Component {
     this.props.Notifications.setOpen(true)
   }
 
-  downloadImage = (message) =>{
-    try {
-      this.sbContext.SB.storage.retrieveImage(message.imageMetaData, this.state.controlMessages).then((data) => {
-        if (data.hasOwnProperty('error')) {
-          this.sendSystemMessage('Could not open image: ' + data['error']);
-        } else {
-          let element = document.createElement('a');
-          element.setAttribute('href',data['url']);
-          element.setAttribute('download', 'image.jpeg');
-          document.body.appendChild(element);
-          element.click();
-          document.body.removeChild(element);
-        }
-      })
-    } catch (error) {
-      console.info('openPreview() exception: ' + error.message);
-      this.sendSystemMessage('Could not open image (' + error.message + ')');
-    }
-  }
-
   openImageOverlay = (message) => {
     this.setState({ img: message.image, openPreview: true })
     try {
@@ -361,7 +341,7 @@ class ChatRoom extends React.Component {
 
       document.getElementById('fileInput').value = '';
     }
-    this.setState({ files: [], images:  [] })
+    this.setState({ files: [], images: [] })
   }
 
   showLoading = (bool) => {
@@ -439,7 +419,13 @@ class ChatRoom extends React.Component {
           //renderUsernameOnMessage={true}
           // infiniteScroll={true}   // This is not supported for web yet
           renderMessageImage={(props) => {
-            return <RenderImage {...props} openImageOverlay={this.openImageOverlay} downloadImage={this.downloadImage} />
+            return <RenderImage 
+            {...props} 
+            openImageOverlay={this.openImageOverlay} 
+            downloadImage={this.downloadImage} 
+            controlMessages={this.state.controlMessages}
+            sendSystemMessage={this.sendSystemMessage} 
+            sbContext={this.sbContext} />
           }}
           // renderMessageText={RenderMessageContainer}
           scrollToBottom={true}
