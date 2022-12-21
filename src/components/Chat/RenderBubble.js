@@ -1,6 +1,7 @@
 import React from 'react'
-import { Grid, Typography } from "@mui/material";
+import { Grid, IconButton, Typography } from "@mui/material";
 import { Bubble } from "react-native-gifted-chat";
+import SendIcon from '@mui/icons-material/Send';
 const SB = require('snackabra')
 const sbCrypto = new SB.SBCrypto();
 
@@ -25,7 +26,7 @@ const RenderBubble = (props) => {
 
   const getColor = (username) => {
     let sumChars = 0;
-    for(let i = 0;i < username.length;i++){
+    for (let i = 0; i < username.length; i++) {
       sumChars += username.charCodeAt(i);
     }
 
@@ -180,7 +181,7 @@ const RenderBubble = (props) => {
             marginLeft: 0,
             width: props.currentMessage.image !== "" ? "80%" : "inherit"
           }
-        }, 
+        },
         textStyle: {
           right: {
             wordBreak: 'break-all',

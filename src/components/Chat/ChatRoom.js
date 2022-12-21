@@ -17,7 +17,6 @@ import RenderSend from "./RenderSend";
 import WhisperUserDialog from "../Modals/WhisperUserDialog";
 import RenderComposer from "./RenderComposer";
 import { observer } from "mobx-react"
-import { SBImage } from '../../utils/ImageProcessor';
 
 const SB = require('snackabra')
 
@@ -160,6 +159,26 @@ class ChatRoom extends React.Component {
     this.props.Notifications.setMessage(message);
     this.props.Notifications.setSeverity(severity);
     this.props.Notifications.setOpen(true)
+  }
+
+  downloadImage = (message) =>{
+    try {
+      this.sbContext.SB.storage.retrieveImage(message.imageMetaData, this.state.controlMessages).then((data) => {
+        if (data.hasOwnProperty('error')) {
+          this.sendSystemMessage('Could not open image: ' + data['error']);
+        } else {
+          let element = document.createElement('a');
+          element.setAttribute('href',data['url']);
+          element.setAttribute('download', 'image.jpeg');
+          document.body.appendChild(element);
+          element.click();
+          document.body.removeChild(element);
+        }
+      })
+    } catch (error) {
+      console.info('openPreview() exception: ' + error.message);
+      this.sendSystemMessage('Could not open image (' + error.message + ')');
+    }
   }
 
   openImageOverlay = (message) => {
@@ -420,8 +439,9 @@ class ChatRoom extends React.Component {
           //renderUsernameOnMessage={true}
           // infiniteScroll={true}   // This is not supported for web yet
           renderMessageImage={(props) => {
-            return <RenderImage {...props} openImageOverlay={this.openImageOverlay} />
+            return <RenderImage {...props} openImageOverlay={this.openImageOverlay} downloadImage={this.downloadImage} />
           }}
+          // renderMessageText={RenderMessageContainer}
           scrollToBottom={true}
           showUserAvatar={true}
           onPressAvatar={this.promptUsername}
