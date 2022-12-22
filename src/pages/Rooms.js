@@ -27,18 +27,19 @@ import NotificationContext from "../contexts/NotificationContext";
 import ImportDialog from "../components/Modals/ImportDialog";
 import DataOperationsDialog from "../components/Modals/DataOperationsDialog";
 import RoomMenu from "../components/Rooms/RoomMenu"
+import NavBarActionContext from "../contexts/NavBarActionContext";
 import { observer } from "mobx-react"
 import { SnackabraContext } from "mobx-snackabra-store";
 
 
 const drawerWidth = 240;
 const ResponsiveDrawer = observer((props) => {
+  const NavAppBarContext = React.useContext(NavBarActionContext)
   const sbContext = React.useContext(SnackabraContext);
   const Notifications = React.useContext(NotificationContext)
   let { room_id } = useParams();
   const { window } = props;
   const [roomId, setRoomId] = React.useState(false);
-  const [mobileOpen, setMobileOpen] = React.useState(false);
   const [openImportDialog, setOpenImportDialog] = React.useState(false);
   const [openDataOperations, setOpenDataOperations] = React.useState(false);
   const [openCreateDialog, setOpenCreateDialog] = React.useState(false);
@@ -54,54 +55,15 @@ const ResponsiveDrawer = observer((props) => {
 
   React.useEffect(() => {
     let _c = []
-    for(let x in sbContext.channels){
+    for (let x in sbContext.channels) {
       _c.push(sbContext.channels[x])
     }
     setChannelList(_c)
   }, [sbContext.channels])
 
   const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
+    NavAppBarContext.setMenuOpen(!NavAppBarContext.state.menuOpen)
   };
-
-  const getRoomData = () => {
-    sbContext.downloadRoomData().then((data) => {
-      console.log(data)
-      downloadFile(JSON.stringify(data.storage), sbContext.rooms[roomId].name + "_storage.txt")
-      downloadFile(JSON.stringify(data.channel), sbContext.rooms[roomId].name + "_data.txt");
-    })
-  }
-
-  const exportKeys = () => {
-    const data = { roomData: {}, contacts: {}, roomMetadata: {} }
-    data.roomData[roomId] = {
-      key: sbContext.rooms[roomId].key,
-      lastSeenMessage: sbContext.rooms[roomId].lastSeenMessage
-    }
-    data.contacts = sbContext.rooms[roomId].contacts
-    data.roomMetadata[roomId] = {
-      name: sbContext.rooms[roomId].name,
-      lastMessageTime: sbContext.rooms[roomId].lastMessageTime,
-      unread: false
-    }
-    data.pem = false;
-    downloadFile(JSON.stringify(data), sbContext.rooms[roomId].name + "_keys.txt");
-  }
-
-  const downloadFile = (text, file) => {
-    try {
-      let element = document.createElement('a');
-      element.setAttribute('href', 'data:text/plain;charset=utf-8, ' + encodeURIComponent(text));
-      element.setAttribute('download', file);
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
-
 
   const editRoom = (roomId) => {
     setEditingRoomId(roomId)
@@ -194,8 +156,9 @@ const ResponsiveDrawer = observer((props) => {
                 >
                   <Grid xs={7} item>
                     {editingRoomId !== room ?
+
                       <a href={`/${room}`}>
-                        <ListItemText primary={roomName} />
+                        <Typography noWrap>{roomName}</Typography>
                       </a> :
                       <TextField
                         id={editingRoomId}
@@ -226,16 +189,11 @@ const ResponsiveDrawer = observer((props) => {
                   <Grid xs={5} item>
                     <RoomMenu
                       socket={sbContext.socket}
+                      sbContext={sbContext}
                       selected={room === roomId}
                       roomId={room}
                       editRoom={() => {
                         editRoom(room)
-                      }}
-                      getRoomData={() => {
-                        getRoomData(room)
-                      }}
-                      exportKeys={() => {
-                        exportKeys(room)
                       }}
                     />
                   </Grid>
@@ -273,18 +231,11 @@ const ResponsiveDrawer = observer((props) => {
         component="nav"
         sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
       >
-        <Fab color="#ff5c42"
-          variant="extended"
-          onClick={handleDrawerToggle}
-          sx={{ mt: 2, position: 'absolute', display: { xs: 'flex-inline', sm: 'none' }, }}>
-          <Typography variant={'body2'}>Menu</Typography>
-          <KeyboardArrowRightIcon />
-        </Fab>
         {/* For future implementation on mobile */}
         <Drawer
           container={container}
           variant="temporary"
-          open={mobileOpen}
+          open={NavAppBarContext.state.menuOpen}
           onClose={handleDrawerToggle}
           ModalProps={{
             keepMounted: true, // Better open performance on mobile.

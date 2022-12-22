@@ -83,7 +83,11 @@ class ChatRoom extends React.Component {
     this.processQueue()
     this.processSQueue()
   }
-
+  /**
+   * Queue helps with order outgoing messages
+   * when sending many images, some were getting lost
+   * this tiny bit of extra time helps ensure messages are sent
+   */
   processQueue = () => {
     setInterval(() => {
       while (!q.isEmpty && !q.isMaxed) {
@@ -95,6 +99,12 @@ class ChatRoom extends React.Component {
       }
     }, 25)
   }
+
+    /**
+   * Queue helps ensure each message gets a unique ID for Images
+   * when sending multiple images gifted chat sees that a single message 
+   * we need to add on to the message id to render the chat container properly
+   */
   processSQueue = () => {
     setInterval(() => {
       while (!_r.isEmpty && !_r.isMaxed) {
@@ -105,10 +115,8 @@ class ChatRoom extends React.Component {
         this.setState({ messages: [...this.state.messages, msg] }, () => {
           _r.processing--
         })
-
       }
-
-    }, 150)
+    }, 25)
   }
 
   connect = async (username) => {
@@ -193,24 +201,23 @@ class ChatRoom extends React.Component {
 
   openImageOverlay = (message) => {
     this.setState({ img: message.image, openPreview: true })
-    try {
-      console.info("**** this.sbContext:")
-      console.info(this.sbContext)
-      console.info("image metadata")
-      console.info(message.imageMetaData)
-      this.sbContext.SB.storage.retrieveImage(message.imageMetaData, this.state.controlMessages).then((data) => {
-        console.info(data)
-        if (data.hasOwnProperty('error')) {
-          this.sendSystemMessage('Could not open image: ' + data['error']);
-        } else {
-          this.setState({ img: data['url'], imgLoaded: true })
-        }
-      })
-    } catch (error) {
-      console.info('openPreview() exception: ' + error.message);
-      this.sendSystemMessage('Could not open image (' + error.message + ')');
+    console.info(this.sbContext)
+    console.info("image metadata")
+    console.info(message.imageMetaData)
+    this.sbContext.SB.storage.retrieveImage(message.imageMetaData, this.state.controlMessages).then((data) => {
+      console.info(data)
+      if (data.hasOwnProperty('error')) {
+        console.error(data['error'])
+        this.notify('Could not load full size image', 'warning')
+      } else {
+        this.setState({ img: data['url'], imgLoaded: true })
+      }
+    }).catch((error) => {
+      console.error('openPreview() exception: ' + error.message);
+      this.notify('Could not load full size image', 'warning')
       this.setState({ openPreview: false })
-    }
+    })
+
   }
 
   imageOverlayClosed = () => {
@@ -349,10 +356,9 @@ class ChatRoom extends React.Component {
   sendSystemMessage = (message) => {
     this.setState({
       messages: [...this.state.messages, {
-        _id: this.state.messages.length,
+        _id: `${this.state.messages.length}_${Date.now()}`,
         user: { _id: 'system', name: 'System Message' },
-        text: message,
-        system: true
+        text: message + '\n\n Details in console'
       }]
     })
   }
@@ -411,7 +417,6 @@ class ChatRoom extends React.Component {
     this.setState({ openWhisper: false })
   }
   render() {
-    const attachMenu = Boolean(this.state.anchorEl);
     return (
 
       <View style={{

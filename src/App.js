@@ -9,9 +9,11 @@ import AppRoutes from "./Routes";
 import theme from "./theme";
 import { ThemeProvider } from "@mui/material";
 import { NotificationProvider } from "./contexts/NotificationContext";
+import { NavBarActionProvider } from "./contexts/NavBarActionContext";
 import { LogProvider } from "./contexts/LogContext";
 import { SnackabraProvider } from "mobx-snackabra-store";
 import NotificationBar from "./components/NotificationBar";
+
 
 i18n.loadLocaleData({
   en: { plurals: en },
@@ -31,10 +33,12 @@ const App = () => {
       <ThemeProvider theme={theme}>
         <SnackabraProvider config={sbConfig}>
           <NotificationProvider>
-            <LogProvider>
-              <AppRoutes />
-            </LogProvider>
-            <NotificationBar />
+            <NavBarActionProvider>
+              <LogProvider>
+                <AppRoutes />
+              </LogProvider>
+              <NotificationBar />
+            </NavBarActionProvider>
           </NotificationProvider>
         </SnackabraProvider>
       </ThemeProvider>

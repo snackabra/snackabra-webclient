@@ -39,6 +39,43 @@ const RoomMenu = (props) => {
 
   }
 
+  const getRoomData = () => {
+    props.sbContext.downloadRoomData().then((data) => {
+      console.log(data)
+      downloadFile(JSON.stringify(data.storage), props.sbContext.rooms[props.roomId].name + "_storage.txt")
+      downloadFile(JSON.stringify(data.channel), props.sbContext.rooms[props.roomId].name + "_data.txt");
+    })
+  }
+
+  const exportKeys = () => {
+    const data = { roomData: {}, contacts: {}, roomMetadata: {} }
+    data.roomData[props.roomId] = {
+      key: props.sbContext.rooms[props.roomId].key,
+      lastSeenMessage: props.sbContext.rooms[props.roomId].lastSeenMessage
+    }
+    data.contacts = props.sbContext.rooms[props.roomId].contacts
+    data.roomMetadata[props.roomId] = {
+      name: props.sbContext.rooms[props.roomId].name,
+      lastMessageTime: props.sbContext.rooms[props.roomId].lastMessageTime,
+      unread: false
+    }
+    data.pem = false;
+    downloadFile(JSON.stringify(data), props.sbContext.rooms[props.roomId].name + "_keys.txt");
+  }
+
+  const downloadFile = (text, file) => {
+    try {
+      let element = document.createElement('a');
+      element.setAttribute('href', 'data:text/plain;charset=utf-8, ' + encodeURIComponent(text));
+      element.setAttribute('download', file);
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   return (
     <div>
       <IconButton
@@ -79,7 +116,7 @@ const RoomMenu = (props) => {
           {props.socket?.status === 'OPEN' && props.selected ?
             <MenuItem onClick={() => {
               handleClose()
-              props.getRoomData()
+              getRoomData()
             }}>
               <ListItemIcon>
                 <FileDownloadOutlinedIcon />

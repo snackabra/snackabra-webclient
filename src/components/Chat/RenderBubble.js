@@ -1,14 +1,12 @@
 import React from 'react'
-import { Grid, IconButton, Typography } from "@mui/material";
+import { Grid, Typography } from "@mui/material";
 import { Bubble } from "react-native-gifted-chat";
-import SendIcon from '@mui/icons-material/Send';
 const SB = require('snackabra')
 const sbCrypto = new SB.SBCrypto();
 
 const RenderBubble = (props) => {
   const [isVerifiedGuest, setVerifiedGuest] = React.useState(false)
   const [isAdmin, setIsAdmin] = React.useState(false)
-  const [isMe, setMe] = React.useState(false)
   const [newProps, setNewProps] = React.useState({})
 
 
@@ -19,11 +17,9 @@ const RenderBubble = (props) => {
       // const verified = await props.socket.api.postPubKey(current_user_key)
       setVerifiedGuest(true);
       setIsAdmin(sbCrypto.compareKeys(props.socket.exportable_owner_pubKey, current_user_key))
-      setMe(sbCrypto.compareKeys(props.socket.exportable_pubKey, current_user_key))
     }
     init();
   }, [props.currentMessage.user._id, props.socket.api, props.socket.exportable_owner_pubKey, props.socket.exportable_pubKey])
-
   const getColor = (username) => {
     let sumChars = 0;
     for (let i = 0; i < username.length; i++) {
@@ -57,18 +53,6 @@ const RenderBubble = (props) => {
             flexGrow: 1,
             marginLeft: 0,
             width: props.currentMessage.image !== "" ? "80%" : "inherit"
-          }
-        },
-        textStyle: {
-          left: {
-            fontStyle: "italic",
-            color: "#000",
-            wordBreak: 'break-all',
-          },
-          right: {
-            fontStyle: "italic",
-            color: "#000",
-            wordBreak: 'break-all',
           }
         }
       })
@@ -104,13 +88,26 @@ const RenderBubble = (props) => {
             marginRight: 0,
             width: props.currentMessage.image !== "" ? "80%" : "inherit"
           }
-        },
-        textStyle: {
+        }
+      })
+    } else if (props.currentMessage.user._id === 'system') {
+
+      setNewProps({
+        wrapperStyle: {
           left: {
-            fontStyle: "italic",
-            color: "Black",
-            wordBreak: 'break-all',
+            borderColor: "black",
+            borderStyle: "solid",
+            borderWidth: "2px",
+            flexGrow: 1,
+            marginRight: 0,
           },
+          right: {
+            borderColor: "black",
+            borderStyle: "solid",
+            borderWidth: "2px",
+            flexGrow: 1,
+            marginRight: 0,
+          }
         }
       })
     } else if (props.currentMessage._id.match(/^sending_/)) {
@@ -124,11 +121,6 @@ const RenderBubble = (props) => {
             marginLeft: 0,
             width: props.currentMessage.image !== "" ? "80%" : "inherit"
           }
-        },
-        textStyle: {
-          right: {
-            wordBreak: 'break-all',
-          },
         }
       })
     }
@@ -152,14 +144,6 @@ const RenderBubble = (props) => {
             marginLeft: 0,
             width: props.currentMessage.image !== "" ? "80%" : "inherit"
           }
-        },
-        textStyle: {
-          right: {
-            wordBreak: 'break-all',
-          },
-          left: {
-            wordBreak: 'break-all',
-          }
         }
       })
     }
@@ -180,14 +164,6 @@ const RenderBubble = (props) => {
             borderWidth: "4px",
             marginLeft: 0,
             width: props.currentMessage.image !== "" ? "80%" : "inherit"
-          }
-        },
-        textStyle: {
-          right: {
-            wordBreak: 'break-all',
-          },
-          left: {
-            wordBreak: 'break-all',
           }
         }
       })
