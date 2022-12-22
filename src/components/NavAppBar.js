@@ -59,7 +59,7 @@ const NavAppBar = observer(() => {
           </Grid>
           <Hidden smUp>
             <Grid xs={5} item>
-              {sbContext.activeRoom ?
+              {sbContext.activeRoom && sbContext.channels[sbContext.activeRoom]?
                 <Grid
                   container
                   direction="row"

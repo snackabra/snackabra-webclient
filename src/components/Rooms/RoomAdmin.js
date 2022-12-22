@@ -110,9 +110,9 @@ const RoomAdmin = (props) => {
         body: { roomId: roomId, SERVER_SECRET: roomSecret, ownerKey: ownerPublicKey }
       }).then((r) => {
         console.log(r)
-        if(r.status === 200) {
+        if (r.status === 200) {
           success('Room Authorized!!!')
-        }else{
+        } else {
           console.log(r)
           error('Something happened when submitting the form!')
         }
@@ -129,10 +129,10 @@ const RoomAdmin = (props) => {
       <Hidden xsUp>
         <Typography variant={'h3'}><Trans id='room upload header'>Upload Room</Trans></Typography>
         <Grid id="uploadRoom"
-              container
-              direction="row"
-              justifyContent="flex-start"
-              alignItems="flex-start">
+          container
+          direction="row"
+          justifyContent="flex-start"
+          alignItems="flex-start">
 
           <Typography variant={'body1'}><Trans id='room upload message'>You can upload room data for a previously
             generated room by selecting a file to upload and then entering your room server secret and pressing the
@@ -165,9 +165,9 @@ const RoomAdmin = (props) => {
       </Hidden>
       <hr />
       <Grid container
-            direction="row"
-            justifyContent="flex-start"
-            alignItems="flex-start">
+        direction="row"
+        justifyContent="flex-start"
+        alignItems="flex-start">
         <Grid xs={12} item>
           <Typography variant={'h3'}><Trans id='new room header'>Create New Room</Trans></Typography>
         </Grid>
@@ -187,10 +187,10 @@ const RoomAdmin = (props) => {
       <hr />
       <Hidden xsUp>
         <Grid id="uploadStorage"
-              container
-              direction="row"
-              justifyContent="flex-start"
-              alignItems="flex-start">
+          container
+          direction="row"
+          justifyContent="flex-start"
+          alignItems="flex-start">
           <Typography variant={'h3'}><Trans id='storage upload header'>Upload Storage Data</Trans></Typography>
           <Typography variant={'body1'}><Trans id='storage upload message'>You can upload storage data for a previously
             generated room by entering your storage server secret and pressing the button below.</Trans></Typography>
@@ -205,16 +205,17 @@ const RoomAdmin = (props) => {
         </Grid>
       </Hidden>
       <Grid id="authorizeRoom"
-            container
-            direction="row"
-            justifyContent="flex-start"
-            alignItems="flex-start">
+        container
+        direction="row"
+        justifyContent="flex-start"
+        alignItems="flex-start">
         <Typography variant={'h3'}><Trans id='room authorize header'>Authorize Room</Trans></Typography>
         <Typography variant={'body1'}><Trans id='room authorize message'>You can authorize a room to be made available
           on your server. To do that, enter the roomId, the public key of the room owner and your server secret and
           press Authorize Room.</Trans></Typography>
         <Grid xs={12} item sx={{ pb: 1, pt: 1 }}>
           <TextField
+            id='sb-room-secret'
             fullWidth
             onChange={(e) => {
               setRoomSecret(e.target.value)
@@ -225,6 +226,7 @@ const RoomAdmin = (props) => {
         </Grid>
         <Grid xs={12} item sx={{ pb: 1, pt: 1 }}>
           <TextField
+            id="sb-room-id"
             fullWidth
             onChange={(e) => {
               setRoomID(e.target.value)
@@ -235,6 +237,7 @@ const RoomAdmin = (props) => {
         </Grid>
         <Grid xs={12} item sx={{ pb: 1, pt: 1 }}>
           <TextField
+            id="sb-owber-pub-key"
             fullWidth
             onChange={(e) => {
               setOwnerPublicKey(e.target.value)

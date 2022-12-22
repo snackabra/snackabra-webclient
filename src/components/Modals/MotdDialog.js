@@ -43,7 +43,7 @@ const MotdDialog = observer((props) => {
         {!sbContext.owner ?
           <>
             <TextField
-              id="whisper-text"
+              id="sb-whisper-text"
               label="Whisper"
               onChange={updateWhisperText}
               multiline

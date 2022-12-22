@@ -44,6 +44,7 @@ const JoinDialog = (props) => {
         </Grid>
         <Grid item xs={12} sx={{ pb: 2, pt: 2 }}>
           <TextField
+            id="sb-room-id"
             placeholder="Room ID"
             fullWidth
             onChange={updateRoomId}

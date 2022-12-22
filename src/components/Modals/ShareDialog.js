@@ -43,7 +43,7 @@ const ShareDialog = (props) => {
         </Grid>
         <Grid item xs={12} sx={{ pb: 2, pt: 2 }}>
           <TextField
-            id="copy_room_id"
+            id="sb-copy_room_id"
             placeholder="Room ID"
             fullWidth
             value={props.roomId}

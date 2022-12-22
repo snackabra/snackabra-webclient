@@ -44,7 +44,7 @@ const FirstVisitDialog = observer((props) => {
         </Grid>
         <Grid item xs={12} sx={{ pb: 2, pt: 2 }}>
           <TextField
-            id="Username"
+            id="sb-username"
             placeholder="Username"
             fullWidth
             autoFocus
