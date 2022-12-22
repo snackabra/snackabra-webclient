@@ -25,7 +25,7 @@ const RenderChatFooter = (props) => {
         files.forEach((file) => {
           file.processImage()
         })
-        props.setFiles(files)
+        // props.setFiles(files)
       })
     }
     if (props.files.length > 0 && props.files.length !== files.length) {

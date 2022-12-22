@@ -16,8 +16,11 @@ import FirstVisitDialog from "../Modals/FirstVisitDialog";
 import RenderSend from "./RenderSend";
 import WhisperUserDialog from "../Modals/WhisperUserDialog";
 import RenderComposer from "./RenderComposer";
+import Queue from "../../utils/Queue";
 import { observer } from "mobx-react"
 
+const q = new Queue()
+const _r = new Queue()
 const SB = require('snackabra')
 
 @observer
@@ -77,6 +80,35 @@ class ChatRoom extends React.Component {
         this.connect();
       }
     })
+    this.processQueue()
+    this.processSQueue()
+  }
+
+  processQueue = () => {
+    setInterval(() => {
+      while (!q.isEmpty && !q.isMaxed) {
+        q.processing++
+        const msg = q.dequeue()
+        msg.send().then(() => {
+          q.processing--
+        })
+      }
+    }, 25)
+  }
+  processSQueue = () => {
+    setInterval(() => {
+      while (!_r.isEmpty && !_r.isMaxed) {
+        _r.processing++
+        const msg = _r.dequeue()
+        msg._id = msg._id + Date.now()
+        this.sending[msg._id] = msg._id
+        this.setState({ messages: [...this.state.messages, msg] }, () => {
+          _r.processing--
+        })
+
+      }
+
+    }, 150)
   }
 
   connect = async (username) => {
@@ -120,7 +152,6 @@ class ChatRoom extends React.Component {
         })
       })
     }).catch((e) => {
-      console.info(e)
       if (e.match(/^No such channel on this server/)) {
         let i = 5
         setInterval(() => {
@@ -137,7 +168,6 @@ class ChatRoom extends React.Component {
 
   recieveMessages = (msg) => {
     if (msg) {
-      console.info(msg)
       if (!msg.control) {
         const messages = this.state.messages.reduce((acc, curr) => {
           if (!curr._id.match(/^sending/)) {
@@ -147,7 +177,6 @@ class ChatRoom extends React.Component {
           }
           return acc;
         }, []);
-        console.warn(JSON.parse(JSON.stringify([...messages, msg])))
         this.setState({ messages: [...messages, msg] })
       } else {
         this.setState({ controlMessages: [...this.state.controlMessages, msg] })
@@ -212,26 +241,24 @@ class ChatRoom extends React.Component {
   //TODO: for images render in chat and then replace with received message
   sendFiles = async (giftedMessage) => {
     this.setState({ uploading: true })
-    const fileMessages = [];
     const filesArray = [];
     const _files = this.state.files;
     this.setState({ files: [] }, () => {
 
 
-      _files.forEach(async (file, i) => {
+      _files.forEach((file, i) => {
 
         const message = {
           createdAt: new Date().toString(),
           text: "",
           image: file.url,
           user: this.sbContext.user,
-          _id: 'sending_' + giftedMessage[0]._id
+          _id: 'sending_' + giftedMessage[0]._id + Date.now()
         }
-        this.sending[message._id] = message._id
-        fileMessages.push(message)
+        _r.enqueue(message)
         filesArray.push(file)
       })
-      this.setState({ messages: [...this.state.messages, ...fileMessages] })
+
       for (let x in filesArray) {
         const sbImage = filesArray[x]
         sbImage.thumbnailReady.then(async () => {
@@ -246,7 +273,7 @@ class ChatRoom extends React.Component {
             previewKey: sbImage.objectMetadata.preview.key,
           }
           sbm.contents.imageMetaData = imageMetaData;
-          sbm.send(); // and no we don't need to wait
+          q.enqueue(sbm)
           Promise.all([storePromises.previewStorePromise]).then((previewVerification) => {
             console.info()
             console.info('Preview image uploaded')
@@ -257,9 +284,7 @@ class ChatRoom extends React.Component {
               controlMessage.contents.control = true;
               controlMessage.contents.verificationToken = verification;
               controlMessage.contents.id = imageMetaData.previewId;
-              controlMessage.send().then(() => {
-                console.info('Control message for preview image sent!')
-              })
+              q.enqueue(controlMessage)
               queueMicrotask(() => {
                 storePromises.fullStorePromise.then((verificationPromise) => {
                   console.info(verificationPromise)
@@ -269,9 +294,7 @@ class ChatRoom extends React.Component {
                     controlMessage.contents.control = true;
                     controlMessage.contents.verificationToken = verification;
                     controlMessage.contents.id = imageMetaData.imageId;
-                    controlMessage.send().then(() => {
-                      console.info('Control message for full image sent!')
-                    })
+                    q.enqueue(controlMessage)
                   });
                 });
               })
@@ -376,6 +399,10 @@ class ChatRoom extends React.Component {
     });
   }
 
+  setFiles = (files) => {
+    this.setState({ files: files })
+  }
+
   setImageFiles = (files) => {
     this.setState({ images: files })
   }
@@ -443,7 +470,7 @@ class ChatRoom extends React.Component {
           renderChatFooter={() => {
             return <RenderChatFooter removeInputFiles={this.removeInputFiles}
               files={this.state.files}
-              setImages={this.setImages}
+              setFiles={this.setFiles}
               uploading={this.state.uploading}
               loading={this.state.loading} />
           }}
