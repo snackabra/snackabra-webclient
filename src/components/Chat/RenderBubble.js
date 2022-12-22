@@ -39,7 +39,7 @@ const RenderBubble = (props) => {
   }
 
   React.useEffect(() => {
-    const width = props.currentMessage.image !== "" ? "max(80%, 18rem)" : "inherit"
+    const width = props.currentMessage.image !== "" ? "min(80%, 18rem)" : "inherit"
 
     if (props.currentMessage.whispered) {
       setNewProps({
