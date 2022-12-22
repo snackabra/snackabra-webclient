@@ -3,12 +3,9 @@ import ResponsiveDialog from "../ResponsiveDialog";
 import { Grid, TextField, Typography } from "@mui/material";
 import { StyledButton } from "../../styles/Buttons";
 import { useState } from "react";
-import { useState } from "react";
 import { Trans } from "@lingui/macro";
 import { observer } from "mobx-react"
-import { observer } from "mobx-react"
 
-const FirstVisitDialog = observer((props) => {
 const FirstVisitDialog = observer((props) => {
   const [open, setOpen] = useState(props.open);
   const [text, setText] = useState('');

@@ -274,7 +274,6 @@ const ResponsiveDrawer = observer((props) => {
     </Box>
   );
 })
-})
 
 
 export default ResponsiveDrawer;

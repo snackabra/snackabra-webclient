@@ -8,8 +8,6 @@ import ConfirmLockDialog from "./ConfirmLockDialog";
 import NotificationContext from "../../contexts/NotificationContext";
 import { observer } from "mobx-react"
 import { SnackabraContext } from "mobx-snackabra-store";
-import { observer } from "mobx-react"
-import { SnackabraContext } from "mobx-snackabra-store";
 
 function isNumeric(v) {
   return !isNaN(v) &&
