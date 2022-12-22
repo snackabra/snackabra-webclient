@@ -46,10 +46,19 @@ const ResponsiveDrawer = observer((props) => {
   const [openJoinDialog, setOpenJoinDialog] = React.useState(false);
   const [editingRoomId, setEditingRoomId] = React.useState(false);
   const [updatedName, setUpdatedName] = React.useState(false);
+  const [channelList, setChannelList] = React.useState([]);
 
   React.useEffect(() => {
     setRoomId(room_id)
   }, [room_id])
+
+  React.useEffect(() => {
+    let _c = []
+    for(let x in sbContext.channels){
+      _c.push(sbContext.channels[x])
+    }
+    setChannelList(_c)
+  }, [sbContext.channels])
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -103,7 +112,7 @@ const ResponsiveDrawer = observer((props) => {
 
   const submitName = (e) => {
     if (e.keyCode === 13) {
-      sbContext.updateChannelName({name: updatedName, channelId: editingRoomId}).then(()=>{
+      sbContext.updateChannelName({ name: updatedName, channelId: editingRoomId }).then(() => {
         setEditingRoomId(false)
       })
     }
@@ -112,7 +121,6 @@ const ResponsiveDrawer = observer((props) => {
   const updateName = (e) => {
     setUpdatedName(e.target.value)
   }
-
   const drawer = (
     <div>
       <Toolbar />
@@ -159,7 +167,7 @@ const ResponsiveDrawer = observer((props) => {
           </ListItemButton>
         </ListItem>
 
-        <ListItem sx={{display: !sbContext.admin ? 'none' : 'inherit'}} disablePadding>
+        <ListItem sx={{ display: !sbContext.admin ? 'none' : 'inherit' }} disablePadding>
           <ListItemButton onClick={() => {
             setOpenAdminDialog(true)
           }}>
@@ -171,10 +179,11 @@ const ResponsiveDrawer = observer((props) => {
         </ListItem>
 
         <Divider />
-        {Object.keys(sbContext.channels).map((room, index) => {
+        {channelList.map((item, index) => {
+          const room = item._id
+          const roomName = item.name
           const bgColor = room === roomId ? '#ff5c42' : 'inherit';
           const color = room === roomId ? '#fff' : 'inherit';
-          const roomName = sbContext.channels[room].name
           return (
             <ListItem key={index} disablePadding sx={{ backgroundColor: bgColor, color: color }}>
               <ListItemButton>
