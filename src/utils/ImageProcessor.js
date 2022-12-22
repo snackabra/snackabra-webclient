@@ -119,7 +119,7 @@ export async function restrictPhoto(sbImage, maxSize, type) {
 
   switch (type) {
     case 'thumbnail':
-      scale = .9;
+      scale = .95;
       break;
     case 'preview':
       scale = .95;
@@ -444,7 +444,7 @@ export class SBImage {
   processThumbnail = () => {
     const t0 = new Date().getTime();
     return new Promise((resolve) => {
-      restrictPhoto(this, 64, 'thumbnail').then(async (photo) => {
+      restrictPhoto(this, 72, 'thumbnail').then(async (photo) => {
         const t1 = new Date().getTime();
         console.warn(`#### thumbnail processing total ${t1 - t0} milliseconds (blocking)`);
         this.thumbnail = await getFileData(photo, 'url');

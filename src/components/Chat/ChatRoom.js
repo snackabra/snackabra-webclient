@@ -140,13 +140,14 @@ class ChatRoom extends React.Component {
       console.info(msg)
       if (!msg.control) {
         const messages = this.state.messages.reduce((acc, curr) => {
-          if (!this.sending.hasOwnProperty(curr._id)) {
+          if (!curr._id.match(/^sending/)) {
             acc.push(curr);
           } else {
             delete this.sending[curr._id]
           }
           return acc;
         }, []);
+        console.warn(JSON.parse(JSON.stringify([...messages, msg])))
         this.setState({ messages: [...messages, msg] })
       } else {
         this.setState({ controlMessages: [...this.state.controlMessages, msg] })

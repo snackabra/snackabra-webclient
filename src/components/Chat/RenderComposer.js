@@ -31,7 +31,7 @@ function RenderComposer(props) {
   const checkForSend = (e) => {
     if (e.keyCode === 13 && !e.ctrlKey && !e.shiftKey) {
       document.getElementById('send-button').click()
-      const input = document.getElementById('send-sb_render_composer_textarea');
+      const input = document.getElementById('sb_render_composer_textarea');
       input.value = ""
       handleSend();
     }
