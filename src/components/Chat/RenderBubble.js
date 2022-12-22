@@ -39,6 +39,8 @@ const RenderBubble = (props) => {
   }
 
   React.useEffect(() => {
+    const width = props.currentMessage.image !== "" ? "max(80%, 18rem)" : "inherit"
+
     if (props.currentMessage.whispered) {
       setNewProps({
         wrapperStyle: {
@@ -46,13 +48,13 @@ const RenderBubble = (props) => {
             backgroundColor: "#FEE251",
             flexGrow: 1,
             marginRight: 0,
-            width: props.currentMessage.image !== "" ? "80%" : "inherit"
+            width: width
           },
           right: {
             backgroundColor: "#FEE251",
             flexGrow: 1,
             marginLeft: 0,
-            width: props.currentMessage.image !== "" ? "80%" : "inherit"
+            width: width
           }
         }
       })
@@ -65,7 +67,7 @@ const RenderBubble = (props) => {
             borderWidth: "4px",
             flexGrow: 1,
             marginRight: 0,
-            width: props.currentMessage.image !== "" ? "80%" : "inherit"
+            width: width
           },
           right: {
             borderColor: "red",
@@ -73,7 +75,7 @@ const RenderBubble = (props) => {
             borderWidth: "4px",
             flexGrow: 1,
             marginLeft: 0,
-            width: props.currentMessage.image !== "" ? "80%" : "inherit"
+            width: width
           }
         }
       })
@@ -86,7 +88,7 @@ const RenderBubble = (props) => {
             borderWidth: "2px",
             flexGrow: 1,
             marginRight: 0,
-            width: props.currentMessage.image !== "" ? "80%" : "inherit"
+            width: width
           }
         }
       })
@@ -119,7 +121,7 @@ const RenderBubble = (props) => {
             borderWidth: "4px",
             flexGrow: 1,
             marginLeft: 0,
-            width: props.currentMessage.image !== "" ? "80%" : "inherit"
+            width: width
           }
         }
       })
@@ -134,7 +136,7 @@ const RenderBubble = (props) => {
             borderWidth: "4px",
             flexGrow: 1,
             marginRight: 0,
-            width: props.currentMessage.image !== "" ? "80%" : "inherit"
+            width: width
           },
           right: {
             borderColor: "#2ECC40",
@@ -142,7 +144,7 @@ const RenderBubble = (props) => {
             borderWidth: "4px",
             flexGrow: 1,
             marginLeft: 0,
-            width: props.currentMessage.image !== "" ? "80%" : "inherit"
+            width: width
           }
         }
       })
@@ -156,14 +158,14 @@ const RenderBubble = (props) => {
             borderStyle: "solid",
             borderWidth: "4px",
             marginRight: 0,
-            width: props.currentMessage.image !== "" ? "80%" : "inherit"
+            width: width
           },
           right: {
             borderColor: getColor(props.currentMessage.user.name),
             borderStyle: "solid",
             borderWidth: "4px",
             marginLeft: 0,
-            width: props.currentMessage.image !== "" ? "80%" : "inherit"
+            width: width
           }
         }
       })
