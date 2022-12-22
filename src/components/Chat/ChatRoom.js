@@ -486,7 +486,7 @@ class ChatRoom extends React.Component {
           }}
           renderSend={RenderSend}
           renderComposer={(props) => {
-            return <RenderComposer {...props} filesAttached={this.state.files.length > 0} />
+            return <RenderComposer {...props} setFiles={this.setFiles} filesAttached={this.state.files.length > 0} showLoading={this.showLoading} />
           }}
           onLongPress={() => false}
           renderTime={RenderTime}

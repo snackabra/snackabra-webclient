@@ -1,8 +1,11 @@
 import * as React from 'react';
 import TextField from '@mui/material/TextField';
+import { SBImage } from "../../utils/ImageProcessor";
+import { SnackabraContext } from "mobx-snackabra-store";
+import { observer } from "mobx-react"
 
-
-function RenderComposer(props) {
+const RenderComposer = observer((props) => {
+  const sbContext = React.useContext(SnackabraContext);
   const [text, setText] = React.useState('')
   const [filesAttached, setFilesAttached] = React.useState(props.filesAttached)
 
@@ -27,6 +30,23 @@ function RenderComposer(props) {
     }
   }, [props])
 
+  const getSbImage = (file, props, sbContext) => {
+    return new Promise((resolve) => {
+      const sbImage = new SBImage(file, sbContext.SB);
+      sbImage.img.then((i) => {
+        sbImage.url = i.src
+        props.showLoading(false)
+        resolve(sbImage)
+        queueMicrotask(() => {
+          const SBImageCanvas = document.createElement('canvas');
+          sbImage.loadToCanvas(SBImageCanvas).then((c) => {
+  
+          });
+        });
+      })
+    })
+  }
+
   const checkForSend = (e) => {
     if (e.keyCode === 13 && !e.ctrlKey && !e.shiftKey) {
       document.getElementById('send-button').click()
@@ -41,6 +61,21 @@ function RenderComposer(props) {
     props.onTextChanged(e.target.value)
   }
 
+  const pasteEvent = async (e) =>{
+    console.log(e.nativeEvent.clipboardData.files)
+    const files = Object.assign(e.nativeEvent.clipboardData.files)
+    console.log(files)
+    let _files= []
+    for(let x in files){
+      if(files[x] instanceof File){
+        if(files[x].type.match(/^image/)){
+          _files.push(await getSbImage(files[x], props, sbContext))
+        }
+      }
+    }
+    props.setFiles(_files)
+  }
+
   return (
     <TextField
       id="sb_render_composer_textarea"
@@ -49,6 +84,7 @@ function RenderComposer(props) {
       placeholder="Type a message..."
       className="textinput-composer"
       multiline
+      onPaste={pasteEvent}
       onKeyUp={checkForSend}
       onChange={handlChange}
       readOnly={filesAttached}
@@ -62,6 +98,6 @@ function RenderComposer(props) {
       }}
     />
   )
-}
+})
 
 export default RenderComposer;
