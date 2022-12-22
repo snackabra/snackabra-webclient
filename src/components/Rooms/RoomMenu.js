@@ -145,7 +145,7 @@ const RoomMenu = (props) => {
         </MenuList>
       </Menu>
       {props.selected ?
-        <ConnectionStatus socket={props.socket} />
+        <ConnectionStatus />
         : ''
 
       }
