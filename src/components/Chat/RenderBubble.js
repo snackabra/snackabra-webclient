@@ -43,6 +43,7 @@ const RenderBubble = (props) => {
 
     if (props.currentMessage.whispered) {
       setNewProps({
+      setNewProps({
         wrapperStyle: {
           left: {
             backgroundColor: "#FEE251",
@@ -129,6 +130,8 @@ const RenderBubble = (props) => {
     // else if (props.currentMessage.user._id === JSON.stringify(state.keys.exportable_room_pubKey)) {
     else if (isAdmin) {
       setNewProps({
+    else if (isAdmin) {
+      setNewProps({
         wrapperStyle: {
           left: {
             borderColor: "#2ECC40",
@@ -147,6 +150,7 @@ const RenderBubble = (props) => {
             width: width
           }
         }
+      })
       })
     }
     //else if (props.currentMessage.user._id === JSON.stringify(state.keys.exportable_verifiedGuest_pubKey)) {
@@ -199,6 +203,7 @@ const RenderBubble = (props) => {
           left: 0,
           fontSize: 12,
           backgroundColor: 'transparent',
+          color: props.position === 'left' ? '#aaa' : 'white'
           color: props.position === 'left' ? '#aaa' : 'white'
         }}>
           {props.currentMessage.user.name}

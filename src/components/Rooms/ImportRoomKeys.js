@@ -74,6 +74,26 @@ const ImportRoomKeys = observer((props) => {
       Notifications.setOpen(true)
     }
   }
+  const parseData = async (keyData) => {
+    const metadata = JSON.parse(keyData)
+    Object.keys(metadata.roomData).forEach(async (roomId)=> {
+      metadata.roomData[roomId] = {
+        key: await exportPrivateCryptoKey(metadata.roomData[roomId].key),
+        lastSeenMessage: metadata.roomData[roomId].lastSeenMessage
+      }
+    })
+    metadata.pem = false;
+    return metadata
+  }
+  const exportPrivateCryptoKey = async (pem) => {
+    const pemHeader = '-----BEGIN PUBLIC KEY-----';
+    const pemFooter = '-----END PUBLIC KEY-----';
+    const start = pem.indexOf(pemHeader);
+    const end = pem.indexOf(pemFooter);
+    const pemContents = pem.slice(start + pemHeader.length, end);
+    const binaryDer = SB.base64ToArrayBuffer(pemContents.replace(/\n/, ''));
+    return crypto.subtle.importKey('spki', binaryDer, { name: 'RSA-OAEP', hash: 'SHA-256' }, true, ['encrypt']);
+  }
 
   return (
     <Grid id="key_import"

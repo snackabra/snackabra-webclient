@@ -2,7 +2,12 @@
 // ##
 // ## PLEASE NOTE: as of today (20221020) moving this to snackabra.ts in the 0.5 ('typescript') branch
 // ##              ... and starting to clean up as a TS set of utils
+// ##
+// ## PLEASE NOTE: as of today (20221020) moving this to snackabra.ts in the 0.5 ('typescript') branch
+// ##              ... and starting to clean up as a TS set of utils
 
+// TODO - can be optimized (asynchronized more) to return the hashes once calculated
+// and then do all the encryption stuff.
 // TODO - can be optimized (asynchronized more) to return the hashes once calculated
 // and then do all the encryption stuff.
 
@@ -10,7 +15,15 @@
 // import config from "../config";
 // import { encrypt, getImageKey } from "./crypto";
 // import { decrypt } from "./utils";
+// import * as utils from "./utils";
+// import config from "../config";
+// import { encrypt, getImageKey } from "./crypto";
+// import { decrypt } from "./utils";
 
+import ImageWorker from './ImageWorker.js';
+import ArrayBufferWorker from './ArrayBufferWorker.js';
+
+import { _appendBuffer } from "snackabra";
 import ImageWorker from './ImageWorker.js';
 import ArrayBufferWorker from './ArrayBufferWorker.js';
 
@@ -49,11 +62,27 @@ export async function _restrictPhoto(maxSize, _c, _b1, scale) {
   const t2 = new Date().getTime();
   const imageType = "image/jpeg";
   const qualityArgument = 0.92;
+// refactoring from using raw photo to using SBImage object
+// change: imageType, qualityArgument both hardcoded
+
+// helper
+// maxSize: target (max) size in KB
+// _c: full image on starting point canvas (eg sbImage.canvas)
+// _b1: blob version (eg sbImage.blob)
+
+//MTG: this needs futher optimizations
+export async function _restrictPhoto(maxSize, _c, _b1, scale) {
+  const t2 = new Date().getTime();
+  const imageType = "image/jpeg";
+  const qualityArgument = 0.92;
   let _size = _b1.size;
   if (_size <= maxSize) {
     console.log(`Starting size ${_size} is fine (below target size ${maxSize}`);
+    console.log(`Starting size ${_size} is fine (below target size ${maxSize}`);
     return _b1;
   }
+  console.log(`Starting size ${_size} too large (max is ${maxSize}) bytes.`)
+  console.log(`Reduce size by scaling canvas - start size is W ${_c.width} x H ${_c.height}`)
   console.log(`Starting size ${_size} too large (max is ${maxSize}) bytes.`)
   console.log(`Reduce size by scaling canvas - start size is W ${_c.width} x H ${_c.height}`)
   // compression wasn't enough, so let's resize until we're getting close
@@ -156,7 +185,11 @@ export async function restrictPhoto(sbImage, maxSize, type) {
 
   // workingDots();
   console.log(`... ok looks like we're good now ... final size is ${_b1.size} (which is ${((_b1.size * 100) / maxSize).toFixed(2)}% of cap)`);
+  console.log(`... ok looks like we're good now ... final size is ${_b1.size} (which is ${((_b1.size * 100) / maxSize).toFixed(2)}% of cap)`);
   // document.getElementById('the-original-image').width = _final_c.width;  // a bit of a hack
+  const end = new Date().getTime();
+  console.log(`#### restrictPhoto() took total ${end - t0} milliseconds`);
+  return _final_b1;
   const end = new Date().getTime();
   console.log(`#### restrictPhoto() took total ${end - t0} milliseconds`);
   return _final_b1;
@@ -164,14 +197,19 @@ export async function restrictPhoto(sbImage, maxSize, type) {
 
 export function scaleCanvas(canvas, scale) {
   var start = new Date().getTime();
+  var start = new Date().getTime();
   const scaledCanvas = document.createElement('canvas');
   scaledCanvas.width = canvas.width * scale;
   scaledCanvas.height = canvas.height * scale;
+  // console.log(`#### scaledCanvas starting with W ${canvas.width} x H ${canvas.height}`);
   // console.log(`#### scaledCanvas starting with W ${canvas.width} x H ${canvas.height}`);
   scaledCanvas
     .getContext('2d')
     .drawImage(canvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
   // console.log(`#### scaledCanvas actual W ${scaledCanvas.width} x H ${scaledCanvas.height}`);
+  var end = new Date().getTime();
+  // console.log(`#### scaleCanvas() took ${end - start} milliseconds`);
+  console.log(`#### scaledCanvas scale ${scale} to target W ${scaledCanvas.width} x H ${scaledCanvas.height} took ${end - start} milliseconds`);
   var end = new Date().getTime();
   // console.log(`#### scaleCanvas() took ${end - start} milliseconds`);
   console.log(`#### scaledCanvas scale ${scale} to target W ${scaledCanvas.width} x H ${scaledCanvas.height} took ${end - start} milliseconds`);
@@ -208,6 +246,9 @@ export function padImage(image_buffer) {
   }
   // _padding_array.push(image_size);
   const _padding = new Uint8Array(_padding_array).buffer;
+  console.log('Padding size: ', _padding.byteLength)
+  let final_data = _appendBuffer(image_buffer, _padding);
+  final_data = _appendBuffer(final_data, new Uint32Array([image_size]).buffer);
   console.log('Padding size: ', _padding.byteLength)
   let final_data = _appendBuffer(image_buffer, _padding);
   final_data = _appendBuffer(final_data, new Uint32Array([image_size]).buffer);

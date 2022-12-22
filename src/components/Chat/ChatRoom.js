@@ -230,10 +230,12 @@ class ChatRoom extends React.Component {
 
 
   handleReply = (user) => {
+  handleReply = (user) => {
     try {
       if (this.sbContext.owner) {
         this.setState({ replyTo: user._id, openWhisper: true })
       } else {
+        this.notify('Whisper is only for room owners.', 'info')
         this.notify('Whisper is only for room owners.', 'info')
       }
     } catch (e) {
