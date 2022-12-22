@@ -24,6 +24,11 @@ const CreateRoom = observer((props) => {
   const [creating, setCreating] = useState(false);
   const [openFirstVisit, setOpenFirstVisit] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [errored, setError] = useState(false);
+
+  React.useEffect(()=>{
+    document.getElementById('sb-wc-server-secret').focus()
+  },[])
 
   const success = (roomId) => {
     if (typeof props?.onClose === 'function') {
@@ -47,20 +52,19 @@ const CreateRoom = observer((props) => {
 
 
   const createRoom = async () => {
-    try {
-      setCreating(true)
-      sbContext.createRoom(secret).then((channel) => {
-        setRoomId(channel)
-        setOpenFirstVisit(true)
-      })
-    } catch (e) {
+    setCreating(true)
+    sbContext.createRoom(secret).then((channel) => {
+      setRoomId(channel)
+      setOpenFirstVisit(true)
+    }).catch((e) => {
       console.error(e)
+      setCreating(false)
+      setError(true)
       error()
-    }
+    })
   }
 
   const saveUsername = (newUsername) => {
-    console.trace('saveUsername')
     return new Promise((resolve) => {
       const _id = sbContext.user._id;
       sbContext.username = newUsername;
@@ -90,12 +94,19 @@ const CreateRoom = observer((props) => {
       alignItems="flex-start">
 
       <Grid xs={12} item>
-
         <FormControl fullWidth variant="outlined">
           <OutlinedInput
             placeholder={'Server Secret'}
+            id="sb-wc-server-secret"
             type={showPassword ? 'text' : 'password'}
             value={secret}
+            error={errored}
+            inputProps={{ autoFocus: true }}
+            onKeyUp={(e) => {
+              if (e.keyCode === 13) {
+                createRoom()
+              }
+            }}
             onChange={(e) => {
               setSecret(e.target.value)
             }}

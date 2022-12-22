@@ -1,4 +1,4 @@
-import { createTheme, experimental_sx as sx } from "@mui/material/styles"
+import { createTheme } from "@mui/material/styles"
 
 let theme = createTheme({
   breakpoints: {
@@ -19,18 +19,22 @@ theme = createTheme(theme, {
   components: {
     MuiInputBase: {
       styleOverrides: {
-        focused: sx({
-          color: '#ff5c42 !important',
-        }),
+        "root": {
+          "&.Mui-focused": {
+            "borderColor": "#ff5c42 !important"
+          }
+        }
       },
     },
     MuiOutlinedInput: {
       styleOverrides: {
-        focused: sx({
-          color: '#ff5c42 !important',
-        }),
+        "root": {
+          "&.Mui-focused": {
+            "borderColor": "#ff5c42 !important"
+          }
+        }
       },
-    },
+    }
   },
   typography: {
     fontFamily: [

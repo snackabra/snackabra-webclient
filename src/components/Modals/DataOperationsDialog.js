@@ -5,7 +5,7 @@ import ExportRoomKeys from "../Rooms/ExportRoomKeys";
 import DownloadRoomData from "../Rooms/DownloadRoomData";
 import { Divider, Typography } from "@mui/material";
 
-export default function DataOperationsDialog(props){
+export default function DataOperationsDialog(props) {
   const [open, setOpen] = React.useState(props.open);
 
   React.useEffect(() => {
@@ -14,15 +14,19 @@ export default function DataOperationsDialog(props){
 
   return (
     <ResponsiveDialog title={'Data Operations'} open={open} onClose={props.onClose} showActions>
-      <Divider sx={{mt:2, mb:2}}/>
+      <Divider sx={{ mt: 2, mb: 2 }} />
       <Typography variant={'h6'} gutterBottom>Download Room Data</Typography>
-      <DownloadRoomData/>
-      <Divider sx={{mt:2, mb:2}}/>
+      <DownloadRoomData />
+      <Divider sx={{ mt: 2, mb: 2 }} />
       <Typography variant={'h6'} gutterBottom>Export Keys</Typography>
-      <ExportRoomKeys/>
-      <Divider sx={{mt:2, mb:2}}/>
+      <ExportRoomKeys onDone={() => {
+        props.onClose()
+      }} />
+      <Divider sx={{ mt: 2, mb: 2 }} />
       <Typography variant={'h6'} gutterBottom>Import Keys</Typography>
-      <ImportRoomKeys/>
+      <ImportRoomKeys onDone={() => {
+        props.onClose()
+      }} />
     </ResponsiveDialog>
   )
 

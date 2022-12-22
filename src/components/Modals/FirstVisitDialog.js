@@ -18,7 +18,7 @@ const FirstVisitDialog = observer((props) => {
     setText(e.target.value)
   }
 
-  const submit = async () => {
+  const submit = () => {
     props.onClose(text);
   }
 
@@ -44,9 +44,15 @@ const FirstVisitDialog = observer((props) => {
         </Grid>
         <Grid item xs={12} sx={{ pb: 2, pt: 2 }}>
           <TextField
-            id="Username"
+            id="sb-username"
             placeholder="Username"
             fullWidth
+            autoFocus
+            onKeyUp={(e) => {
+              if (e.keyCode === 13) {
+                submit()
+              }
+            }}
             onChange={updateText}
           />
         </Grid>

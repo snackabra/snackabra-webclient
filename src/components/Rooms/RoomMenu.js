@@ -9,14 +9,14 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import IosShareOutlinedIcon from '@mui/icons-material/IosShareOutlined';
-import ShareDialog from "../Modals/ShareDialog"
+import NotificationContext from "../../contexts/NotificationContext";
 import ConnectionStatus from "./ConnectionStatus"
 
 const ITEM_HEIGHT = 48;
 
 const RoomMenu = (props) => {
+  const Notifications = React.useContext(NotificationContext)
   const [anchorEl, setAnchorEl] = React.useState(null);
-  const [dialogOpen, setDialogOpen] = React.useState(false);
   const open = Boolean(anchorEl);
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -25,17 +25,59 @@ const RoomMenu = (props) => {
     setAnchorEl(null);
   };
 
-  const toggle = () => {
-    console.log('toggling')
-    setDialogOpen(!dialogOpen)
+  const copy = async () => {
+    console.log(window.location)
+    if ('clipboard' in navigator) {
+      await navigator.clipboard.writeText(window.location.origin + '/' + props.roomId);
+    } else {
+      document.execCommand('copy', true, window.location.origin + '/' + props.roomId);
+    }
+    Notifications.setMessage('Room URL copied to clipboard!');
+    Notifications.setSeverity('success');
+    Notifications.setOpen(true)
+    handleClose()
+
+  }
+
+  const getRoomData = () => {
+    props.sbContext.downloadRoomData().then((data) => {
+      console.log(data)
+      downloadFile(JSON.stringify(data.storage), props.sbContext.rooms[props.roomId].name + "_storage.txt")
+      downloadFile(JSON.stringify(data.channel), props.sbContext.rooms[props.roomId].name + "_data.txt");
+    })
+  }
+
+  const exportKeys = () => {
+    const data = { roomData: {}, contacts: {}, roomMetadata: {} }
+    data.roomData[props.roomId] = {
+      key: props.sbContext.rooms[props.roomId].key,
+      lastSeenMessage: props.sbContext.rooms[props.roomId].lastSeenMessage
+    }
+    data.contacts = props.sbContext.rooms[props.roomId].contacts
+    data.roomMetadata[props.roomId] = {
+      name: props.sbContext.rooms[props.roomId].name,
+      lastMessageTime: props.sbContext.rooms[props.roomId].lastMessageTime,
+      unread: false
+    }
+    data.pem = false;
+    downloadFile(JSON.stringify(data), props.sbContext.rooms[props.roomId].name + "_keys.txt");
+  }
+
+  const downloadFile = (text, file) => {
+    try {
+      let element = document.createElement('a');
+      element.setAttribute('href', 'data:text/plain;charset=utf-8, ' + encodeURIComponent(text));
+      element.setAttribute('download', file);
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   return (
     <div>
-      <ShareDialog open={dialogOpen} roomId={props.roomId} onClose={()=>{
-        toggle()
-        handleClose()
-        }} />
       <IconButton
         aria-label="more"
         id="long-button"
@@ -74,7 +116,7 @@ const RoomMenu = (props) => {
           {props.socket?.status === 'OPEN' && props.selected ?
             <MenuItem onClick={() => {
               handleClose()
-              props.getRoomData()
+              getRoomData()
             }}>
               <ListItemIcon>
                 <FileDownloadOutlinedIcon />
@@ -94,7 +136,7 @@ const RoomMenu = (props) => {
               <ListItemText>Export Keys</ListItemText>
             </MenuItem> : ''
           } */}
-          <MenuItem onClick={toggle}>
+          <MenuItem onClick={copy}>
             <ListItemIcon>
               <IosShareOutlinedIcon />
             </ListItemIcon>

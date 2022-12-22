@@ -1,12 +1,9 @@
 import * as React from "react"
-import { Trans } from "@lingui/macro";
-import { FormControl, Grid, IconButton, InputAdornment, InputLabel, OutlinedInput, TextField, Typography } from "@mui/material";
+import Grid from '@mui/material/Grid';
 import DownloadIcon from '@mui/icons-material/Download';
 import { StyledButton } from "../../styles/Buttons";
-import { useState } from "react"
 import { observer } from "mobx-react"
 import { SnackabraContext } from "mobx-snackabra-store";
-const SB = require("snackabra")
 
 const DownloadRoomData = observer(() => {
     const sbContext = React.useContext(SnackabraContext);

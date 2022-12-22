@@ -68,6 +68,7 @@ const AdminDialog = observer((props) => {
       alignItems="flex-start">
       <Grid item xs={12}>
         <TextField
+        id="sb-motd"
           multiline
           placeholder={'MOTD'}
           rows={4}
@@ -87,6 +88,7 @@ const AdminDialog = observer((props) => {
       </Grid>
       <Grid item xs={12}>
         <TextField
+        id="sb-rrom-capacity"
           placeholder={'Room Capacity'}
           inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
           value={roomCapacity}

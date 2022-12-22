@@ -13,12 +13,15 @@ const root = createRoot(container);
 //   if (event.scale !== 1) { event.preventDefault(); }
 // }, { passive: false });
 
-document.addEventListener("localKvReady", async (e) => {
-    root.render(<App />);
-});
+
 
 
 const localKV = new IndexedKV({ db: 'sb_files', table: 'files' })
+
+localKV.ready.then(() => {
+  root.render(<App />);
+})
+
 
 Object.defineProperty(document, 'cacheDb', {
   value: localKV
