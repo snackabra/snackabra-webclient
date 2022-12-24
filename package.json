@@ -3,7 +3,7 @@
   "author": "Magnusson Institute",
   "email": "snackabra@gmail.com",
   "description": "Snackabra web app (React Native)",
-  "version": "0.5.67",
+  "version": "0.5.68",
   "bugs": "https://github.com/snackabra/snackabra-webclient/issues",
   "homepage": "https://snackabra.io",
   "license": "GPL-3.0-only",
