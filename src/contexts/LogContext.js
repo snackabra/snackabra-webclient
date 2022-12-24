@@ -96,6 +96,7 @@ export const LogProvider = ({ children }) => {
         console.tine = function () {}
         console.timeEnd = function () {}
         console.timeLog = function () {}
+        console.trace = function () {}
       }
       if(level === 'production'){
         console.log = function () { }
@@ -110,6 +111,7 @@ export const LogProvider = ({ children }) => {
         console.tine = function () {}
         console.timeEnd = function () {}
         console.timeLog = function () {}
+        console.trace = function () {}
       }
     }
   }, [])

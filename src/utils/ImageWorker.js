@@ -12,6 +12,39 @@
 // import { SBImage, _restrictPhoto } from '../utils/ImageProcessor.js';
 
 export default(i) => {  // eslint-disable-line
+      const level = 'production'
+      if(level === 'development'){
+      }
+      if(level === 'stage'){
+        console.log = function () {}
+        console.assert = function () {}
+        console.count = function () {}
+        console.debug = function () {}
+        console.dir = function () {}
+        console.dirxml = function () {}
+        console.group = function () {}
+        console.table = function () {}
+        console.tine = function () {}
+        console.timeEnd = function () {}
+        console.timeLog = function () {}
+        console.trace = function () {}
+      }
+      if(level === 'production'){
+        console.log = function () { }
+        console.warn = function () {}
+        console.assert = function () {}
+        console.count = function () {}
+        console.debug = function () {}
+        console.dir = function () {}
+        console.dirxml = function () {}
+        console.group = function () {}
+        console.table = function () {}
+        console.tine = function () {}
+        console.timeEnd = function () {}
+        console.timeLog = function () {}
+        console.trace = function () {}
+      }
+
     console.log(`starting image worker number ${i}`);
   
     // const IW_blob = new Blob([`(${IW_code})(maxSize, _c, _b1)`]);

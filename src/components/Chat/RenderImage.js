@@ -43,7 +43,7 @@ const RenderImage = (props) => {
     }).catch(error => {
       setIsDownloading(false)
       setDownloaded(false)
-      console.info('openPreview() exception: ' + error.message);
+      console.log('openPreview() exception: ' + error.message);
       props.sendSystemMessage('Could not open image (' + error.message + ')');
     })
   }

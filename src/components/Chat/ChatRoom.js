@@ -201,11 +201,11 @@ class ChatRoom extends React.Component {
 
   openImageOverlay = (message) => {
     this.setState({ img: message.image, openPreview: true })
-    console.info(this.sbContext)
-    console.info("image metadata")
-    console.info(message.imageMetaData)
+    console.log(this.sbContext)
+    console.log("image metadata")
+    console.log(message.imageMetaData)
     this.sbContext.SB.storage.retrieveImage(message.imageMetaData, this.state.controlMessages).then((data) => {
-      console.info(data)
+      console.log(data)
       if (data.hasOwnProperty('error')) {
         console.error(data['error'])
         this.notify('Could not load full size image', 'warning')
@@ -237,7 +237,7 @@ class ChatRoom extends React.Component {
         this.notify('Whisper is only for room owners.', 'info')
       }
     } catch (e) {
-      console.info(e);
+      console.log(e);
       this.notify(e.message, 'error')
     }
   }
@@ -282,8 +282,8 @@ class ChatRoom extends React.Component {
           sbm.contents.imageMetaData = imageMetaData;
           q.enqueue(sbm)
           Promise.all([storePromises.previewStorePromise]).then((previewVerification) => {
-            console.info()
-            console.info('Preview image uploaded')
+            console.log()
+            console.log('Preview image uploaded')
             previewVerification[0].verification.then((verification) => {
               // now the preview (up to 2MiB) has been safely stored
               let controlMessage = new SB.SBMessage(this.sbContext.socket);
@@ -294,9 +294,9 @@ class ChatRoom extends React.Component {
               q.enqueue(controlMessage)
               queueMicrotask(() => {
                 storePromises.fullStorePromise.then((verificationPromise) => {
-                  console.info(verificationPromise)
+                  console.log(verificationPromise)
                   verificationPromise.verification.then((verification) => {
-                    console.info('Full image uploaded')
+                    console.log('Full image uploaded')
                     let controlMessage = new SB.SBMessage(this.sbContext.socket);
                     controlMessage.contents.control = true;
                     controlMessage.contents.verificationToken = verification;
@@ -385,7 +385,7 @@ class ChatRoom extends React.Component {
 
   saveUsername = (newUsername, _id) => {
     if (_id === this.sbContext.user._id) {
-      console.info('its me!!!')
+      console.log('its me!!!')
       this.sbContext.username = newUsername;
     }
     const contacts = this.sbContext.contacts
