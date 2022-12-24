@@ -1,4 +1,8 @@
 import * as React from "react"
+import { red } from '@mui/material/colors';
+import BugReportIcon from "@mui/icons-material/BugReport";
+import { Fab } from "@mui/material";
+import DebugOverlay from "../components/Modals/DebugOverlay";
 
 const LogContext = React.createContext(undefined);
 
@@ -7,17 +11,27 @@ let warn = console.warn;
 let info = console.info;
 let error = console.error;
 
+const fabRedStyle = {
+  color: 'common.white',
+  position: 'absolute',
+  bottom: 64,
+  right: 16,
+  bgcolor: red[500],
+  '&:hover': {
+    bgcolor: red[600],
+  },
+};
 
 export const LogProvider = ({ children }) => {
   const [logs, setLogs] = React.useState([])
   const [enabled, setEnabled] = React.useState(false)
+  const [open, setOpened] = React.useState(false)
 
   React.useEffect(() => {
     const url = new URL(window.location.href);
     const params = new URLSearchParams(url.search);
-    if (params.get('debug') === 'true') {
-
-
+    const hasParam = (params.get('debug') === 'true' || params.get('debug') === '1' || params.get('debug') === 'on')
+    if (hasParam) {
       setEnabled(true)
 
 
@@ -66,10 +80,54 @@ export const LogProvider = ({ children }) => {
         error.apply(console, args);
       }
     }
+    if(process.env.REACT_APP_LOG_LEVEL && !hasParam){
+      const level = 'production'
+      if(level === 'development'){
+      }
+      if(level === 'stage'){
+        console.log = function () {}
+        console.assert = function () {}
+        console.count = function () {}
+        console.debug = function () {}
+        console.dir = function () {}
+        console.dirxml = function () {}
+        console.group = function () {}
+        console.table = function () {}
+        console.tine = function () {}
+        console.timeEnd = function () {}
+        console.timeLog = function () {}
+      }
+      if(level === 'production'){
+        console.log = function () { }
+        console.warn = function () {}
+        console.assert = function () {}
+        console.count = function () {}
+        console.debug = function () {}
+        console.dir = function () {}
+        console.dirxml = function () {}
+        console.group = function () {}
+        console.table = function () {}
+        console.tine = function () {}
+        console.timeEnd = function () {}
+        console.timeLog = function () {}
+      }
+    }
   }, [])
+
+  const toggleDebugger = () => {
+    setOpened(!open)
+  }
 
   return (
     <LogContext.Provider value={{ logs, enabled }}>
+              {enabled ?
+          <>
+            <Fab onClick={toggleDebugger} sx={{ ...fabRedStyle }}>
+              <BugReportIcon />
+            </Fab>
+            <DebugOverlay open={open} onClose={toggleDebugger} />
+          </> : ''
+        }
       {children}
     </LogContext.Provider>
   )
