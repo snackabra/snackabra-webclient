@@ -81,7 +81,7 @@ export const LogProvider = ({ children }) => {
       }
     }
     if(process.env.REACT_APP_LOG_LEVEL && !hasParam){
-      const level = 'production'
+      const level = process.env.REACT_APP_LOG_LEVEL
       if(level === 'development'){
       }
       if(level === 'stage'){
