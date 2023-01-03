@@ -2,11 +2,10 @@ import * as React from "react"
 import ResponsiveDialog from "../ResponsiveDialog";
 import { Grid, TextField, Typography } from "@mui/material";
 import { StyledButton } from "../../styles/Buttons";
-import { useState } from "react";
 
 const JoinDialog = (props) => {
-  const [open, setOpen] = useState(props.open);
-  const [roomId, setRoomId] = useState("");
+  const [open, setOpen] = React.useState(props.open);
+  const [roomId, setRoomId] = React.useState("");
 
   React.useEffect(() => {
     setOpen(props.open)
@@ -18,8 +17,14 @@ const JoinDialog = (props) => {
   }
 
   const connect = () => {
-    console.log(window.location.origin + "/" + roomId)
-    window.location.replace(window.location.origin + "/" + roomId)
+    if(roomId.match(/^http/)){
+      console.log(roomId)
+      window.location.replace(roomId)
+    }else{
+      console.log(window.location.origin + "/" + roomId)
+      window.location.replace(window.location.origin + "/" + roomId)
+    }
+
     setRoomId("");
     props.onClose()
   }
@@ -39,13 +44,13 @@ const JoinDialog = (props) => {
         alignItems="flex-start">
         <Grid item xs={12}>
           <Typography variant={'body1'}>
-            Enter the room ID you would like to connect to.
+            Enter the room ID or URL you would like to connect to.
           </Typography>
         </Grid>
         <Grid item xs={12} sx={{ pb: 2, pt: 2 }}>
           <TextField
             id="sb-room-id"
-            placeholder="Room ID"
+            placeholder="Room ID or URL"
             fullWidth
             onChange={updateRoomId}
             value={roomId}
