@@ -16,7 +16,7 @@ const JoinDialog = (props) => {
 
   const updateRoomId = (e) => {
     console.log(e.target.value)
-    setRoomId(e.target.value)
+    setRoomId(e.target.value.trim())
   }
 
   const errorNotify = (message) => {
