@@ -32,3 +32,11 @@ input::-webkit-credentials-auto-fill-button {
   position: absolute;
   right: 0;
 }
+
+.password-field {
+  -webkit-text-security: circle;
+}
+
+.text-field {
+  -webkit-text-security: none;
+}
