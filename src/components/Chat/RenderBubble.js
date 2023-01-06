@@ -46,25 +46,25 @@ const RenderBubble = (props) => {
     const width = props.currentMessage.image !== "" ? "min(80%, 18rem)" : "inherit"
     const defaultWrapperStyle = {
       left: {
-        overflow: "hidden",
+        // overflow: "hidden",
         borderColor: "black",
         borderStyle: "solid",
         overflowWrap: "break-word",
         borderWidth: "3px",
         flexGrow: 1,
-        maxWidth:"max(55%, 18rem)",
+        // maxWidth:"max(55%, 18rem)",
         width: width,
         ...both,
         ...left
       },
       right: {
-        overflow: "hidden",
+        // overflow: "hidden",
         overflowWrap: "break-word",
         borderColor: "black",
         borderStyle: "solid",
         borderWidth: "3px",
         flexGrow: 1,
-        maxWidth:"max(55%, 18rem)",
+        // maxWidth:"max(55%, 18rem)",
         width: width,
         ...both,
         ...right

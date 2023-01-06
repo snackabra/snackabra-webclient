@@ -24,6 +24,7 @@ a {
 .msgImg {
   object-fit: contain;
   width: 100%;
+  border-radius: 12px 12px 0px 0px;
 }
 
 /** to block safari behavior on asking to fill passowrd**/
