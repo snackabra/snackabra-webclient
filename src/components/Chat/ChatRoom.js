@@ -9,8 +9,9 @@ import RenderImage from "./RenderImage";
 import ChangeNameDialog from "../Modals/ChangeNameDialog";
 import MotdDialog from "../Modals/MotdDialog";
 import RenderChatFooter from "./RenderChatFooter";
+import RenderMessage from "./RenderMessage";
 import RenderTime from "./RenderTime";
-import { View } from "react-native";
+import { Dimensions, } from "react-native";
 // import AttachMenu from "./AttachMenu";
 import FirstVisitDialog from "../Modals/FirstVisitDialog";
 import RenderSend from "./RenderSend";
@@ -18,6 +19,8 @@ import WhisperUserDialog from "../Modals/WhisperUserDialog";
 import RenderComposer from "./RenderComposer";
 import Queue from "../../utils/Queue";
 import { observer } from "mobx-react"
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { isMobile } from 'react-device-detect';
 
 const q = new Queue()
 const _r = new Queue()
@@ -53,7 +56,8 @@ class ChatRoom extends React.Component {
   componentDidMount() {
 
     const handleResize = (e) => {
-      this.setState({ height: window.innerHeight })
+      const { height } = Dimensions.get('window')
+      this.setState({ height: height })
     }
 
     window.addEventListener('resize', handleResize)
@@ -100,11 +104,11 @@ class ChatRoom extends React.Component {
     }, 25)
   }
 
-    /**
-   * Queue helps ensure each message gets a unique ID for Images
-   * when sending multiple images gifted chat sees that a single message 
-   * we need to add on to the message id to render the chat container properly
-   */
+  /**
+ * Queue helps ensure each message gets a unique ID for Images
+ * when sending multiple images gifted chat sees that a single message 
+ * we need to add on to the message id to render the chat container properly
+ */
   processSQueue = () => {
     setInterval(() => {
       while (!_r.isEmpty && !_r.isMaxed) {
@@ -419,10 +423,11 @@ class ChatRoom extends React.Component {
   render() {
     return (
 
-      <View style={{
+      <SafeAreaView style={{
         flexGrow: 1,
         flexBasis: 'fit-content',
-        height: this.state.height - 48
+        height: isMobile && !this.state.typing ? this.state.height - 36 : this.state.height,
+        paddingTop: 48
       }}>
         <WhisperUserDialog replyTo={this.state.replyTo} open={this.state.openWhisper} onClose={this.closeWhisper} />
         <ImageOverlay open={this.state.openPreview} img={this.state.img} imgLoaded={this.state.imgLoaded}
@@ -465,7 +470,7 @@ class ChatRoom extends React.Component {
               sendSystemMessage={this.sendSystemMessage}
               sbContext={this.sbContext} />
           }}
-          // renderMessageText={RenderMessageContainer}
+          renderMessageText={RenderMessage}
           scrollToBottom={true}
           showUserAvatar={true}
           onPressAvatar={this.promptUsername}
@@ -486,13 +491,24 @@ class ChatRoom extends React.Component {
           }}
           renderSend={RenderSend}
           renderComposer={(props) => {
-            return <RenderComposer {...props} setFiles={this.setFiles} filesAttached={this.state.files.length > 0} showLoading={this.showLoading} />
+            return <RenderComposer {...props} 
+            onFocus={()=>{
+              this.setState({typing: true})
+            }}
+            onBlur={()=>{
+              this.setState({typing: false})
+            }}
+            setFiles={this.setFiles} 
+            filesAttached={this.state.files.length > 0} 
+            showLoading={this.showLoading} />
           }}
           onLongPress={() => false}
           renderTime={RenderTime}
-
+          parsePatterns={(linkStyle) => [
+            { type: 'phone', style: {}, onPress: undefined }
+          ]}
         />
-      </View>
+      </SafeAreaView>
 
     )
   }

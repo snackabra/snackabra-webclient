@@ -1,6 +1,7 @@
 /* Copyright (c) 2021 Magnusson Institute, All Rights Reserved */
 
 import React from 'react'
+import { SafeAreaProvider } from "react-native-safe-area-context"
 import { i18n } from '@lingui/core'
 import { I18nProvider } from '@lingui/react'
 import { messages } from './locales/en/messages'
@@ -29,20 +30,22 @@ const sbConfig = {
 
 const App = () => {
   return (
-    <I18nProvider i18n={i18n}>
-      <ThemeProvider theme={theme}>
-        <SnackabraProvider config={sbConfig}>
-          <NotificationProvider>
-            <NavBarActionProvider>
-              <LogProvider>
-                <AppRoutes />
-              </LogProvider>
-              <NotificationBar />
-            </NavBarActionProvider>
-          </NotificationProvider>
-        </SnackabraProvider>
-      </ThemeProvider>
-    </I18nProvider>
+    <SafeAreaProvider>
+      <I18nProvider i18n={i18n}>
+        <ThemeProvider theme={theme}>
+          <SnackabraProvider config={sbConfig}>
+            <NotificationProvider>
+              <NavBarActionProvider>
+                <LogProvider>
+                  <AppRoutes />
+                </LogProvider>
+                <NotificationBar />
+              </NavBarActionProvider>
+            </NotificationProvider>
+          </SnackabraProvider>
+        </ThemeProvider>
+      </I18nProvider>
+    </SafeAreaProvider>
   )
 }
 

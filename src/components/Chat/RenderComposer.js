@@ -81,6 +81,8 @@ const RenderComposer = observer((props) => {
       id="sb_render_composer_textarea"
       label=""
       value={text}
+      onFocus={ props.onFocus } 
+      onBlur={ props.onBlur } 
       placeholder="Type a message..."
       className="textinput-composer"
       multiline

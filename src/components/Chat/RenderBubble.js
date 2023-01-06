@@ -38,139 +38,74 @@ const RenderBubble = (props) => {
     return colors[sumChars % colors.length];
   }
 
-  React.useEffect(() => {
+  const updateProps = React.useCallback(({ both, left, right }) => {
+    both = both || {}
+    left = left || {}
+    right = right || {}
+
     const width = props.currentMessage.image !== "" ? "min(80%, 18rem)" : "inherit"
+    const defaultWrapperStyle = {
+      left: {
+        overflow: "hidden",
+        borderColor: "black",
+        borderStyle: "solid",
+        overflowWrap: "break-word",
+        borderWidth: "3px",
+        flexGrow: 1,
+        maxWidth:"max(55%, 18rem)",
+        width: width,
+        ...both,
+        ...left
+      },
+      right: {
+        overflow: "hidden",
+        overflowWrap: "break-word",
+        borderColor: "black",
+        borderStyle: "solid",
+        borderWidth: "3px",
+        flexGrow: 1,
+        maxWidth:"max(55%, 18rem)",
+        width: width,
+        ...both,
+        ...right
+      }
+    }
+
+    setNewProps({
+      wrapperStyle: defaultWrapperStyle
+    })
+  }, [props.currentMessage.image])
+
+  React.useEffect(() => {
 
     if (props.currentMessage.whispered) {
-      setNewProps({
-        wrapperStyle: {
-          left: {
-            backgroundColor: "#FEE251",
-            flexGrow: 1,
-            marginRight: 0,
-            width: width
-          },
-          right: {
-            backgroundColor: "#FEE251",
-            flexGrow: 1,
-            marginLeft: 0,
-            width: width
-          }
-        }
-      })
+      updateProps({ both: { backgroundColor: "#FEE251" } })
     } else if (!isAdmin && !isVerifiedGuest) {
-      setNewProps({
-        wrapperStyle: {
-          left: {
-            borderColor: "red",
-            borderStyle: "solid",
-            borderWidth: "4px",
-            flexGrow: 1,
-            marginRight: 0,
-            width: width
-          },
-          right: {
-            borderColor: "red",
-            borderStyle: "solid",
-            borderWidth: "4px",
-            flexGrow: 1,
-            marginLeft: 0,
-            width: width
-          }
-        }
-      })
-    } else if (props.currentMessage.info) {
-      setNewProps({
-        wrapperStyle: {
-          left: {
-            borderColor: "black",
-            borderStyle: "solid",
-            borderWidth: "2px",
-            flexGrow: 1,
-            marginRight: 0,
-            width: width
-          }
-        }
-      })
-    } else if (props.currentMessage.user._id === 'system') {
-
-      setNewProps({
-        wrapperStyle: {
-          left: {
-            borderColor: "black",
-            borderStyle: "solid",
-            borderWidth: "2px",
-            flexGrow: 1,
-            marginRight: 0,
-          },
-          right: {
-            borderColor: "black",
-            borderStyle: "solid",
-            borderWidth: "2px",
-            flexGrow: 1,
-            marginRight: 0,
-          }
+      updateProps({
+        both: {
+          borderColor: "red",
         }
       })
     } else if (props.currentMessage._id.match(/^sending_/)) {
-      setNewProps({
-        wrapperStyle: {
-          right: {
-            borderColor: "gray",
-            borderStyle: "solid",
-            borderWidth: "4px",
-            flexGrow: 1,
-            marginLeft: 0,
-            width: width
-          }
+      updateProps({
+        both: {
+          borderColor: "gray",
+        }
+      })
+    } else if (isAdmin) {
+      updateProps({
+        both: {
+          borderColor: "#2ECC40",
+        }
+      })
+    } else if (isVerifiedGuest && !isAdmin) {
+      updateProps({
+        both: {
+          borderColor: getColor(props.currentMessage.user.name),
         }
       })
     }
-    // else if (props.currentMessage.user._id === JSON.stringify(state.keys.exportable_room_pubKey)) {
-    else if (isAdmin) {
-      setNewProps({
-        wrapperStyle: {
-          left: {
-            borderColor: "#2ECC40",
-            borderStyle: "solid",
-            borderWidth: "4px",
-            flexGrow: 1,
-            marginRight: 0,
-            width: width
-          },
-          right: {
-            borderColor: "#2ECC40",
-            borderStyle: "solid",
-            borderWidth: "4px",
-            flexGrow: 1,
-            marginLeft: 0,
-            width: width
-          }
-        }
-      })
-    }
-    //else if (props.currentMessage.user._id === JSON.stringify(state.keys.exportable_verifiedGuest_pubKey)) {
-    else if (isVerifiedGuest && !isAdmin) {
-      setNewProps({
-        wrapperStyle: {
-          left: {
-            borderColor: getColor(props.currentMessage.user.name),
-            borderStyle: "solid",
-            borderWidth: "4px",
-            marginRight: 0,
-            width: width
-          },
-          right: {
-            borderColor: getColor(props.currentMessage.user.name),
-            borderStyle: "solid",
-            borderWidth: "4px",
-            marginLeft: 0,
-            width: width
-          }
-        }
-      })
-    }
-  }, [isVerifiedGuest, isAdmin, props.currentMessage.encrypted, props.currentMessage.info, props.currentMessage._id, props.currentMessage.whispered])
+  }, [isVerifiedGuest, isAdmin, props.currentMessage.encrypted, props.currentMessage.info, props.currentMessage._id, props.currentMessage.whispered, props.currentMessage.user.name, updateProps])
 
 
   const isSameDay = (currentMessage, diffMessage) => {
@@ -189,8 +124,9 @@ const RenderBubble = (props) => {
       currentMessage.user &&
       diffMessage.user._id === currentMessage.user._id);
   }
+
   return (
-    <Grid style={{ width: '60%' }}>
+    <Grid style={{maxWidth: "55%"}}>
       {(isSameUser(props.currentMessage, props.previousMessage) && isSameDay(props.currentMessage, props.previousMessage))
         ? ''
         : <Typography variant={'body1'} style={{
@@ -204,16 +140,6 @@ const RenderBubble = (props) => {
           {props.currentMessage.user.name}
         </Typography>}
       <Bubble
-        textStyle={{
-          right: {
-            color: props.currentMessage.whispered ? '#aaa' : 'white',
-            wordBreak: 'break-all',
-          },
-          left: {
-            color: props.currentMessage.whispered ? '#aaa' : 'black',
-            wordBreak: 'break-all',
-          }
-        }}
         {...props}
         {...newProps} />
     </Grid>

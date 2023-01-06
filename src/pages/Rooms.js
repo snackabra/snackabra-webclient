@@ -16,13 +16,11 @@ import InputAdornment from '@mui/material/InputAdornment';
 import CloseIcon from '@mui/icons-material/Close';
 import Toolbar from '@mui/material/Toolbar';
 import { useParams } from "react-router-dom";
-import { Grid, Hidden, IconButton, TextField, Typography } from "@mui/material";
+import { Grid, IconButton, TextField, Typography } from "@mui/material";
 import ChatRoom from "../components/Chat/ChatRoom";
 import CreateRoomDialog from "../components/Modals/CreateRoomDialog";
 import JoinDialog from "../components/Modals/JoinDialog";
 import AdminDialog from "../components/Modals/AdminDialog";
-import Fab from '@mui/material/Fab';
-import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import NotificationContext from "../contexts/NotificationContext";
 import ImportDialog from "../components/Modals/ImportDialog";
 import DataOperationsDialog from "../components/Modals/DataOperationsDialog";
@@ -30,7 +28,9 @@ import RoomMenu from "../components/Rooms/RoomMenu"
 import NavBarActionContext from "../contexts/NavBarActionContext";
 import { observer } from "mobx-react"
 import { SnackabraContext } from "mobx-snackabra-store";
-
+import { isMobile } from 'react-device-detect';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Dimensions } from "react-native";
 
 const drawerWidth = 240;
 const ResponsiveDrawer = observer((props) => {
@@ -208,9 +208,9 @@ const ResponsiveDrawer = observer((props) => {
   );
 
   const container = window !== undefined ? () => window().document.body : undefined;
-
+  const { height } = Dimensions.get('window')
   return (
-    <Box sx={{ display: 'flex', p: 0 }}>
+    <SafeAreaView sx={{ display: 'flex', p: 0 }}>
       <CssBaseline />
       <DataOperationsDialog open={openDataOperations} onClose={() => {
         setOpenDataOperations(false)
@@ -260,9 +260,32 @@ const ResponsiveDrawer = observer((props) => {
       </Box>
       <Box
         component="main"
-        sx={{ flexGrow: 1, p: 0, width: { xs: '100%', sm: `calc(100% - ${drawerWidth}px)` } }}
+        sx={{
+          flexGrow: 1,
+          p: 0,
+          ml: {
+            sm: `${drawerWidth}px`,
+            md: `${drawerWidth}px`,
+            lg: `${drawerWidth}px`,
+            xl: `${drawerWidth}px`,
+          },
+          width: {
+            xs: '100%',
+            sm: `calc(100% - ${drawerWidth}px)`,
+            md: `calc(100% - ${drawerWidth}px)`,
+            lg: `calc(100% - ${drawerWidth}px)`,
+            xl: `calc(100% - ${drawerWidth}px)`
+          }
+        }}
+        style={{
+          borderBottom: isMobile ? 36 : 0,
+          borderLeft: 0,
+          borderRight: 0,
+          borderColor: "black",
+          borderStyle: "solid"
+        }}
       >
-        {(!roomId || !sbContext.activeroom) && (<Grid>
+        {(!roomId || !sbContext.activeroom) && (<Grid style={{height: height}}>
           <Toolbar />
           <Typography variant={'h6'}>Select a room or create a new one to get started.</Typography>
         </Grid>)
@@ -271,7 +294,7 @@ const ResponsiveDrawer = observer((props) => {
           (<ChatRoom roomId={roomId ? roomId : sbContext.activeroom} sbContext={sbContext} Notifications={Notifications} />)
         }
       </Box>
-    </Box>
+    </SafeAreaView >
   );
 })
 
