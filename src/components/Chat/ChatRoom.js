@@ -468,6 +468,7 @@ class ChatRoom extends React.Component {
               downloadImage={this.downloadImage}
               controlMessages={this.state.controlMessages}
               sendSystemMessage={this.sendSystemMessage}
+              notify={this.notify}
               sbContext={this.sbContext} />
           }}
           renderMessageText={RenderMessage}

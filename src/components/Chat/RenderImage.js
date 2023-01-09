@@ -24,8 +24,8 @@ const RenderImage = (props) => {
           setIsDownloading(false)
           setDownloaded(false)
         }, 2000)
-
-        props.sendSystemMessage('Could not open image (' + data.error + ')');
+        throw new Error(`Could not open image (${data.error})`)
+        // props.notify('Could not open image (' + data.error + ')', 'error');
       } else {
         let element = document.createElement('a');
         element.setAttribute('href', data['url']);
@@ -40,11 +40,6 @@ const RenderImage = (props) => {
           setDownloaded(false)
         }, 10000)
       }
-    }).catch(error => {
-      setIsDownloading(false)
-      setDownloaded(false)
-      console.log('openPreview() exception: ' + error.message);
-      props.sendSystemMessage('Could not open image (' + error.message + ')');
     })
   }
 
