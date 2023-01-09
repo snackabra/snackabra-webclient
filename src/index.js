@@ -15,7 +15,6 @@ const root = createRoot(container);
 
 
 
-
 const localKV = new IndexedKV({ db: 'sb_files', table: 'files' })
 
 localKV.ready.then(() => {
