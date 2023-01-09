@@ -1,6 +1,7 @@
 import React from 'react'
 import { Grid, Typography } from "@mui/material";
-import { Bubble } from "react-native-gifted-chat";
+import { isSameUser, isSameDay, Bubble } from "react-native-gifted-chat";
+import { getColorFromId } from "../../utils/misc"
 const SB = require('snackabra')
 const sbCrypto = new SB.SBCrypto();
 
@@ -20,23 +21,6 @@ const RenderBubble = (props) => {
     }
     init();
   }, [props.currentMessage.user._id, props.socket.api, props.socket.exportable_owner_pubKey, props.socket.exportable_pubKey])
-  const getColor = (username) => {
-    let sumChars = 0;
-    for (let i = 0; i < username.length; i++) {
-      sumChars += username.charCodeAt(i);
-    }
-
-    const colors = [
-      '#e67e22', // carrot
-      '#2ecc71', // emerald
-      '#3498db', // peter river
-      '#8e44ad', // wisteria
-      '#e74c3c', // alizarin
-      '#1abc9c', // turquoise
-      '#2c3e50', // midnight blue
-    ];
-    return colors[sumChars % colors.length];
-  }
 
   const updateProps = React.useCallback(({ both, left, right }) => {
     both = both || {}
@@ -101,32 +85,16 @@ const RenderBubble = (props) => {
     } else if (isVerifiedGuest && !isAdmin) {
       updateProps({
         both: {
-          borderColor: getColor(props.currentMessage.user.name),
+          borderColor: getColorFromId(props.currentMessage.user._id),
         }
       })
     }
   }, [isVerifiedGuest, isAdmin, props.currentMessage.encrypted, props.currentMessage.info, props.currentMessage._id, props.currentMessage.whispered, props.currentMessage.user.name, updateProps])
 
 
-  const isSameDay = (currentMessage, diffMessage) => {
-    if (!currentMessage || !diffMessage || (!currentMessage.createdAt && !diffMessage.createdAt)) {
-      return false;
-    }
-    let currDt = new Date(currentMessage.createdAt);
-    let diffDt = new Date(diffMessage.createdAt);
-    return (currDt.getDate() - diffDt.getDate() === 0) && (currDt.getMonth() - diffDt.getMonth() === 0) && (currDt.getFullYear() - diffDt.getFullYear() === 0);
-  }
-
-  const isSameUser = (currentMessage, diffMessage) => {
-    return (diffMessage &&
-      diffMessage.user &&
-      currentMessage &&
-      currentMessage.user &&
-      diffMessage.user._id === currentMessage.user._id);
-  }
 
   return (
-    <Grid style={{maxWidth: "55%"}}>
+    <Grid style={{ maxWidth: "55%" }}>
       {(isSameUser(props.currentMessage, props.previousMessage) && isSameDay(props.currentMessage, props.previousMessage))
         ? ''
         : <Typography variant={'body1'} style={{

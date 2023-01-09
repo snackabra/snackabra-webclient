@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { GiftedChat } from 'react-native-gifted-chat';
 import RenderBubble from "./RenderBubble";
+import RenderAvatar from "./RenderAvatar";
 import RenderAttachmentIcon from "./RenderAttachmentIcon";
 import ImageOverlay from "../Modals/ImageOverlay";
 import RenderImage from "./RenderImage";
@@ -461,6 +462,7 @@ class ChatRoom extends React.Component {
           }}
           //renderUsernameOnMessage={true}
           // infiniteScroll={true}   // This is not supported for web yet
+          renderAvatar={RenderAvatar}
           renderMessageImage={(props) => {
             return <RenderImage
               {...props}
