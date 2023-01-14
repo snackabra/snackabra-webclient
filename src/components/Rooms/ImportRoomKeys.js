@@ -11,17 +11,19 @@ const ImportRoomKeys = observer((props) => {
   const sbContext = React.useContext(SnackabraContext);
   const Notifications = useContext(NotificationContext)
   const [key, setKey] = useState('');
-  const [data, setData] = useState(JSON.stringify({}));
+  const [data, setData] = useState(false);
 
   React.useEffect(() => {
-    try {
-      if (Object.keys(JSON.parse(data).roomData).length !== 0) {
-        setKey(data)
+    if (data) {
+      try {
+        if (Object.keys(JSON.parse(data).roomData).length !== 0) {
+          setKey(data)
+        }
+      } catch (e) {
+        console.warn(e)
       }
-    } catch (e) {
-      console.warn(e)
-    }
 
+    }
   }, [data])
 
   let fileReader;
@@ -67,6 +69,7 @@ const ImportRoomKeys = observer((props) => {
         props.onDone()
       }
     } catch (error) {
+      console.log(content)
       console.log(key)
       console.log(error)
       Notifications.setMessage('Key file failed to import, check your console for details');
@@ -121,7 +124,7 @@ const ImportRoomKeys = observer((props) => {
         />
       </Grid>
       <Grid xs={12} item>
-        <StyledButton variant="contained" onClick={importKeys}><Trans id='key import header'>Import Keys</Trans></StyledButton>
+        <StyledButton variant="contained" onClick={()=>{importKeys()}}><Trans id='key import header'>Import Keys</Trans></StyledButton>
       </Grid>
 
     </Grid>
