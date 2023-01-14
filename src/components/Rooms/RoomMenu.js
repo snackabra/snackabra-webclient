@@ -41,6 +41,7 @@ const RoomMenu = (props) => {
 
   const getRoomData = () => {
     props.sbContext.downloadRoomData().then((data) => {
+      delete data.channel.SERVER_SECRET
       console.log(data)
       downloadFile(JSON.stringify(data.storage), props.sbContext.rooms[props.roomId].name + "_storage.txt")
       downloadFile(JSON.stringify(data.channel), props.sbContext.rooms[props.roomId].name + "_data.txt");
