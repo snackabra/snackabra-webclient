@@ -39,29 +39,17 @@ const RoomMenu = (props) => {
 
   }
 
-  const getRoomData = () => {
+  const getRoomData = (roomId) => {
     props.sbContext.downloadRoomData().then((data) => {
       delete data.channel.SERVER_SECRET
-      console.log(data)
-      downloadFile(JSON.stringify(data.storage), props.sbContext.rooms[props.roomId].name + "_storage.txt")
       downloadFile(JSON.stringify(data.channel), props.sbContext.rooms[props.roomId].name + "_data.txt");
     })
   }
 
-  const exportKeys = () => {
-    const data = { roomData: {}, contacts: {}, roomMetadata: {} }
-    data.roomData[props.roomId] = {
-      key: props.sbContext.rooms[props.roomId].key,
-      lastSeenMessage: props.sbContext.rooms[props.roomId].lastSeenMessage
-    }
-    data.contacts = props.sbContext.rooms[props.roomId].contacts
-    data.roomMetadata[props.roomId] = {
-      name: props.sbContext.rooms[props.roomId].name,
-      lastMessageTime: props.sbContext.rooms[props.roomId].lastMessageTime,
-      unread: false
-    }
-    data.pem = false;
-    downloadFile(JSON.stringify(data), props.sbContext.rooms[props.roomId].name + "_keys.txt");
+  const getRoomStorage = (roomId) => {
+    props.sbContext.downloadRoomData().then((data) => {
+      downloadFile(JSON.stringify(data.storage), props.sbContext.rooms[props.roomId].name + "_storage.txt")
+    })
   }
 
   const downloadFile = (text, file) => {
@@ -122,7 +110,18 @@ const RoomMenu = (props) => {
               <ListItemIcon>
                 <FileDownloadOutlinedIcon />
               </ListItemIcon>
-              <ListItemText>Download Data</ListItemText>
+              <ListItemText>Get Data</ListItemText>
+            </MenuItem> : ''
+          }
+          {props.socket?.status === 'OPEN' && props.selected ?
+            <MenuItem onClick={() => {
+              handleClose()
+              getRoomStorage()
+            }}>
+              <ListItemIcon>
+                <FileDownloadOutlinedIcon />
+              </ListItemIcon>
+              <ListItemText>Get Storage</ListItemText>
             </MenuItem> : ''
           }
 
