@@ -5,7 +5,7 @@ import { isSameUser, isSameDay, GiftedAvatar } from 'react-native-gifted-chat';
 const styles = {
   left: StyleSheet.create({
     container: {
-      marginRight: 8,
+      marginRight: 0,
     },
     onTop: {
       alignSelf: 'flex-start',
@@ -19,7 +19,7 @@ const styles = {
   }),
   right: StyleSheet.create({
     container: {
-      marginLeft: 8,
+      marginLeft: 0,
     },
     onTop: {
       alignSelf: 'flex-start',
