@@ -78,14 +78,15 @@ export async function _restrictPhoto(maxSize, _c, _b1, scale) {
   // we assume that within this width interval, storage is roughly prop to area,
   // with a little tuning downwards
   let _ratio = (maxSize / _old_size) * scale; // overshoot a bit
-  console.warn("scale is:")
-  console.warn(scale);
+  let _maxIteration = 12;  // to be safe
+  console.log("scale is:")
+  console.log(scale);
+  console.log("_old_c is:")
+  console.log(_old_c);
   console.log(`... stepping back up to W ${_old_c.width} x H ${_old_c.height} and will then try scale ${_ratio.toFixed(4)}`);
   let _final_c;
   const t4 = new Date().getTime();
-  let iterations = 6
-  while (_b1.size >= maxSize && iterations > 0) {
-    iterations--
+  while (_b1.size >= maxSize) {
     // TODO: lint reports this as unsafe reference to _final_c
     _final_c = scaleCanvas(_old_c, Math.sqrt(_ratio) * scale); // always overshoot
     console.log(_final_c)
@@ -100,10 +101,6 @@ export async function _restrictPhoto(maxSize, _c, _b1, scale) {
     const t5 = new Date().getTime();
     console.log(`... resulting _ratio is ${_ratio} ... total time here ${t5 - t4} milliseconds`);
     console.log(` ... we're within ${(Math.abs(_b1.size - maxSize) / maxSize)} of cap (${maxSize})`);
-    _final_c.remove();
-    if (_b1.size <= maxSize) {
-      break;
-    }
   }
 
   return _b1;
@@ -116,16 +113,15 @@ export async function restrictPhoto(sbImage, maxSize, type) {
   console.log("#################### inside restrictPhoto() ####################");
   console.log("################################################################");
   let scale = .5
-
   switch (type) {
     case 'thumbnail':
-      scale = .95;
+      scale = sbImage.size > 4096 * 1024 ? .7 : .9;
       break;
     case 'preview':
-      scale = .95;
+      scale = .3;
       break;
     case 'full':
-      scale = .85
+      scale = .4
       break;
     default:
       scale = .5
@@ -137,11 +133,15 @@ export async function restrictPhoto(sbImage, maxSize, type) {
   // qualityArgument should be 0.92 for jpeg and 0.8 for png (MDN default)
   maxSize = maxSize * 1024; // KB
   // let _c = await readPhoto(photo);
-  let _c = await sbImage.img;
+  let _c = await sbImage.img.then(() => sbImage.canvas);
+  console.log("Got sbImage as:");
+  console.log(sbImage);
+  console.log("And got sbImage.canvas as:");
+  console.log(_c);
   const t1 = new Date().getTime();
   console.log(`#### readPhoto took ${t1 - t0} milliseconds`);
   // let _b1 = await new Promise((resolve) => _c.blob.then((b) => resolve(b)));
-  let _b1 = await sbImage.blob();
+  let _b1 = await sbImage.blob.then(() => sbImage.blob);
   console.log("got blob");
   console.log(_b1);
 
@@ -272,7 +272,6 @@ export class SBImage {
     this.SB = SB
     this.image = image; // file
 
-
     this.thumbnailReady = new Promise((resolve) => {
       // block on getting width and height...
       this.thumbnailResolve = resolve;
@@ -299,6 +298,7 @@ export class SBImage {
         return new ReadableStream({
           start(controller) {
             var foundSize = false;
+            return pump();
             function pump() {
               return reader.read().then(({ done, value }) => {
                 // When no more data needs to be consumed, close the stream
@@ -330,16 +330,16 @@ export class SBImage {
                     _self.img.then((el) => {
                       _self.width = el.width;
                       _self.height = el.height;
+                      console.warn(`got the size of the image!!  ${_self.width} x ${_self.height}`);
                       _self.resolveAspectRatio(_self.width / _self.height);
                     })
                   }
                 }
                 // Enqueue the next data chunk into our target stream
                 controller.enqueue(value);
-                pump();
+                return pump();
               });
             }
-            pump();
           }
         })
       })
@@ -362,11 +362,11 @@ export class SBImage {
     })
 
     this.img = new Promise((resolve) => {
-      if (this.url) {
-        resolve(this.url)
-      }
       const reader = new FileReader();
+      reader.onabort = (e) => { console.error(e) }
+      reader.onerror = (e) => { console.error(e) }
       reader.onload = (e) => {
+        console.warn(e)
         var img = new Image();
         img.onload = function () {
           this.width = img.width;
@@ -376,55 +376,47 @@ export class SBImage {
         };
         img.src = reader.result;
       }
-      console.warn(this.image.size)
       reader.readAsDataURL(this.image);
     });
 
 
     // create a canvas and then wait for the correct size
     this.canvas = new Promise((resolve) => {
+      console.log('ASPECT RATIO')
       this.aspectRatio.then((r) => {
         const canvas = document.createElement('canvas');
         canvas.width = this.width;
         canvas.height = this.height;
-        if (!this.url) {
-          this.img.then((img) =>
-            canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height));
+        this.img.then((img) => {
+          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
           // this will return right away with correctly-sized canvas
           resolve(canvas);
-        } else {
-          canvas.getContext('2d').drawImage(this.url, 0, 0, canvas.width, canvas.height);
-          // this will return right away with correctly-sized canvas
-          resolve(canvas);
-        }
+        })
 
       });
     });
 
-    // this requests some worker to load the file into a sharedarraybuffer
-    this.imageSAB = doImageTask(['loadSB', image], false);
-  }
 
-  blob = () => {
-    return new Promise((resolve, reject) => {
+    this.blob = new Promise((resolve, reject) => {
       // spin up worker
       try {
         const code = ArrayBufferWorker.toString();
         const blob = new Blob([`(${code})(${0})`]);
         let worker = new Worker(URL.createObjectURL(blob));
-        console.warn('worker', worker)
         worker.onmessage = (event) => {
           console.warn("Got blob from worker:");
-          console.trace(event.data);
           resolve(new Blob([event.data])); // convert arraybuffer to blob
         }
-        worker.postMessage(this.image);
+        worker.postMessage(image);
       } catch (e) {
         console.error(e)
         reject(e)
       }
 
     });
+
+    // this requests some worker to load the file into a sharedarraybuffer
+    this.imageSAB = doImageTask(['loadSB', image], false);
   }
 
   getStorePromises = (roomId) => {
@@ -550,38 +542,38 @@ export class BlobWorker extends Worker {
   }
 }
 
-let image_workers = [];
+// let image_workers = [];
 let next_worker = 0;
-let max_workers = window.navigator.hardwareConcurrency / 2; // dialing back to not overload
-max_workers = max_workers >= 1 ? max_workers : 1 // just a safeguardd
-console.log(`setting up ${max_workers} image helper workers`);
+// let max_workers = window.navigator.hardwareConcurrency / 2; // dialing back to not overload
+// max_workers = max_workers >= 1 ? max_workers : 1 // just a safeguardd
+// console.log(`setting up ${max_workers} image helper workers`);
 
 // const IW_code = _restrictPhoto.toString();
 // const IW_blob = new Blob([`${IW_code}`]);
 // const IW_url = URL.createObjectURL(IW_blob);
 // console.log("%%%%%%%%%%%%%%%% IW_code:", IW_code);
 
-for (let i = 0; i < max_workers; i++) {
-  let newWorker = {
-    worker: new BlobWorker(ImageWorker, i),
-    i: i, // index/number of worker
-    broken: false // tracks if there's a problem
-  };
-  image_workers.push(newWorker);
-}
+// for (let i = 0; i < max_workers; i++) {
+//   let newWorker = {
+//     worker: new BlobWorker(ImageWorker, i),
+//     i: i, // index/number of worker
+//     broken: false // tracks if there's a problem
+//   };
+//   image_workers.push(newWorker);
+// }
 
 function doImageTask(vars, transfer) {
   console.log("doImageTask() - vars are:");
   console.log(vars);
-  var i = next_worker;
-  next_worker = (next_worker + 1) % max_workers;
-  var instance = image_workers[i].worker;
+  next_worker++;
+  var instance = new BlobWorker(ImageWorker, next_worker);
   return new Promise(function (resolve, reject) {
     // we pick one, rotating
     console.log(`Passing ${vars} on to ${next_worker}`);
     instance.onmessage = function (m) {
-      console.log(`[${i}] finished finished ... returning with:`);
+      console.log(`[${next_worker}] finished finished ... returning with:`);
       console.log(m);
+      instance.terminate()
       resolve(m.data);
     }
     try {
@@ -591,11 +583,43 @@ function doImageTask(vars, transfer) {
         instance.postMessage(vars);
       }
     } catch (error) {
-      console.error(`Failed to send task to worker ${i}`);
+      console.error(`Failed to send task to worker ${next_worker}`);
       console.error(error);
+      instance.terminate()
       reject("failed");
     }
   });
+}
+// 96 DPI width 816px * height 1056px (Legal size)
+export async function text2Image(text, name) {
+  return new Promise((resolve) => {
+    var canvas = document.createElement('canvas');
+    canvas.width = 816;
+    canvas.height = 1056;
+    var ctx = canvas.getContext("2d");
+    ctx.font = "12px Arial";
+    var v = 24;
+    const h = 1056;
+    const fs = 12;
+    const lm = 5;
+    const lx = 84;
+    for (let l of text.split(/[\r\n\f\v]/)) {
+      ctx.fillText(l.slice(0, lx), lm, v);
+      v += (fs + 1);
+      if (v > h) {
+        break;
+      }
+    }
+    canvas.toBlob((blob) => {
+      console.log(blob.type)
+      const file = new File([blob], name + '.png', {
+        type: blob.type,
+      });
+      resolve(file)
+    });
+
+  })
+
 }
 
 
