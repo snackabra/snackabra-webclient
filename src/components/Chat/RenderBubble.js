@@ -6,13 +6,14 @@ const SB = require('snackabra')
 const sbCrypto = new SB.SBCrypto();
 
 const RenderBubble = (props) => {
+  const { currentMessage, previousMessage } = props
   const [isVerifiedGuest, setVerifiedGuest] = React.useState(false)
   const [isAdmin, setIsAdmin] = React.useState(false)
   const [newProps, setNewProps] = React.useState({})
 
 
   React.useEffect(() => {
-    let current_user_key = props.currentMessage.user._id !== 'system' ? JSON.parse(props.currentMessage.user._id) : {};
+    let current_user_key = currentMessage.user._id !== 'system' ? JSON.parse(currentMessage.user._id) : {};
     const init = async () => {
       //TODO: this is breaking the server for some reason
       // const verified = await props.socket.api.postPubKey(current_user_key)
@@ -20,14 +21,14 @@ const RenderBubble = (props) => {
       setIsAdmin(sbCrypto.compareKeys(props.socket.exportable_owner_pubKey, current_user_key))
     }
     init();
-  }, [props.currentMessage.user._id, props.socket.api, props.socket.exportable_owner_pubKey, props.socket.exportable_pubKey])
+  }, [currentMessage.user._id, props.socket.api, props.socket.exportable_owner_pubKey, props.socket.exportable_pubKey])
 
   const updateProps = React.useCallback(({ both, left, right }) => {
     both = both || {}
     left = left || {}
     right = right || {}
 
-    const width = props.currentMessage.image !== "" ? "min(80%, 18rem)" : "inherit"
+    const width = currentMessage.image !== "" ? "min(80%, 18rem)" : "inherit"
     const defaultWrapperStyle = {
       left: {
         // overflow: "hidden",
@@ -58,11 +59,11 @@ const RenderBubble = (props) => {
     setNewProps({
       wrapperStyle: defaultWrapperStyle
     })
-  }, [props.currentMessage.image])
+  }, [currentMessage.image])
 
   React.useEffect(() => {
 
-    if (props.currentMessage.whispered) {
+    if (currentMessage.whispered) {
       updateProps({ both: { backgroundColor: "#FEE251" } })
     } else if (!isAdmin && !isVerifiedGuest) {
       updateProps({
@@ -70,7 +71,7 @@ const RenderBubble = (props) => {
           borderColor: "red",
         }
       })
-    } else if (props.currentMessage._id.match(/^sending_/)) {
+    } else if (currentMessage.user._id === 'system' || currentMessage._id.match(/^sending_/)) {
       updateProps({
         both: {
           borderColor: "gray",
@@ -85,17 +86,17 @@ const RenderBubble = (props) => {
     } else if (isVerifiedGuest && !isAdmin) {
       updateProps({
         both: {
-          borderColor: getColorFromId(props.currentMessage.user._id),
+          borderColor: getColorFromId(currentMessage.user._id),
         }
       })
     }
-  }, [isVerifiedGuest, isAdmin, props.currentMessage.encrypted, props.currentMessage.info, props.currentMessage._id, props.currentMessage.whispered, props.currentMessage.user.name, updateProps])
+  }, [isVerifiedGuest, isAdmin, currentMessage, updateProps])
 
 
 
   return (
     <Grid style={{ maxWidth: "55%" }}>
-      {(isSameUser(props.currentMessage, props.previousMessage) && isSameDay(props.currentMessage, props.previousMessage))
+      {(isSameUser(currentMessage, previousMessage) && isSameDay(currentMessage, previousMessage))
         ? ''
         : <Typography variant={'body1'} style={{
           width: '50vw',
@@ -105,7 +106,7 @@ const RenderBubble = (props) => {
           backgroundColor: 'transparent',
           color: props.position === 'left' ? '#aaa' : 'white'
         }}>
-          {props.currentMessage.user.name}
+          {currentMessage.user.name}
         </Typography>}
       <Bubble
         {...props}

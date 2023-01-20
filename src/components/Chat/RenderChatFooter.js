@@ -1,7 +1,6 @@
 import React from 'react'
 import { Grid, CircularProgress, Paper, IconButton, LinearProgress, ImageList, ImageListItem } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
-import { restrictPhoto, getFileData, SBImage } from "../../utils/ImageProcessor";
 
 const RenderChatFooter = (props) => {
 

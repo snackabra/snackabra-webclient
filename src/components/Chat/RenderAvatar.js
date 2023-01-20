@@ -57,7 +57,6 @@ function RenderAvatar(props) {
   const renderAvatarComponent = () => {
     if (props.renderAvatar) {
       const { renderAvatar, ...avatarProps } = props;
-      console.log(avatarProps)
       return props.renderAvatar(avatarProps);
     }
     if (props.currentMessage) {
@@ -65,7 +64,6 @@ function RenderAvatar(props) {
         {height: 36, width: 36, borderRadius: 18, backgroundColor: getColorFromId(props.currentMessage.user._id)},
         props.imageStyle && props.imageStyle[props.position],
       ]
-      console.log(avatarStyle[0])
       return (<GiftedAvatar avatarStyle={avatarStyle} user={props.currentMessage.user} onPress={() => { var _a; return (_a = props.onPressAvatar) === null || _a === void 0 ? void 0 : _a.call(props, props.currentMessage.user); }} onLongPress={() => { var _a; return (_a = props.onLongPressAvatar) === null || _a === void 0 ? void 0 : _a.call(props, props.currentMessage.user); }} />);
     }
     return null;

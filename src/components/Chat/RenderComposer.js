@@ -5,9 +5,11 @@ import { SnackabraContext } from "mobx-snackabra-store";
 import { observer } from "mobx-react"
 
 const RenderComposer = observer((props) => {
+  const {filesAttached, onTextChanged} = props
   const sbContext = React.useContext(SnackabraContext);
   const [text, setText] = React.useState('')
-  const [filesAttached, setFilesAttached] = React.useState(props.filesAttached)
+  const [attachedFiles, setFilesAttached] = React.useState(filesAttached)
+
 
   React.useEffect(() => {
     const sendButton = document.getElementById('send-button');
@@ -23,12 +25,12 @@ const RenderComposer = observer((props) => {
   }
 
   React.useEffect(() => {
-    setFilesAttached(props.filesAttached)
+    setFilesAttached(filesAttached)
     if (props.filesAttached) {
       setText('')
       props.onTextChanged('')
     }
-  }, [props])
+  }, [filesAttached, onTextChanged, setText])
 
   const getSbImage = (file, props, sbContext) => {
     return new Promise((resolve) => {
@@ -89,7 +91,7 @@ const RenderComposer = observer((props) => {
       onPaste={pasteEvent}
       onKeyUp={checkForSend}
       onChange={handlChange}
-      readOnly={filesAttached}
+      readOnly={attachedFiles}
       variant={'standard'}
       InputProps={{
         disableUnderline: true
