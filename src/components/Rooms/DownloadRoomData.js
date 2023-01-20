@@ -54,7 +54,7 @@ const DownloadRoomData = observer(() => {
                     }}
                     variant="contained" 
                     endIcon={<DownloadIcon />}>
-                        {sbContext.rooms[room].name} Data
+                        {sbContext.rooms[room].name} Channel
                     </StyledButton>
                     <StyledButton 
                     sx={{mr: 1}}
@@ -63,7 +63,7 @@ const DownloadRoomData = observer(() => {
                     }}
                     variant="contained" 
                     endIcon={<DownloadIcon />}>
-                        {sbContext.rooms[room].name} Storage
+                        {sbContext.rooms[room].name} Shards
                     </StyledButton>
                 </Grid>
             })

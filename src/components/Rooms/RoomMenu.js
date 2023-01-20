@@ -110,7 +110,7 @@ const RoomMenu = (props) => {
               <ListItemIcon>
                 <FileDownloadOutlinedIcon />
               </ListItemIcon>
-              <ListItemText>Get Data</ListItemText>
+              <ListItemText>Get Channel</ListItemText>
             </MenuItem> : ''
           }
           {props.socket?.status === 'OPEN' && props.selected ?
@@ -121,7 +121,7 @@ const RoomMenu = (props) => {
               <ListItemIcon>
                 <FileDownloadOutlinedIcon />
               </ListItemIcon>
-              <ListItemText>Get Storage</ListItemText>
+              <ListItemText>Get Shards</ListItemText>
             </MenuItem> : ''
           }
 
