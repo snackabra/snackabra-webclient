@@ -126,6 +126,7 @@ export const LogProvider = ({children }) => {
         if(notify){
           console.log(notify)
           notify.setMessage("An uncaught exception has occured, view the console for details");
+          notify.setSeverity("error");
           notify.setOpen(true)
           console.trace(error)
         }

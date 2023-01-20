@@ -183,7 +183,7 @@ class ChatRoom extends React.Component {
     if (msg) {
       if (!msg.control) {
         const messages = this.state.messages.reduce((acc, curr) => {
-          if (!curr._id.match(/^sending/)) {
+          if (curr.user._id !== 'system' && !curr._id.match(/^sending/)) {
             acc.push(curr);
           } else {
             delete this.sending[curr._id]
@@ -443,75 +443,75 @@ class ChatRoom extends React.Component {
           this.setState({ openFirstVisit: false })
           this.connect(username)
         }} roomId={this.state.roomId} />
-          <GiftedChat
-            messages={this.state.messages}
-            onSend={this.sendMessages}
-            // timeFormat='L LT'
-            user={this.sbContext.user}
-            inverted={false}
-            alwaysShowSend={true}
-            loadEarlier={this.props.sbContext.moreMessages}
-            isLoadingEarlier={this.props.sbContext.loadingMore}
-            onLoadEarlier={this.getOldMessages}
-            renderActions={(props) => {
-              return <RenderAttachmentIcon
-                {...props}
-                addFile={this.loadFiles}
-                openAttachMenu={this.openAttachMenu}
-                showLoading={this.showLoading} />
-            }}
-            //renderUsernameOnMessage={true}
-            // infiniteScroll={true}   // This is not supported for web yet
-            renderAvatar={RenderAvatar}
-            renderMessageImage={(props) => {
-              return <RenderImage
-                {...props}
-                openImageOverlay={this.openImageOverlay}
-                downloadImage={this.downloadImage}
-                controlMessages={this.state.controlMessages}
-                sendSystemMessage={this.sendSystemMessage}
-                notify={this.notify}
-                sbContext={this.sbContext} />
-            }}
-            renderMessageText={RenderMessage}
-            scrollToBottom={true}
-            showUserAvatar={true}
-            onPressAvatar={this.promptUsername}
-            onLongPressAvatar={(context) => {
-              return this.handleReply(context)
-            }}
-            renderChatFooter={() => {
-              return <RenderChatFooter removeInputFiles={this.removeInputFiles}
-                files={this.state.files}
-                setFiles={this.setFiles}
-                uploading={this.state.uploading}
-                loading={this.state.loading} />
-            }}
-            renderBubble={(props) => {
-              return <RenderBubble {...props} keys={{ ...this.props.sbContext.socket.keys, ...this.props.sbContext.userKey }}
-                socket={this.props.sbContext.socket}
-                SB={this.SB} />
-            }}
-            renderSend={RenderSend}
-            renderComposer={(props) => {
-              return <RenderComposer {...props}
-                onFocus={() => {
-                  this.setState({ typing: true })
-                }}
-                onBlur={() => {
-                  this.setState({ typing: false })
-                }}
-                setFiles={this.setFiles}
-                filesAttached={this.state.files.length > 0}
-                showLoading={this.showLoading} />
-            }}
-            onLongPress={() => false}
-            keyboardShouldPersistTaps='always'
-            renderTime={RenderTime}
-            parsePatterns={(linkStyle) => [
-              { type: 'phone', style: {}, onPress: undefined }
-            ]}
-          />
+        <GiftedChat
+          messages={this.state.messages}
+          onSend={this.sendMessages}
+          // timeFormat='L LT'
+          user={this.sbContext.user}
+          inverted={false}
+          alwaysShowSend={true}
+          loadEarlier={this.props.sbContext.moreMessages}
+          isLoadingEarlier={this.props.sbContext.loadingMore}
+          onLoadEarlier={this.getOldMessages}
+          renderActions={(props) => {
+            return <RenderAttachmentIcon
+              {...props}
+              addFile={this.loadFiles}
+              openAttachMenu={this.openAttachMenu}
+              showLoading={this.showLoading} />
+          }}
+          //renderUsernameOnMessage={true}
+          // infiniteScroll={true}   // This is not supported for web yet
+          renderAvatar={RenderAvatar}
+          renderMessageImage={(props) => {
+            return <RenderImage
+              {...props}
+              openImageOverlay={this.openImageOverlay}
+              downloadImage={this.downloadImage}
+              controlMessages={this.state.controlMessages}
+              sendSystemMessage={this.sendSystemMessage}
+              notify={this.notify}
+              sbContext={this.sbContext} />
+          }}
+          renderMessageText={RenderMessage}
+          scrollToBottom={true}
+          showUserAvatar={true}
+          onPressAvatar={this.promptUsername}
+          onLongPressAvatar={(context) => {
+            return this.handleReply(context)
+          }}
+          renderChatFooter={() => {
+            return <RenderChatFooter removeInputFiles={this.removeInputFiles}
+              files={this.state.files}
+              setFiles={this.setFiles}
+              uploading={this.state.uploading}
+              loading={this.state.loading} />
+          }}
+          renderBubble={(props) => {
+            return <RenderBubble {...props} keys={{ ...this.props.sbContext.socket.keys, ...this.props.sbContext.userKey }}
+              socket={this.props.sbContext.socket}
+              SB={this.SB} />
+          }}
+          renderSend={RenderSend}
+          renderComposer={(props) => {
+            return <RenderComposer {...props}
+              onFocus={() => {
+                this.setState({ typing: true })
+              }}
+              onBlur={() => {
+                this.setState({ typing: false })
+              }}
+              setFiles={this.setFiles}
+              filesAttached={this.state.files.length > 0}
+              showLoading={this.showLoading} />
+          }}
+          onLongPress={() => false}
+          keyboardShouldPersistTaps='always'
+          renderTime={RenderTime}
+          parsePatterns={(linkStyle) => [
+            { type: 'phone', style: {}, onPress: undefined }
+          ]}
+        />
       </SafeAreaView>
 
 
