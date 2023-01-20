@@ -18,7 +18,7 @@ const DownloadRoomData = observer(() => {
 
     const getRoomStorage = (roomId) => {
         sbContext.downloadRoomData().then((data) => {
-            downloadFile(JSON.stringify(data.storage), sbContext.rooms[roomId].name + "_storage.txt")
+            downloadFile(JSON.stringify(data.storage), sbContext.rooms[roomId].name + "_shards.txt")
         })
     }
 

@@ -48,7 +48,7 @@ const RoomMenu = (props) => {
 
   const getRoomStorage = (roomId) => {
     props.sbContext.downloadRoomData().then((data) => {
-      downloadFile(JSON.stringify(data.storage), props.sbContext.rooms[props.roomId].name + "_storage.txt")
+      downloadFile(JSON.stringify(data.storage), props.sbContext.rooms[props.roomId].name + "_shards.txt")
     })
   }
 
