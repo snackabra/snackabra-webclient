@@ -8,12 +8,11 @@ import RenderAttachmentIcon from "./RenderAttachmentIcon";
 import ImageOverlay from "../Modals/ImageOverlay";
 import RenderImage from "./RenderImage";
 import ChangeNameDialog from "../Modals/ChangeNameDialog";
-import MotdDialog from "../Modals/MotdDialog";
 import RenderChatFooter from "./RenderChatFooter";
 import RenderMessage from "./RenderMessage";
 import RenderTime from "./RenderTime";
 import { Dimensions } from "react-native";
-// import AttachMenu from "./AttachMenu";
+import AdminDialog from "../Modals/AdminDialog";
 import FirstVisitDialog from "../Modals/FirstVisitDialog";
 import RenderSend from "./RenderSend";
 import WhisperUserDialog from "../Modals/WhisperUserDialog";
@@ -31,6 +30,7 @@ const SB = require('snackabra')
 class ChatRoom extends React.Component {
   sending = {}
   state = {
+    openAdminDialog: false,
     openWhisper: false,
     openPreview: false,
     openChangeName: false,
@@ -87,6 +87,13 @@ class ChatRoom extends React.Component {
     })
     this.processQueue()
     this.processSQueue()
+  }
+
+  componentDidUpdate(prevProps) {
+    // Typical usage (don't forget to compare props):
+    if (this.props.openAdminDialog !== prevProps.openAdminDialog) {
+      this.setOpenAdminDialog(this.props.openAdminDialog);
+    }
   }
   /**
    * Queue helps with order outgoing messages
@@ -183,7 +190,8 @@ class ChatRoom extends React.Component {
     if (msg) {
       if (!msg.control) {
         const messages = this.state.messages.reduce((acc, curr) => {
-          if (curr.user._id !== 'system' && !curr._id.match(/^sending/)) {
+          const msg_id = curr._id.toString()
+          if (!msg_id.match(/^sending/)) {
             acc.push(curr);
           } else {
             delete this.sending[curr._id]
@@ -421,6 +429,11 @@ class ChatRoom extends React.Component {
   closeWhisper = () => {
     this.setState({ openWhisper: false })
   }
+
+  setOpenAdminDialog = (opened) => {
+    this.setState({ openAdminDialog: opened })
+  }
+
   render() {
     return (
 
@@ -430,6 +443,9 @@ class ChatRoom extends React.Component {
         height: isMobile && !this.state.typing ? this.state.height - 36 : this.state.height,
         paddingTop: 48
       }}>
+        <AdminDialog open={this.state.openAdminDialog} sendSystemInfo={this.sendSystemInfo} onClose={() => {
+          this.setOpenAdminDialog(false)
+        }} />
         <WhisperUserDialog replyTo={this.state.replyTo} open={this.state.openWhisper} onClose={this.closeWhisper} />
         <ImageOverlay open={this.state.openPreview} img={this.state.img} imgLoaded={this.state.imgLoaded}
           onClose={this.imageOverlayClosed} />
@@ -437,7 +453,6 @@ class ChatRoom extends React.Component {
           this.saveUsername(userName, _id)
           this.setState({ openChangeName: false })
         }} />
-        <MotdDialog open={this.state.openMotd} roomName={this.props.roomName} />
         {/* <AttachMenu open={attachMenu} handleClose={this.handleClose} /> */}
         <FirstVisitDialog open={this.state.openFirstVisit} sbContext={this.sbContext} messageCallback={this.recieveMessages} onClose={(username) => {
           this.setState({ openFirstVisit: false })

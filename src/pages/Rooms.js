@@ -20,7 +20,6 @@ import { Grid, IconButton, TextField, Typography } from "@mui/material";
 import ChatRoom from "../components/Chat/ChatRoom";
 import CreateRoomDialog from "../components/Modals/CreateRoomDialog";
 import JoinDialog from "../components/Modals/JoinDialog";
-import AdminDialog from "../components/Modals/AdminDialog";
 import NotificationContext from "../contexts/NotificationContext";
 import ImportDialog from "../components/Modals/ImportDialog";
 import DataOperationsDialog from "../components/Modals/DataOperationsDialog";
@@ -221,9 +220,6 @@ const ResponsiveDrawer = observer((props) => {
       <CreateRoomDialog open={openCreateDialog} onClose={() => {
         setOpenCreateDialog(false)
       }} />
-      <AdminDialog open={openAdminDialog} onClose={() => {
-        setOpenAdminDialog(false)
-      }} />
       <JoinDialog open={openJoinDialog} onClose={() => {
         setOpenJoinDialog(false)
       }} />
@@ -285,13 +281,13 @@ const ResponsiveDrawer = observer((props) => {
           borderStyle: "solid"
         }}
       >
-        {(!roomId || !sbContext.activeroom) && (<Grid style={{height: height}}>
+        {(!roomId || !sbContext.activeroom) && (<Grid style={{ height: height }}>
           <Toolbar />
           <Typography variant={'h6'}>Select a room or create a new one to get started.</Typography>
         </Grid>)
         }
         {(roomId && sbContext) &&
-          (<ChatRoom roomId={roomId ? roomId : sbContext.activeroom} sbContext={sbContext} Notifications={Notifications} />)
+          (<ChatRoom roomId={roomId ? roomId : sbContext.activeroom} sbContext={sbContext} Notifications={Notifications} openAdminDialog={openAdminDialog} />)
         }
       </Box>
     </SafeAreaView >
