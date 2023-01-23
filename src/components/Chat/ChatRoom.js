@@ -454,10 +454,11 @@ class ChatRoom extends React.Component {
     // console.log(this.state.dzRef)
     return (
 
-      <SafeAreaView style={{
+      <SafeAreaView id={'sb_chat_area'} style={{
         flexGrow: 1,
         flexBasis: 'fit-content',
         height: isMobile && !this.state.typing ? this.state.height - 36 : this.state.height,
+        width: '100%',
         paddingTop: 48
       }}>
         <DropZone notify={this.notify} dzRef={this.setDropzoneRef} addFile={this.loadFiles} showLoading={this.showLoading}>
@@ -477,6 +478,11 @@ class ChatRoom extends React.Component {
             this.connect(username)
           }} roomId={this.state.roomId} />
           <GiftedChat
+          wrapInSafeArea={false}
+          className={'sb_chat_container'}
+            style={{
+              width: '100%'
+            }}
             messages={this.state.messages}
             onSend={this.sendMessages}
             // timeFormat='L LT'

@@ -115,7 +115,7 @@ const DropZone = observer((props) => {
 
 
   return (
-    <Dropzone ref={dzRef} onDrop={onDropZone} onDropRejected={onRejected} onError={onError} noClick noKeyboard accept={{ 'image/*': [] }} maxFiles={maxFiles}>
+    <Dropzone id={'sb_drobox'} ref={dzRef} onDrop={onDropZone} onDropRejected={onRejected} onError={onError} noClick noKeyboard accept={{ 'image/*': [] }} maxFiles={maxFiles}>
       {({ getRootProps, getInputProps, isFocused, isDragAccept, isDragReject }) => {
         const style = useMemo(
           () => ({

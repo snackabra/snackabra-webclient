@@ -62,6 +62,10 @@ body {
   border-radius: 20px
 } */
 
+div[data-testid="GC_WRAPPER"]{
+  width: 100%
+}
+
 #root,
 body,
 html {
