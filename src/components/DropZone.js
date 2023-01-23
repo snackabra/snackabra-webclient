@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, createRef } from 'react'
+import React, { useCallback, useMemo } from 'react'
 import { SBImage } from "../utils/ImageProcessor";
 import { SnackabraContext } from "mobx-snackabra-store";
 import Dropzone from 'react-dropzone'

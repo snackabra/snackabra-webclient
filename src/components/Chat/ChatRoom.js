@@ -288,6 +288,7 @@ class ChatRoom extends React.Component {
           let sbm = new SB.SBMessage(this.sbContext.socket)
           // populate
           sbm.contents.image = _files[x].thumbnail
+          console.log(sbImage.objectMetadata)
           const imageMetaData = {
             imageId: sbImage.objectMetadata.full.id,
             imageKey: sbImage.objectMetadata.full.key,
@@ -310,13 +311,13 @@ class ChatRoom extends React.Component {
               queueMicrotask(() => {
                 storePromises.fullStorePromise.then((verificationPromise) => {
                   console.log(verificationPromise)
-                  verificationPromise.verification.then((verification) => {
+                  verificationPromise.verification.then((_f_verification) => {
                     console.log('Full image uploaded')
-                    let controlMessage = new SB.SBMessage(this.sbContext.socket);
-                    controlMessage.contents.control = true;
-                    controlMessage.contents.verificationToken = verification;
-                    controlMessage.contents.id = imageMetaData.imageId;
-                    q.enqueue(controlMessage)
+                    let _f_controlMessage = new SB.SBMessage(this.sbContext.socket);
+                    _f_controlMessage.contents.control = true;
+                    _f_controlMessage.contents.verificationToken = _f_verification;
+                    _f_controlMessage.contents.id = imageMetaData.imageId;
+                    q.enqueue(_f_controlMessage)
                   });
                 });
               })
