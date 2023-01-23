@@ -112,10 +112,10 @@ const AdminDialog = observer((props) => {
         <Typography variant={"button"}>Save Capacity</Typography>
       </StyledButton>
 
-
+{/* 
       <StyledButton variant={"contained"} onClick={openConfirm} sx={{ pb: 1, pt: 1 }}>
         <Typography variant={"button"}>Restrict Room</Typography>
-      </StyledButton>
+      </StyledButton> */}
       <Grid item xs={12} sx={{ pb: 1, pt: 1 }}>
         <StyledButton variant={"contained"} onClick={props.onClose} sx={{ pb: 1, pt: 1 }}>
           <Typography variant={"button"}>Cancel</Typography>
