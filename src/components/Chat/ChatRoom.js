@@ -446,6 +446,10 @@ class ChatRoom extends React.Component {
 
   }
 
+  inputErrored = (errored) => {
+    this.setState({ inputError: errored })
+  }
+
   render() {
     // console.log(this.state.dzRef)
     return (
@@ -521,9 +525,12 @@ class ChatRoom extends React.Component {
                 socket={this.props.sbContext.socket}
                 SB={this.SB} />
             }}
-            renderSend={RenderSend}
+            renderSend={(props) => {
+              return <RenderSend {...props} inputError={this.state.inputError} />
+            }}
             renderComposer={(props) => {
               return <RenderComposer {...props}
+                inputErrored={this.inputErrored}
                 onFocus={() => {
                   this.setState({ typing: true })
                 }}

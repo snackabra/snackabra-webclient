@@ -5,9 +5,10 @@ import { SnackabraContext } from "mobx-snackabra-store";
 import { observer } from "mobx-react"
 
 const RenderComposer = observer((props) => {
-  const { filesAttached, onTextChanged } = props
+  const { filesAttached, onTextChanged, inputErrored } = props
   const sbContext = React.useContext(SnackabraContext);
   const [text, setText] = React.useState('')
+  const [error, setError] = React.useState(false)
   const [attachedFiles, setFilesAttached] = React.useState(filesAttached)
 
 
@@ -15,6 +16,25 @@ const RenderComposer = observer((props) => {
     const sendButton = document.getElementById('send-button');
     sendButton.addEventListener('click', handleSend)
   }, [])
+
+  const validateText = React.useCallback((text) => {
+    const enc = new TextEncoder()
+    const ab = enc.encode(text)
+    console.log(ab)
+    const c = new Blob([ab])
+    console.log(c)
+    if (c.size <= 1024 * 64) {
+      setError(false)
+      inputErrored(false)
+    } else {
+      setError(true)
+      inputErrored(true)
+    }
+  }, []);
+
+  React.useEffect(() => {
+    validateText(text)
+  }, [text, validateText])
 
   const handleSend = () => {
     setTimeout(() => {
@@ -26,9 +46,9 @@ const RenderComposer = observer((props) => {
 
   React.useEffect(() => {
     setFilesAttached(filesAttached)
-    if (props.filesAttached) {
+    if (filesAttached) {
       setText('')
-      props.onTextChanged('')
+      onTextChanged('')
     }
   }, [filesAttached, onTextChanged, setText])
 
@@ -50,7 +70,7 @@ const RenderComposer = observer((props) => {
   }
 
   const checkForSend = (e) => {
-    if (e.keyCode === 13 && !e.ctrlKey && !e.shiftKey) {
+    if (e.keyCode === 13 && !e.ctrlKey && !e.shiftKey && !error) {
       document.getElementById('send-button').click()
       const input = document.getElementById('sb_render_composer_textarea');
       input.value = ""
@@ -67,6 +87,9 @@ const RenderComposer = observer((props) => {
     console.log(e.nativeEvent.clipboardData.files)
     const files = Object.assign(e.nativeEvent.clipboardData.files)
     console.log(files)
+    if(files.length > 0){
+      setText('')
+    }
     let _files = []
     for (let x in files) {
       if (files[x] instanceof File) {
@@ -83,6 +106,7 @@ const RenderComposer = observer((props) => {
       id="sb_render_composer_textarea"
       label=""
       value={text}
+      error={error}
       onFocus={props.onFocus}
       onBlur={props.onBlur}
       placeholder="Type a message..."
