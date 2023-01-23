@@ -49,7 +49,7 @@ body {
   -moz-osx-font-smoothing: grayscale
 }
 
-* {
+/* * {
   scrollbar-width: thin
 }
 
@@ -60,7 +60,7 @@ body {
 ::-webkit-scrollbar-thumb {
   background-color: #d3d3d3;
   border-radius: 20px
-}
+} */
 
 #root,
 body,

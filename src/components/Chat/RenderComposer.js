@@ -5,7 +5,7 @@ import { SnackabraContext } from "mobx-snackabra-store";
 import { observer } from "mobx-react"
 
 const RenderComposer = observer((props) => {
-  const {filesAttached, onTextChanged} = props
+  const { filesAttached, onTextChanged } = props
   const sbContext = React.useContext(SnackabraContext);
   const [text, setText] = React.useState('')
   const [attachedFiles, setFilesAttached] = React.useState(filesAttached)
@@ -17,7 +17,7 @@ const RenderComposer = observer((props) => {
   }, [])
 
   const handleSend = () => {
-    setTimeout(()=>{
+    setTimeout(() => {
       setText('')
       props.onTextChanged('')
     }, 100)
@@ -42,7 +42,7 @@ const RenderComposer = observer((props) => {
         queueMicrotask(() => {
           const SBImageCanvas = document.createElement('canvas');
           sbImage.loadToCanvas(SBImageCanvas).then((c) => {
-  
+            // SBImageCanvas.remove()
           });
         });
       })
@@ -63,14 +63,14 @@ const RenderComposer = observer((props) => {
     props.onTextChanged(e.target.value)
   }
 
-  const pasteEvent = async (e) =>{
+  const pasteEvent = async (e) => {
     console.log(e.nativeEvent.clipboardData.files)
     const files = Object.assign(e.nativeEvent.clipboardData.files)
     console.log(files)
-    let _files= []
-    for(let x in files){
-      if(files[x] instanceof File){
-        if(files[x].type.match(/^image/)){
+    let _files = []
+    for (let x in files) {
+      if (files[x] instanceof File) {
+        if (files[x].type.match(/^image/)) {
           _files.push(await getSbImage(files[x], props, sbContext))
         }
       }
@@ -83,8 +83,8 @@ const RenderComposer = observer((props) => {
       id="sb_render_composer_textarea"
       label=""
       value={text}
-      onFocus={ props.onFocus } 
-      onBlur={ props.onBlur } 
+      onFocus={props.onFocus}
+      onBlur={props.onBlur}
       placeholder="Type a message..."
       className="textinput-composer"
       multiline

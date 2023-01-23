@@ -17,6 +17,7 @@ import FirstVisitDialog from "../Modals/FirstVisitDialog";
 import RenderSend from "./RenderSend";
 import WhisperUserDialog from "../Modals/WhisperUserDialog";
 import RenderComposer from "./RenderComposer";
+import DropZone from "../DropZone";
 import Queue from "../../utils/Queue";
 import { observer } from "mobx-react"
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -50,7 +51,8 @@ class ChatRoom extends React.Component {
     user: {},
     height: 0,
     visibility: 'visible',
-    replyTo: null
+    replyTo: null,
+    dzRef: null
   }
   sbContext = this.props.sbContext
 
@@ -434,7 +436,17 @@ class ChatRoom extends React.Component {
     this.setState({ openAdminDialog: opened })
   }
 
+  setDropzoneRef = (ref) => {
+
+    if (ref && !this.state.dzRef) {
+      console.log(ref)
+      this.setState({ dzRef: ref })
+    }
+
+  }
+
   render() {
+    // console.log(this.state.dzRef)
     return (
 
       <SafeAreaView style={{
@@ -443,91 +455,94 @@ class ChatRoom extends React.Component {
         height: isMobile && !this.state.typing ? this.state.height - 36 : this.state.height,
         paddingTop: 48
       }}>
-        <AdminDialog open={this.state.openAdminDialog} sendSystemInfo={this.sendSystemInfo} onClose={() => {
-          this.setOpenAdminDialog(false)
-        }} />
-        <WhisperUserDialog replyTo={this.state.replyTo} open={this.state.openWhisper} onClose={this.closeWhisper} />
-        <ImageOverlay open={this.state.openPreview} img={this.state.img} imgLoaded={this.state.imgLoaded}
-          onClose={this.imageOverlayClosed} />
-        <ChangeNameDialog {...this.state.changeUserNameProps} open={this.state.openChangeName} onClose={(userName, _id) => {
-          this.saveUsername(userName, _id)
-          this.setState({ openChangeName: false })
-        }} />
-        {/* <AttachMenu open={attachMenu} handleClose={this.handleClose} /> */}
-        <FirstVisitDialog open={this.state.openFirstVisit} sbContext={this.sbContext} messageCallback={this.recieveMessages} onClose={(username) => {
-          this.setState({ openFirstVisit: false })
-          this.connect(username)
-        }} roomId={this.state.roomId} />
-        <GiftedChat
-          messages={this.state.messages}
-          onSend={this.sendMessages}
-          // timeFormat='L LT'
-          user={this.sbContext.user}
-          inverted={false}
-          alwaysShowSend={true}
-          loadEarlier={this.props.sbContext.moreMessages}
-          isLoadingEarlier={this.props.sbContext.loadingMore}
-          onLoadEarlier={this.getOldMessages}
-          renderActions={(props) => {
-            return <RenderAttachmentIcon
-              {...props}
-              addFile={this.loadFiles}
-              openAttachMenu={this.openAttachMenu}
-              showLoading={this.showLoading} />
-          }}
-          //renderUsernameOnMessage={true}
-          // infiniteScroll={true}   // This is not supported for web yet
-          renderAvatar={RenderAvatar}
-          renderMessageImage={(props) => {
-            return <RenderImage
-              {...props}
-              openImageOverlay={this.openImageOverlay}
-              downloadImage={this.downloadImage}
-              controlMessages={this.state.controlMessages}
-              sendSystemMessage={this.sendSystemMessage}
-              notify={this.notify}
-              sbContext={this.sbContext} />
-          }}
-          renderMessageText={RenderMessage}
-          scrollToBottom={true}
-          showUserAvatar={true}
-          onPressAvatar={this.promptUsername}
-          onLongPressAvatar={(context) => {
-            return this.handleReply(context)
-          }}
-          renderChatFooter={() => {
-            return <RenderChatFooter removeInputFiles={this.removeInputFiles}
-              files={this.state.files}
-              setFiles={this.setFiles}
-              uploading={this.state.uploading}
-              loading={this.state.loading} />
-          }}
-          renderBubble={(props) => {
-            return <RenderBubble {...props} keys={{ ...this.props.sbContext.socket.keys, ...this.props.sbContext.userKey }}
-              socket={this.props.sbContext.socket}
-              SB={this.SB} />
-          }}
-          renderSend={RenderSend}
-          renderComposer={(props) => {
-            return <RenderComposer {...props}
-              onFocus={() => {
-                this.setState({ typing: true })
-              }}
-              onBlur={() => {
-                this.setState({ typing: false })
-              }}
-              setFiles={this.setFiles}
-              filesAttached={this.state.files.length > 0}
-              showLoading={this.showLoading} />
-          }}
-          onLongPress={() => false}
-          keyboardShouldPersistTaps='always'
-          renderTime={RenderTime}
-          parsePatterns={(linkStyle) => [
-            { type: 'phone', style: {}, onPress: undefined }
-          ]}
-        />
+        <DropZone notify={this.notify} dzRef={this.setDropzoneRef} addFile={this.loadFiles} showLoading={this.showLoading}>
+          <AdminDialog open={this.state.openAdminDialog} sendSystemInfo={this.sendSystemInfo} onClose={() => {
+            this.setOpenAdminDialog(false)
+          }} />
+          <WhisperUserDialog replyTo={this.state.replyTo} open={this.state.openWhisper} onClose={this.closeWhisper} />
+          <ImageOverlay open={this.state.openPreview} img={this.state.img} imgLoaded={this.state.imgLoaded}
+            onClose={this.imageOverlayClosed} />
+          <ChangeNameDialog {...this.state.changeUserNameProps} open={this.state.openChangeName} onClose={(userName, _id) => {
+            this.saveUsername(userName, _id)
+            this.setState({ openChangeName: false })
+          }} />
+          {/* <AttachMenu open={attachMenu} handleClose={this.handleClose} /> */}
+          <FirstVisitDialog open={this.state.openFirstVisit} sbContext={this.sbContext} messageCallback={this.recieveMessages} onClose={(username) => {
+            this.setState({ openFirstVisit: false })
+            this.connect(username)
+          }} roomId={this.state.roomId} />
+          <GiftedChat
+            messages={this.state.messages}
+            onSend={this.sendMessages}
+            // timeFormat='L LT'
+            user={this.sbContext.user}
+            inverted={false}
+            alwaysShowSend={true}
+            loadEarlier={this.props.sbContext.moreMessages}
+            isLoadingEarlier={this.props.sbContext.loadingMore}
+            onLoadEarlier={this.getOldMessages}
+            renderActions={(props) => {
+              return <RenderAttachmentIcon
+                {...props}
+                dzRef={this.state.dzRef}
+                openAttachMenu={this.openAttachMenu}
+                showLoading={this.showLoading} />
+            }}
+            //renderUsernameOnMessage={true}
+            // infiniteScroll={true}   // This is not supported for web yet
+            renderAvatar={RenderAvatar}
+            renderMessageImage={(props) => {
+              return <RenderImage
+                {...props}
+                openImageOverlay={this.openImageOverlay}
+                downloadImage={this.downloadImage}
+                controlMessages={this.state.controlMessages}
+                sendSystemMessage={this.sendSystemMessage}
+                notify={this.notify}
+                sbContext={this.sbContext} />
+            }}
+            renderMessageText={RenderMessage}
+            scrollToBottom={true}
+            showUserAvatar={true}
+            onPressAvatar={this.promptUsername}
+            onLongPressAvatar={(context) => {
+              return this.handleReply(context)
+            }}
+            renderChatFooter={() => {
+              return <RenderChatFooter removeInputFiles={this.removeInputFiles}
+                files={this.state.files}
+                setFiles={this.setFiles}
+                uploading={this.state.uploading}
+                loading={this.state.loading} />
+            }}
+            renderBubble={(props) => {
+              return <RenderBubble {...props} keys={{ ...this.props.sbContext.socket.keys, ...this.props.sbContext.userKey }}
+                socket={this.props.sbContext.socket}
+                SB={this.SB} />
+            }}
+            renderSend={RenderSend}
+            renderComposer={(props) => {
+              return <RenderComposer {...props}
+                onFocus={() => {
+                  this.setState({ typing: true })
+                }}
+                onBlur={() => {
+                  this.setState({ typing: false })
+                }}
+                setFiles={this.setFiles}
+                filesAttached={this.state.files.length > 0}
+                showLoading={this.showLoading} />
+            }}
+            onLongPress={() => false}
+            keyboardShouldPersistTaps='always'
+            renderTime={RenderTime}
+            parsePatterns={(linkStyle) => [
+              { type: 'phone', style: {}, onPress: undefined }
+            ]}
+          />
+        </DropZone>
       </SafeAreaView>
+
 
 
     )

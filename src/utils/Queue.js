@@ -1,10 +1,10 @@
 class Queue {
-    constructor() {
+    constructor(options) {
         this.elements = {};
         this.head = 0;
         this.tail = 0;
         this.inProcess = 0;
-        this.maxProcessing = 1;
+        this.maxProcessing = options?.maxProcessing ? options?.maxProcessing : 1;
     }
     enqueue(item) {
         this.elements[this.tail] = item;

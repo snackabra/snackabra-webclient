@@ -45,7 +45,7 @@ export async function getFileData(file, outputType) {
 // _b1: blob version (eg sbImage.blob)
 
 //MTG: this needs futher optimizations
-export async function _restrictPhoto(maxSize, _c, _b1, scale, canvas) {
+export async function _restrictPhoto(maxSize, _c, _b1, scale) {
   const t2 = new Date().getTime();
   const imageType = "image/jpeg";
   const qualityArgument = 0.92;
@@ -63,11 +63,11 @@ export async function _restrictPhoto(maxSize, _c, _b1, scale, canvas) {
 
   // while (_size > maxSize) {
   _old_c = _c;
-  // _c = scaleCanvas(_c, .95);
-  // _b1 = await new Promise((resolve) => {
-  //   // TODO: lint reports this as unsafe use of reference to _c
-  //   _c.toBlob(resolve, imageType, qualityArgument);
-  // });
+  _c = scaleCanvas(_c, .95);
+  _b1 = await new Promise((resolve) => {
+    // TODO: lint reports this as unsafe use of reference to _c
+    _c.toBlob(resolve, imageType, qualityArgument);
+  });
   _old_size = _size;
   _size = _b1.size;
   // workingDots();
@@ -80,19 +80,17 @@ export async function _restrictPhoto(maxSize, _c, _b1, scale, canvas) {
   let _ratio = (maxSize / _old_size) * scale; // overshoot a bit
   console.warn("scale is:")
   console.warn(scale);
-  // releaseCanvas(_c);
   console.log(`... stepping back up to W ${_old_c.width} x H ${_old_c.height} and will then try scale ${_ratio.toFixed(4)}`);
-  let _final_c = canvas;
+  let _final_c;
   const t4 = new Date().getTime();
   while (_b1.size >= maxSize) {
     // TODO: lint reports this as unsafe reference to _final_c
-    _final_c = scaleCanvas(_old_c, Math.sqrt(_ratio) * scale, _final_c); // always overshoot
+    _final_c = scaleCanvas(_old_c, Math.sqrt(_ratio) * scale); // always overshoot
     console.log(_final_c)
     _b1 = await new Promise((resolve) => {
       _final_c.toBlob(resolve, imageType, qualityArgument);
       console.log(`(generating blob of requested type ${imageType})`);
     }).catch(console.error)
-    releaseCanvas(_final_c);
     console.log(_b1)
     // workingDots();
     console.log(`... fine-tuning to W ${_final_c.width} x H ${_final_c.height} (size ${_b1.size})`);
@@ -100,8 +98,8 @@ export async function _restrictPhoto(maxSize, _c, _b1, scale, canvas) {
     const t5 = new Date().getTime();
     console.log(`... resulting _ratio is ${_ratio} ... total time here ${t5 - t4} milliseconds`);
     console.log(` ... we're within ${(Math.abs(_b1.size - maxSize) / maxSize)} of cap (${maxSize})`);
-    // _final_c.remove();
-    // _c.remove();
+    _final_c.remove();
+    _c.remove();
     if (_b1.size <= maxSize) {
       break;
     }
@@ -110,14 +108,7 @@ export async function _restrictPhoto(maxSize, _c, _b1, scale, canvas) {
   return _b1;
 }
 
-function releaseCanvas(canvas) {
-  canvas.width = 1;
-  canvas.height = 1;
-  const ctx = canvas.getContext('2d');
-  ctx && ctx.clearRect(0, 0, 1, 1);
-  canvas.remove()
-  console.warn("Canvase released")
-}
+
 
 export async function restrictPhoto(sbImage, maxSize, type) {
   console.log("################################################################");
@@ -160,7 +151,7 @@ export async function restrictPhoto(sbImage, maxSize, type) {
   console.log(`#### getting photo into a blob took ${t2 - t1} milliseconds`);
   // workingDots();
 
-  let _final_b1 = _restrictPhoto(maxSize, _c, _b1, scale, sbImage.canvas);
+  let _final_b1 = _restrictPhoto(maxSize, _c, _b1, scale);
 
   // workingDots();
   console.log(`... ok looks like we're good now ... final size is ${_b1.size} (which is ${((_b1.size * 100) / maxSize).toFixed(2)}% of cap)`);
@@ -170,29 +161,24 @@ export async function restrictPhoto(sbImage, maxSize, type) {
   return _final_b1;
 }
 
-export function scaleCanvas(canvas, scale, sCanvas) {
-
-  var start = new Date().getTime();
-  let scaledCanvas = sCanvas;
-  if (!scaledCanvas) {
-    console.warn('new canvas')
-    scaledCanvas = document.createElement('canvas');
-  }
-  scaledCanvas.width = canvas.width * scale;
-  scaledCanvas.height = canvas.height * scale;
-  // console.log(`#### scaledCanvas starting with W ${canvas.width} x H ${canvas.height}`);
-  const ctx = scaledCanvas.getContext('2d')
-  if (ctx) {
-    ctx.drawImage(canvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
+export function scaleCanvas(canvas, scale) {
+  try {
+    var start = new Date().getTime();
+    const scaledCanvas = document.createElement('canvas');
+    scaledCanvas.width = canvas.width * scale;
+    scaledCanvas.height = canvas.height * scale;
+    // console.log(`#### scaledCanvas starting with W ${canvas.width} x H ${canvas.height}`);
+    scaledCanvas
+      .getContext('2d')
+      .drawImage(canvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
     // console.log(`#### scaledCanvas actual W ${scaledCanvas.width} x H ${scaledCanvas.height}`);
     var end = new Date().getTime();
     // console.log(`#### scaleCanvas() took ${end - start} milliseconds`);
     console.log(`#### scaledCanvas scale ${scale} to target W ${scaledCanvas.width} x H ${scaledCanvas.height} took ${end - start} milliseconds`);
     return scaledCanvas;
-  } else {
-    return canvas;
+  } catch (e) {
+    throw new Error(e)
   }
-
 }
 
 
@@ -397,6 +383,23 @@ export class SBImage {
       console.warn(this.image.size)
       reader.readAsDataURL(this.image);
     });
+
+
+    // create a canvas and then wait for the correct size
+    this.canvas = new Promise((resolve) => {
+      this.aspectRatio.then((r) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = this.width;
+        canvas.height = this.height;
+        this.img.then((img) => {
+          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+          // this will return right away with correctly-sized canvas
+          resolve(canvas);
+        })
+
+      });
+    });
+
     // this requests some worker to load the file into a sharedarraybuffer
     this.imageSAB = doImageTask(['loadSB', image], false);
   }
@@ -501,7 +504,7 @@ export class SBImage {
         console.log("~~~~~~~~~~~~~~~~ got WxH", this.width, this.height);
         canvas.width = this.width;
         canvas.height = this.height;
-        this.canvas = canvas;
+
         this.imageSAB.then((imageSAB) => {
           try {
             console.log('After SAB Promise', OffscreenCanvas)
@@ -511,15 +514,13 @@ export class SBImage {
               // const canvas = document.createElement('canvas'); // test to give it from caller
               // var ctx = canvas.getContext('2d');
               // var imageData = ctx.createImageData(400, 400);
-              const toOffscreen = cloneCanvas(canvas);
-              const offscreen = toOffscreen.transferControlToOffscreen();
+              const offscreen = canvas.transferControlToOffscreen();
               // const ctx = offscreen.getContext('2d');
               // doImageTask(['testCanvas', imageData.data.buffer], [imageData.data.buffer]).then((m) => console.log(m));
               doImageTask(['testCanvas', offscreen, imageSAB], [offscreen]).then((m) => {
                 console.log("**************** Returned message:", m);
                 console.log("**************** offscreen:", canvas);
                 console.log("**************** offscreen:", offscreen);
-                releaseCanvas(toOffscreen)
                 resolve(canvas);
               });
             } else {
@@ -530,7 +531,7 @@ export class SBImage {
             console.log("**************** THIS feature only works with OffscreenCanvas");
             console.log("                 (TODO: make the code work as promise as fallback");
             console.log(e)
-            resolve(this.canvas);
+            resolve(canvas);
           }
         }).catch(console.error)
       });
@@ -539,22 +540,6 @@ export class SBImage {
 
 }
 
-function cloneCanvas(oldCanvas) {
-
-  //create a new canvas
-  var newCanvas = document.createElement('canvas');
-  var context = newCanvas.getContext('2d');
-
-  //set dimensions
-  newCanvas.width = oldCanvas.width;
-  newCanvas.height = oldCanvas.height;
-
-  //apply the old canvas to the new one
-  context.drawImage(oldCanvas, 0, 0);
-
-  //return the new canvas
-  return newCanvas;
-}
 
 // we need this so it can be packaged
 export class BlobWorker extends Worker {
@@ -608,8 +593,107 @@ function doImageTask(vars, transfer) {
     } catch (error) {
       console.error(`Failed to send task to worker ${next_worker}`);
       console.error(error);
-      instance.terminate()
       reject("failed");
     }
   });
 }
+
+
+// OLD CODE FOR REFERENCE 
+
+
+// async restrictPhoto(photo, maxSize, imageType, qualityArgument) {
+//   // imageType default should be 'image/jpeg'
+//   // qualityArgument should be 0.92 for jpeg and 0.8 for png (MDN default)
+//   maxSize = maxSize * 1024; // KB
+//   // console.log(`Target size is ${maxSize} bytes`);
+//   let _c = await this.readPhoto(photo);
+//   var _b1 = await new Promise((resolve) => {
+//     _c.toBlob(resolve, imageType, qualityArgument);
+//   });
+//   // workingDots();
+//   // console.log(`start canvas W ${_c.width} x H ${_c.height}`)
+//   let _size = _b1.size;
+//   if (_size <= maxSize) {
+//     // console.log(`Starting size ${_size} is fine`);
+//     return _b1;
+//   }
+//   // console.log(`Starting size ${_size} too large, start by reducing image size`);
+//   // compression wasn't enough, so let's resize until we're getting close
+//   let _old_size;
+//   let _old_c;
+//   while (_size > maxSize) {
+//     _old_c = _c;
+//     _c = this.scaleCanvas(_c, .5);
+//     _b1 = await new Promise((resolve) => {
+//       _c.toBlob(resolve, imageType, qualityArgument);
+//     });
+//     _old_size = _size;
+//     _size = _b1.size;
+//     // workingDots();
+//     // console.log(`... reduced to W ${_c.width} x H ${_c.height} (to size ${_size})`);
+//   }
+
+//   // we assume that within this width interval, storage is roughly prop to area,
+//   // with a little tuning downards
+//   let _ratio = maxSize / _old_size;
+//   let _maxIteration = 12;  // to be safe
+//   // console.log(`... stepping back up to W ${_old_c.width} x H ${_old_c.height} and will then try scale ${_ratio.toFixed(4)}`);
+//   let _final_c;
+//   do {
+//     _final_c = this.scaleCanvas(_old_c, Math.sqrt(_ratio) * 0.99);  // we're targeting within 1%
+//     _b1 = await new Promise((resolve) => {
+//       _final_c.toBlob(resolve, imageType, qualityArgument);
+//       // console.log(`(generating blob of requested type ${imageType})`);
+//     });
+//     // workingDots();
+//     // console.log(`... fine-tuning to W ${_final_c.width} x H ${_final_c.height} (size ${_b1.size})`);
+//     _ratio *= (maxSize / _b1.size);
+//   } while (((_b1.size > maxSize) || ((Math.abs(_b1.size - maxSize) / maxSize) > 0.02)) && (--_maxIteration > 0));  // it's ok within 2%
+
+//   // workingDots();
+//   // console.log(`... ok looks like we're good now ... final size is ${_b1.size} (which is ${((_b1.size * 100) / maxSize).toFixed(2)}% of cap)`);
+
+//   // document.getElementById('the-original-image').width = _final_c.width;  // a bit of a hack
+//   return _b1;
+// }
+
+
+// async readPhoto(photo) {
+//   const canvas = document.createElement('canvas');
+//   const img = document.createElement('img');
+
+//   // create img element from File object
+//   img.src = await new Promise((resolve) => {
+//     const reader = new FileReader();
+//     reader.onload = (e) => resolve(e.target.result);
+//     reader.readAsDataURL(photo);
+//   });
+//   await new Promise((resolve) => {
+//     img.onload = resolve;
+//   });
+
+//   // console.log("img object");
+//   // console.log(img);
+//   // console.log("canvas object");
+//   // console.log(canvas);
+
+//   // draw image in canvas element
+//   canvas.width = img.width;
+//   canvas.height = img.height;
+//   canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+//   return canvas;
+// };
+
+
+// scaleCanvas(canvas, scale) {
+//   const scaledCanvas = document.createElement('canvas');
+//   scaledCanvas.width = canvas.width * scale;
+//   scaledCanvas.height = canvas.height * scale;
+//   // console.log(`#### scaledCanvas target W ${scaledCanvas.width} x H ${scaledCanvas.height}`);
+//   scaledCanvas
+//     .getContext('2d')
+//     .drawImage(canvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
+//   // console.log(`#### scaledCanvas actual W ${scaledCanvas.width} x H ${scaledCanvas.height}`);
+//   return scaledCanvas;
+// };

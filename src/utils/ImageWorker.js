@@ -12,7 +12,7 @@
 // import { SBImage, _restrictPhoto } from '../utils/ImageProcessor.js';
 
 export default(i) => {  // eslint-disable-line
-      const level = 'production'
+      const level = 'development'
       if(level === 'development'){
       }
       if(level === 'stage'){
