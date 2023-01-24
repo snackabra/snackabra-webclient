@@ -422,7 +422,7 @@ class ChatRoom extends React.Component {
   }
 
   setFiles = (files) => {
-    this.setState({ files: files })
+    this.setState({ files: [...files, ...this.state.files] })
   }
 
   setImageFiles = (files) => {
@@ -478,8 +478,8 @@ class ChatRoom extends React.Component {
             this.connect(username)
           }} roomId={this.state.roomId} />
           <GiftedChat
-          wrapInSafeArea={false}
-          className={'sb_chat_container'}
+            wrapInSafeArea={false}
+            className={'sb_chat_container'}
             style={{
               width: '100%'
             }}

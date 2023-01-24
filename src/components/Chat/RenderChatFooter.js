@@ -3,7 +3,7 @@ import { Grid, CircularProgress, Paper, IconButton, LinearProgress, ImageList, I
 import CloseIcon from '@mui/icons-material/Close';
 
 const RenderChatFooter = (props) => {
-
+  const incomingFiles = props.files
   const [files, setFiles] = React.useState([])
   const [loading, setLoading] = React.useState(props.loading)
   const [containerHeight, setContainerHeight] = React.useState(50)
@@ -31,11 +31,11 @@ const RenderChatFooter = (props) => {
 
   React.useEffect(() => {
     const getImageUrls = () => {
-      setFiles(props.files)
+      setFiles(incomingFiles)
       let filesPromises = [];
 
-      for (let x in props.files) {
-        let file = props.files[x]
+      for (let x in incomingFiles) {
+        let file = incomingFiles[x]
         // setHeight(file)
         filesPromises.push(file.processThumbnail())
         handleResize()
@@ -49,13 +49,13 @@ const RenderChatFooter = (props) => {
         // props.setFiles(files)
       })
     }
-    if (props.files.length > 0 && props.files.length !== files.length) {
+    if (incomingFiles.length > 0 && incomingFiles.length !== files.length) {
       getImageUrls()
     } else {
-      setFiles(props.files)
+      setFiles(incomingFiles)
     }
 
-  }, [props.files])
+  }, [incomingFiles])
 
   React.useEffect(() => {
     setLoading(props.loading)
@@ -121,7 +121,7 @@ const RenderChatFooter = (props) => {
           bottom: 0,
           width: '100%'
         }}>
-          <ImageList sx={{ width: '100%',  height: '30vh',overflow: 'scroll',}} cols={columns} rowHeight={164}>
+          <ImageList sx={{ width: '100%',  height: '30vh',overflowY: 'auto',}} cols={columns} rowHeight={164}>
             {files.map((file, index) => {
               if (file.url || file.thumbnail) {
                 return (
