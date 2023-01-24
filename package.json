@@ -53,6 +53,7 @@
     "react-native-web": "0.18.10",
     "react-router-dom": "^6.3.0",
     "react-scripts": "^5.0.1",
+    "react-swipeable-views": "^0.14.0",
     "snackabra": "https://github.com/384co/snackabra-jslib.git#development",
     "styled-components": "^5.3.5",
     "workbox-core": "^6.5.3",

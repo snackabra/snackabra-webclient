@@ -73,7 +73,7 @@ const AdminDialog = observer((props) => {
       alignItems="flex-start">
       <Grid item xs={12}>
         <TextField
-        id="sb-motd"
+          id="sb-motd"
           multiline
           placeholder={'MOTD'}
           rows={4}
@@ -86,7 +86,7 @@ const AdminDialog = observer((props) => {
         />
         <StyledButton variant={"contained"} onClick={() => {
           sbContext.setMOTD(motd)
-          if(motd !== ''){
+          if (motd !== '') {
             sendMotdMessage()
           }
           props.onClose()
@@ -96,7 +96,7 @@ const AdminDialog = observer((props) => {
       </Grid>
       <Grid item xs={12}>
         <TextField
-        id="sb-rrom-capacity"
+          id="sb-rrom-capacity"
           placeholder={'Room Capacity'}
           inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
           value={roomCapacity}
@@ -112,7 +112,7 @@ const AdminDialog = observer((props) => {
         <Typography variant={"button"}>Save Capacity</Typography>
       </StyledButton>
 
-{/* 
+      {/* 
       <StyledButton variant={"contained"} onClick={openConfirm} sx={{ pb: 1, pt: 1 }}>
         <Typography variant={"button"}>Restrict Room</Typography>
       </StyledButton> */}
