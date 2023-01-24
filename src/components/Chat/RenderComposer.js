@@ -3,6 +3,8 @@ import TextField from '@mui/material/TextField';
 import { SBImage } from "../../utils/ImageProcessor";
 import { SnackabraContext } from "mobx-snackabra-store";
 import { observer } from "mobx-react"
+import { isDataURL } from '../../utils/misc';
+import { base64ToArrayBuffer } from "snackabra"
 
 const RenderComposer = observer((props) => {
   const { filesAttached, onTextChanged, inputErrored } = props
@@ -17,16 +19,19 @@ const RenderComposer = observer((props) => {
     sendButton.addEventListener('click', handleSend)
   }, [])
 
-  const validateText = React.useCallback((text) => {
+  const validateText = React.useCallback(async (text) => {
     const enc = new TextEncoder()
     const ab = enc.encode(text)
-    console.log(ab)
     const c = new Blob([ab])
-    console.log(c)
     if (c.size <= 1024 * 64) {
       setError(false)
       inputErrored(false)
     } else {
+      const n = c.slice(0, 1024 * 64)
+      const dec = new TextDecoder()
+      const ab = await n.arrayBuffer();
+      const t = dec.decode(ab);
+      setText(t)
       setError(true)
       inputErrored(true)
     }
@@ -84,13 +89,23 @@ const RenderComposer = observer((props) => {
   }
 
   const pasteEvent = async (e) => {
-    console.log(e.nativeEvent.clipboardData.files)
+    // console.log(e.nativeEvent.clipboardData.getData('text/plain'))
+    setError(true)
+    let _files = []
     const files = Object.assign(e.nativeEvent.clipboardData.files)
     console.log(files)
-    if(files.length > 0){
+    if (files.length > 0) {
       setText('')
     }
-    let _files = []
+    const text = e.nativeEvent.clipboardData.getData('text/plain');
+    if (isDataURL(text) && text.match(/data:image/)) {
+      setText('')
+      const base64 = e.nativeEvent.clipboardData.getData('text/plain').split(/data:image\/[a-zA-Z]{3,4};base64,/)[1]
+      const ab = base64ToArrayBuffer(base64)
+      _files.push(await getSbImage(new Blob([ab]), props, sbContext))
+    }
+
+
     for (let x in files) {
       if (files[x] instanceof File) {
         if (files[x].type.match(/^image/)) {
@@ -98,7 +113,16 @@ const RenderComposer = observer((props) => {
         }
       }
     }
-    props.setFiles(_files)
+    if (_files.length > 0) {
+      props.setFiles(_files)
+      setText('')
+      // props.onSend({ text: '' }, true)
+      setTimeout(()=>{
+        props.onTextChanged('')
+        setError(false)
+      }, 100)
+      
+    }
   }
 
   return (
@@ -122,7 +146,9 @@ const RenderComposer = observer((props) => {
       }}
       style={{
         flexGrow: 1,
-        padding: 8
+        padding: 8,
+        maxHeight: '25vh',
+        overflowY: 'auto'
       }}
     />
   )
