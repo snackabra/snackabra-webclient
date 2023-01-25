@@ -165,7 +165,7 @@ const ImportRoomKeys = observer((props) => {
 
   }
 
-  const saveConflicts = async () => {
+  const saveConflicts = () => {
     console.log(toSave)
     console.log(toMerge)
     const saving = toSave;
@@ -174,13 +174,20 @@ const ImportRoomKeys = observer((props) => {
       saving.roomData = Object.assign(saving.roomData, toMerge[x][selected[x].selected].roomData)
       saving.roomMetadata = Object.assign(saving.roomMetadata, toMerge[x][selected[x].selected].roomMetadata)
     }
-    await sbContext.importKeys(saving)
-    Notifications.setMessage('Key file imported!');
-    Notifications.setSeverity('success');
-    Notifications.setOpen(true)
-    if (typeof props.onDone === 'function') {
-      props.onDone()
-    }
+    sbContext.importKeys(saving).then(()=>{
+      Notifications.setMessage('Key file imported!');
+      Notifications.setSeverity('success');
+      Notifications.setOpen(true)
+      if (typeof props.onDone === 'function') {
+        props.onDone()
+      }
+    }).catch((e)=>{
+      console.error(e)
+      Notifications.setMessage(e.message);
+      Notifications.setSeverity('error');
+      Notifications.setOpen(true)
+    })
+
   }
 
   console.log(toMerge)
