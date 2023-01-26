@@ -28,7 +28,7 @@ export default function ResponsiveDialog(props) {
   return (
     <div>
       <Dialog
-        fullScreen={fullScreen}
+        fullScreen={fullScreen || props.fullScreen}
         open={open}
         onClose={handleClose}
       >

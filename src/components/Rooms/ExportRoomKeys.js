@@ -15,29 +15,31 @@ const ExportRoomKeys = observer((props) => {
   const [data, setData] = useState(JSON.stringify({}));
 
   React.useEffect(() => {
+    const parseData = async () => {
+      const metadata = { roomData: {}, contacts: {}, roomMetadata: {} }
+      const rooms = await sbContext.getAllChannels()
+      console.log(rooms)
+      for (let x in rooms) {
+        let roomId = rooms[x].id
+        metadata.roomData[roomId] = {
+          key: rooms[roomId].key,
+          lastSeenMessage: rooms[roomId].lastSeenMessage
+        }
+        metadata.contacts = Object.assign(metadata.contacts, rooms[roomId].contacts)
+        metadata.roomMetadata[roomId] = {
+          name: rooms[roomId].name,
+          lastMessageTime: rooms[roomId].lastMessageTime,
+          unread: false
+        }
+      }
+      metadata.pem = false;
+      console.log(metadata)
+      setData(JSON.stringify(metadata, null, 2))
+    }
     parseData()
   }, [])
 
-  const parseData = async () => {
-    const metadata = { roomData: {}, contacts: {}, roomMetadata: {} }
-    const rooms = await sbContext.getAllChannels()
-    for (let x in rooms) {
-      let roomId = rooms[x].id
-      metadata.roomData[roomId] = {
-        key: rooms[roomId].key,
-        lastSeenMessage: rooms[roomId].lastSeenMessage
-      }
-      metadata.contacts = Object.assign(metadata.contacts, rooms[roomId].contacts)
-      metadata.roomMetadata[roomId] = {
-        name: rooms[roomId].name,
-        lastMessageTime: rooms[roomId].lastMessageTime,
-        unread: false
-      }
-    }
-    metadata.pem = false;
-    console.log(metadata)
-    setData(JSON.stringify(metadata, null, 2))
-  }
+
 
   const downloadKeys = () => {
     downloadFile(data, fileName + ".txt");
@@ -66,7 +68,7 @@ const ExportRoomKeys = observer((props) => {
     Notifications.setMessage('Keys copied to clipboard!');
     Notifications.setSeverity('success');
     Notifications.setOpen(true)
-    if(typeof props.onDone === 'function'){
+    if (typeof props.onDone === 'function') {
       props.onDone()
     }
 
@@ -79,7 +81,7 @@ const ExportRoomKeys = observer((props) => {
       justifyContent="flex-start"
       alignItems="flex-start">
 
-      {Object.keys(sbContext.rooms).length > 0
+      {data
         ? <Grid spacing={2}
           container
           direction="row"
@@ -127,13 +129,13 @@ const ExportRoomKeys = observer((props) => {
               rows={10}
               value={data}
               endAdornment={
-                <InputAdornment 
-                style={{
-                  position: 'absolute',
-                  right: 25,
-                  top: 35
-                }}
-                 position="end">
+                <InputAdornment
+                  style={{
+                    position: 'absolute',
+                    right: 25,
+                    top: 35
+                  }}
+                  position="end">
                   <IconButton
                     aria-label="copy key text"
                     onClick={copy}

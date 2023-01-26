@@ -63,7 +63,7 @@ export default function DataOperationsDialog(props) {
   };
 
   return (
-    <ResponsiveDialog title={'Data Operations'} open={open} onClose={props.onClose} showActions>
+    <ResponsiveDialog title={'Data Management'} open={open} onClose={props.onClose} showActions fullScreen>
       <Tabs
         value={value}
         onChange={handleChange}
@@ -73,8 +73,8 @@ export default function DataOperationsDialog(props) {
         aria-label="full width tabs example"
       >
         <Tab label="Keys" {...a11yProps(0)} />
-        <Tab label="Rooms" {...a11yProps(1)} />
-        <Tab label="Storage" {...a11yProps(2)} />
+        <Tab label="Downloads" {...a11yProps(1)} />
+        {/* <Tab label="Uploads" {...a11yProps(2)} /> */}
       </Tabs>
       <SwipeableViews
         axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
@@ -93,12 +93,12 @@ export default function DataOperationsDialog(props) {
           }} />
         </TabPanel>
         <TabPanel value={value} index={1} dir={theme.direction}>
-          <Typography variant={'h6'} gutterBottom>Download Room Data</Typography>
+          <Typography variant={'h6'} gutterBottom>Download Data</Typography>
           <DownloadRoomData />
         </TabPanel>
-        <TabPanel value={value} index={2} dir={theme.direction}>
-          <Typography variant={'h6'} gutterBottom>Storage</Typography>
-        </TabPanel>
+        {/* <TabPanel value={value} index={2} dir={theme.direction}>
+          <Typography variant={'h6'} gutterBottom>Upload Data</Typography>
+        </TabPanel> */}
       </SwipeableViews>
     </ResponsiveDialog>
   );

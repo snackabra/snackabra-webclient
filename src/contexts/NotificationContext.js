@@ -12,7 +12,28 @@ export const NotificationProvider = ({ children }) => {
   const [action, setAction] = React.useState("");
   const [autoHideDuration, setAutoHideDuration] = React.useState(6000);
 
+  const error = (message) =>{
+    setSeverity("error");
+    setMessage(message)
+    setOpen(true)
+  }
+
+  const info = (message) =>{
+    setSeverity("info");
+    setMessage(message)
+    setOpen(true)
+  }
+
+  const warn = (message) =>{
+    setSeverity("warning");
+    setMessage(message)
+    setOpen(true)
+  }
+
   return (<NotificationContext.Provider value={{
+    error,
+    warn,
+    info,
     open,
     setOpen,
     severity,
