@@ -3,21 +3,25 @@
 import * as React from 'react';
 import { GiftedChat } from 'react-native-gifted-chat';
 import RenderBubble from "./RenderBubble";
+import RenderAvatar from "./RenderAvatar";
 import RenderAttachmentIcon from "./RenderAttachmentIcon";
 import ImageOverlay from "../Modals/ImageOverlay";
 import RenderImage from "./RenderImage";
 import ChangeNameDialog from "../Modals/ChangeNameDialog";
-import MotdDialog from "../Modals/MotdDialog";
 import RenderChatFooter from "./RenderChatFooter";
+import RenderMessage from "./RenderMessage";
 import RenderTime from "./RenderTime";
-import { View } from "react-native";
-// import AttachMenu from "./AttachMenu";
+import { Dimensions } from "react-native";
+import AdminDialog from "../Modals/AdminDialog";
 import FirstVisitDialog from "../Modals/FirstVisitDialog";
 import RenderSend from "./RenderSend";
 import WhisperUserDialog from "../Modals/WhisperUserDialog";
 import RenderComposer from "./RenderComposer";
+import DropZone from "../DropZone";
 import Queue from "../../utils/Queue";
 import { observer } from "mobx-react"
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { isMobile } from 'react-device-detect';
 
 const q = new Queue()
 const _r = new Queue()
@@ -27,6 +31,7 @@ const SB = require('snackabra')
 class ChatRoom extends React.Component {
   sending = {}
   state = {
+    openAdminDialog: false,
     openWhisper: false,
     openPreview: false,
     openChangeName: false,
@@ -46,14 +51,16 @@ class ChatRoom extends React.Component {
     user: {},
     height: 0,
     visibility: 'visible',
-    replyTo: null
+    replyTo: null,
+    dzRef: null
   }
   sbContext = this.props.sbContext
 
   componentDidMount() {
 
     const handleResize = (e) => {
-      this.setState({ height: window.innerHeight })
+      const { height } = Dimensions.get('window')
+      this.setState({ height: height })
     }
 
     window.addEventListener('resize', handleResize)
@@ -83,6 +90,13 @@ class ChatRoom extends React.Component {
     this.processQueue()
     this.processSQueue()
   }
+
+  componentDidUpdate(prevProps) {
+    // Typical usage (don't forget to compare props):
+    if (this.props.openAdminDialog !== prevProps.openAdminDialog) {
+      this.setOpenAdminDialog(this.props.openAdminDialog);
+    }
+  }
   /**
    * Queue helps with order outgoing messages
    * when sending many images, some were getting lost
@@ -100,11 +114,11 @@ class ChatRoom extends React.Component {
     }, 25)
   }
 
-    /**
-   * Queue helps ensure each message gets a unique ID for Images
-   * when sending multiple images gifted chat sees that a single message 
-   * we need to add on to the message id to render the chat container properly
-   */
+  /**
+ * Queue helps ensure each message gets a unique ID for Images
+ * when sending multiple images gifted chat sees that a single message 
+ * we need to add on to the message id to render the chat container properly
+ */
   processSQueue = () => {
     setInterval(() => {
       while (!_r.isEmpty && !_r.isMaxed) {
@@ -178,7 +192,8 @@ class ChatRoom extends React.Component {
     if (msg) {
       if (!msg.control) {
         const messages = this.state.messages.reduce((acc, curr) => {
-          if (!curr._id.match(/^sending/)) {
+          const msg_id = curr._id.toString()
+          if (!msg_id.match(/^sending/)) {
             acc.push(curr);
           } else {
             delete this.sending[curr._id]
@@ -273,6 +288,7 @@ class ChatRoom extends React.Component {
           let sbm = new SB.SBMessage(this.sbContext.socket)
           // populate
           sbm.contents.image = _files[x].thumbnail
+          console.log(sbImage.objectMetadata)
           const imageMetaData = {
             imageId: sbImage.objectMetadata.full.id,
             imageKey: sbImage.objectMetadata.full.key,
@@ -295,13 +311,13 @@ class ChatRoom extends React.Component {
               queueMicrotask(() => {
                 storePromises.fullStorePromise.then((verificationPromise) => {
                   console.log(verificationPromise)
-                  verificationPromise.verification.then((verification) => {
+                  verificationPromise.verification.then((_f_verification) => {
                     console.log('Full image uploaded')
-                    let controlMessage = new SB.SBMessage(this.sbContext.socket);
-                    controlMessage.contents.control = true;
-                    controlMessage.contents.verificationToken = verification;
-                    controlMessage.contents.id = imageMetaData.imageId;
-                    q.enqueue(controlMessage)
+                    let _f_controlMessage = new SB.SBMessage(this.sbContext.socket);
+                    _f_controlMessage.contents.control = true;
+                    _f_controlMessage.contents.verificationToken = _f_verification;
+                    _f_controlMessage.contents.id = imageMetaData.imageId;
+                    q.enqueue(_f_controlMessage)
                   });
                 });
               })
@@ -406,7 +422,7 @@ class ChatRoom extends React.Component {
   }
 
   setFiles = (files) => {
-    this.setState({ files: files })
+    this.setState({ files: [...files, ...this.state.files] })
   }
 
   setImageFiles = (files) => {
@@ -416,83 +432,132 @@ class ChatRoom extends React.Component {
   closeWhisper = () => {
     this.setState({ openWhisper: false })
   }
+
+  setOpenAdminDialog = (opened) => {
+    this.setState({ openAdminDialog: opened })
+  }
+
+  setDropzoneRef = (ref) => {
+
+    if (ref && !this.state.dzRef) {
+      console.log(ref)
+      this.setState({ dzRef: ref })
+    }
+
+  }
+
+  inputErrored = (errored) => {
+    this.setState({ inputError: errored })
+  }
+
   render() {
+    // console.log(this.state.dzRef)
     return (
 
-      <View style={{
+      <SafeAreaView id={'sb_chat_area'} style={{
         flexGrow: 1,
         flexBasis: 'fit-content',
-        height: this.state.height - 48
+        height: isMobile && !this.state.typing ? this.state.height - 36 : this.state.height,
+        width: '100%',
+        paddingTop: 48
       }}>
-        <WhisperUserDialog replyTo={this.state.replyTo} open={this.state.openWhisper} onClose={this.closeWhisper} />
-        <ImageOverlay open={this.state.openPreview} img={this.state.img} imgLoaded={this.state.imgLoaded}
-          onClose={this.imageOverlayClosed} />
-        <ChangeNameDialog {...this.state.changeUserNameProps} open={this.state.openChangeName} onClose={(userName, _id) => {
-          this.saveUsername(userName, _id)
-          this.setState({ openChangeName: false })
-        }} />
-        <MotdDialog open={this.state.openMotd} roomName={this.props.roomName} />
-        {/* <AttachMenu open={attachMenu} handleClose={this.handleClose} /> */}
-        <FirstVisitDialog open={this.state.openFirstVisit} sbContext={this.sbContext} messageCallback={this.recieveMessages} onClose={(username) => {
-          this.setState({ openFirstVisit: false })
-          this.connect(username)
-        }} roomId={this.state.roomId} />
-        <GiftedChat
-          messages={this.state.messages}
-          onSend={this.sendMessages}
-          // timeFormat='L LT'
-          user={this.sbContext.user}
-          inverted={false}
-          alwaysShowSend={true}
-          loadEarlier={this.props.sbContext.moreMessages}
-          isLoadingEarlier={this.props.sbContext.loadingMore}
-          onLoadEarlier={this.getOldMessages}
-          renderActions={(props) => {
-            return <RenderAttachmentIcon
-              {...props}
-              addFile={this.loadFiles}
-              openAttachMenu={this.openAttachMenu}
-              showLoading={this.showLoading} />
-          }}
-          //renderUsernameOnMessage={true}
-          // infiniteScroll={true}   // This is not supported for web yet
-          renderMessageImage={(props) => {
-            return <RenderImage
-              {...props}
-              openImageOverlay={this.openImageOverlay}
-              downloadImage={this.downloadImage}
-              controlMessages={this.state.controlMessages}
-              sendSystemMessage={this.sendSystemMessage}
-              sbContext={this.sbContext} />
-          }}
-          // renderMessageText={RenderMessageContainer}
-          scrollToBottom={true}
-          showUserAvatar={true}
-          onPressAvatar={this.promptUsername}
-          onLongPressAvatar={(context) => {
-            return this.handleReply(context)
-          }}
-          renderChatFooter={() => {
-            return <RenderChatFooter removeInputFiles={this.removeInputFiles}
-              files={this.state.files}
-              setFiles={this.setFiles}
-              uploading={this.state.uploading}
-              loading={this.state.loading} />
-          }}
-          renderBubble={(props) => {
-            return <RenderBubble {...props} keys={{ ...this.props.sbContext.socket.keys, ...this.props.sbContext.userKey }}
-              socket={this.props.sbContext.socket}
-              SB={this.SB} />
-          }}
-          renderSend={RenderSend}
-          renderComposer={(props) => {
-            return <RenderComposer {...props} setFiles={this.setFiles} filesAttached={this.state.files.length > 0} showLoading={this.showLoading} />
-          }}
-          onLongPress={() => false}
-          renderTime={RenderTime}
+        <DropZone notify={this.notify} dzRef={this.setDropzoneRef} addFile={this.loadFiles} showLoading={this.showLoading}>
+          <AdminDialog open={this.state.openAdminDialog} sendSystemInfo={this.sendSystemInfo} onClose={() => {
+            this.setOpenAdminDialog(false)
+          }} />
+          <WhisperUserDialog replyTo={this.state.replyTo} open={this.state.openWhisper} onClose={this.closeWhisper} />
+          <ImageOverlay open={this.state.openPreview} img={this.state.img} imgLoaded={this.state.imgLoaded}
+            onClose={this.imageOverlayClosed} />
+          <ChangeNameDialog {...this.state.changeUserNameProps} open={this.state.openChangeName} onClose={(userName, _id) => {
+            this.saveUsername(userName, _id)
+            this.setState({ openChangeName: false })
+          }} />
+          {/* <AttachMenu open={attachMenu} handleClose={this.handleClose} /> */}
+          <FirstVisitDialog open={this.state.openFirstVisit} sbContext={this.sbContext} messageCallback={this.recieveMessages} onClose={(username) => {
+            this.setState({ openFirstVisit: false })
+            this.connect(username)
+          }} roomId={this.state.roomId} />
+          <GiftedChat
+            wrapInSafeArea={false}
+            className={'sb_chat_container'}
+            style={{
+              width: '100%'
+            }}
+            messages={this.state.messages}
+            onSend={this.sendMessages}
+            // timeFormat='L LT'
+            user={this.sbContext.user}
+            inverted={false}
+            alwaysShowSend={true}
+            loadEarlier={this.props.sbContext.moreMessages}
+            isLoadingEarlier={this.props.sbContext.loadingMore}
+            onLoadEarlier={this.getOldMessages}
+            renderActions={(props) => {
+              return <RenderAttachmentIcon
+                {...props}
+                dzRef={this.state.dzRef}
+                openAttachMenu={this.openAttachMenu}
+                showLoading={this.showLoading} />
+            }}
+            //renderUsernameOnMessage={true}
+            // infiniteScroll={true}   // This is not supported for web yet
+            renderAvatar={RenderAvatar}
+            renderMessageImage={(props) => {
+              return <RenderImage
+                {...props}
+                openImageOverlay={this.openImageOverlay}
+                downloadImage={this.downloadImage}
+                controlMessages={this.state.controlMessages}
+                sendSystemMessage={this.sendSystemMessage}
+                notify={this.notify}
+                sbContext={this.sbContext} />
+            }}
+            renderMessageText={RenderMessage}
+            scrollToBottom={true}
+            showUserAvatar={true}
+            onPressAvatar={this.promptUsername}
+            onLongPressAvatar={(context) => {
+              return this.handleReply(context)
+            }}
+            renderChatFooter={() => {
+              return <RenderChatFooter removeInputFiles={this.removeInputFiles}
+                files={this.state.files}
+                setFiles={this.setFiles}
+                uploading={this.state.uploading}
+                loading={this.state.loading} />
+            }}
+            renderBubble={(props) => {
+              return <RenderBubble {...props} keys={{ ...this.props.sbContext.socket.keys, ...this.props.sbContext.userKey }}
+                socket={this.props.sbContext.socket}
+                SB={this.SB} />
+            }}
+            renderSend={(props) => {
+              return <RenderSend {...props} inputError={this.state.inputError} />
+            }}
+            renderComposer={(props) => {
+              return <RenderComposer {...props}
+                inputErrored={this.inputErrored}
+                onFocus={() => {
+                  this.setState({ typing: true })
+                }}
+                onBlur={() => {
+                  this.setState({ typing: false })
+                }}
+                setFiles={this.setFiles}
+                filesAttached={this.state.files.length > 0}
+                showLoading={this.showLoading} />
+            }}
+            onLongPress={() => false}
+            keyboardShouldPersistTaps='always'
+            renderTime={RenderTime}
+            parsePatterns={(linkStyle) => [
+              { type: 'phone', style: {}, onPress: undefined }
+            ]}
+          />
+        </DropZone>
+      </SafeAreaView>
 
-        />
-      </View>
+
 
     )
   }

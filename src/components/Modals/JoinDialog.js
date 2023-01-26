@@ -2,11 +2,13 @@ import * as React from "react"
 import ResponsiveDialog from "../ResponsiveDialog";
 import { Grid, TextField, Typography } from "@mui/material";
 import { StyledButton } from "../../styles/Buttons";
-import { useState } from "react";
+import NotificationContext from "../../contexts/NotificationContext";
 
 const JoinDialog = (props) => {
-  const [open, setOpen] = useState(props.open);
-  const [roomId, setRoomId] = useState("");
+  const Notifications = React.useContext(NotificationContext);
+  const [open, setOpen] = React.useState(props.open);
+  const [roomId, setRoomId] = React.useState("");
+  const [error, setErrored] = React.useState(false);
 
   React.useEffect(() => {
     setOpen(props.open)
@@ -14,14 +16,48 @@ const JoinDialog = (props) => {
 
   const updateRoomId = (e) => {
     console.log(e.target.value)
-    setRoomId(e.target.value)
+    setRoomId(e.target.value.trim())
   }
 
+  const errorNotify = (message) => {
+    Notifications.setMessage(message);
+    Notifications.setSeverity('error');
+    Notifications.setOpen(true)
+    setErrored(true)
+  }
+
+
   const connect = () => {
-    console.log(window.location.origin + "/" + roomId)
-    window.location.replace(window.location.origin + "/" + roomId)
-    setRoomId("");
-    props.onClose()
+
+    if (roomId.match(/^http|^https/)) {
+      const uriParts = roomId.split('/')
+      const pathname = uriParts[uriParts.length - 1]
+      const domain = roomId.match(/([\w\d]+\..+|localhost:3000)\//)
+      const origin = window.location.origin.match(/([\w\d]+\..+|localhost:3000)/)
+      console.log(domain, origin)
+      if (domain[1] === origin[1]) {
+        if (pathname.length === 64) {
+          window.location.replace(roomId)
+          setRoomId("");
+          props.onClose()
+        } else {
+          errorNotify('The room id provided is not the correct format.')
+        }
+
+      } else {
+        errorNotify('Invalid URL for connecting to a room id.')
+      }
+
+    } else {
+      console.log(window.location.origin + "/" + roomId)
+      if (roomId.length === 64) {
+        window.location.replace(window.location.origin + "/" + roomId)
+        setRoomId("");
+        props.onClose()
+      } else {
+        errorNotify('The room id provided is not the correct format.')
+      }
+    }
   }
 
   const onClose = () => {
@@ -39,16 +75,22 @@ const JoinDialog = (props) => {
         alignItems="flex-start">
         <Grid item xs={12}>
           <Typography variant={'body1'}>
-            Enter the room ID you would like to connect to.
+            Enter the room ID or URL you would like to connect to.
           </Typography>
         </Grid>
         <Grid item xs={12} sx={{ pb: 2, pt: 2 }}>
           <TextField
             id="sb-room-id"
-            placeholder="Room ID"
+            error={error}
+            placeholder="Room ID or URL"
             fullWidth
             onChange={updateRoomId}
             value={roomId}
+            onKeyUp={(e) => {
+              if (e.keyCode === 13) {
+                connect()
+              }
+            }}
           />
         </Grid>
       </Grid>

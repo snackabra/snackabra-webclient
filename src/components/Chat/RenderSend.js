@@ -11,9 +11,9 @@ function RenderSend(props) {
   }
 
   return (
-    <IconButton onClick={handleSend} component="div" id={'send-button'}
-                aria-label="attach" size="large">
-      <SendIcon color={'primary'} />
+    <IconButton disabled={props.inputError} onClick={handleSend} component="div" id={'send-button'}
+      aria-label="attach" size="large">
+      <SendIcon color={props.inputError ? 'disabled' : 'primary'} />
     </IconButton>
   )
 }

@@ -18,7 +18,8 @@ import { SnackabraContext } from "mobx-snackabra-store";
 
 const CreateRoom = observer((props) => {
   const sbContext = React.useContext(SnackabraContext);
-  const Notifications = useContext(NotificationContext)
+  const Notifications = useContext(NotificationContext);
+  const isFirefox = typeof InstallTrigger !== 'undefined';
   const [secret, setSecret] = useState('');
   const [roomId, setRoomId] = useState('');
   const [creating, setCreating] = useState(false);
@@ -26,9 +27,9 @@ const CreateRoom = observer((props) => {
   const [showPassword, setShowPassword] = useState(false);
   const [errored, setError] = useState(false);
 
-  React.useEffect(()=>{
+  React.useEffect(() => {
     document.getElementById('sb-wc-server-secret').focus()
-  },[])
+  }, [])
 
   const success = (roomId) => {
     if (typeof props?.onClose === 'function') {
@@ -98,10 +99,10 @@ const CreateRoom = observer((props) => {
           <OutlinedInput
             placeholder={'Server Secret'}
             id="sb-wc-server-secret"
-            type={showPassword ? 'text' : 'password'}
+            type={!isFirefox ? 'text' : showPassword ? 'text' : 'password'}
             value={secret}
             error={errored}
-            inputProps={{ autoFocus: true }}
+            inputProps={{ autoFocus: true, autoComplete: "off",className: showPassword ? 'text-field' : 'password-field' }}
             onKeyUp={(e) => {
               if (e.keyCode === 13) {
                 createRoom()

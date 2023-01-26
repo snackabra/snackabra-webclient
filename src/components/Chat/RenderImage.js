@@ -2,7 +2,7 @@ import React from 'react';
 import { CircularProgress, Grid, IconButton } from "@mui/material";
 import InputIcon from '@mui/icons-material/Download';
 import CheckIcon from '@mui/icons-material/Check';
-
+import { downloadFile } from '../../utils/misc'
 
 const styles = {
   left: {
@@ -18,34 +18,38 @@ const RenderImage = (props) => {
   const [downloaded, setDownloaded] = React.useState(false)
   const downloadImage = (message) => {
     setIsDownloading(true)
-    props.sbContext.SB.storage.retrieveImage(message.imageMetaData, props.controlMessages).then((data) => {
-      if (data.hasOwnProperty('error')) {
-        setTimeout(()=>{
-          setIsDownloading(false)
-          setDownloaded(false)
-        }, 2000)
-
-        props.sendSystemMessage('Could not open image (' + data.error + ')');
-      } else {
-        let element = document.createElement('a');
-        element.setAttribute('href', data['url']);
-        element.setAttribute('download', 'image.jpeg');
-        document.body.appendChild(element);
-        element.click();
-        document.body.removeChild(element);
-
-        setDownloaded(true)
-        setTimeout(() => {
-          setIsDownloading(false)
-          setDownloaded(false)
-        }, 10000)
-      }
-    }).catch(error => {
-      setIsDownloading(false)
-      setDownloaded(false)
-      console.log('openPreview() exception: ' + error.message);
-      props.sendSystemMessage('Could not open image (' + error.message + ')');
-    })
+    //  mtg: In scenarios where the preview and full size image are the same file because the full image is below 4MB
+    const type = message.imageMetaData.imageId === message.imageMetaData.previewId ? 'p' : 'f'
+    props.sbContext.SB.storage.retrieveImage(
+      message.imageMetaData,
+      props.controlMessages,
+      message.imageMetaData.imageId,
+      message.imageMetaData.imageKey,
+      type).then((data) => {
+        if (data.hasOwnProperty('error')) {
+          setTimeout(() => {
+            setIsDownloading(false)
+            setDownloaded(false)
+          }, 2000)
+          throw new Error(`Could not open image (${data.error})`)
+          // props.notify('Could not open image (' + data.error + ')', 'error');
+        } else {
+          try {
+            var regex = new RegExp(/data:([\w/\-\.]+);(\w+),(.*)/, '');
+            var match = data['url'].match(regex);
+            const type = match[1]
+            const fileData = match[3]
+            downloadFile(fileData, 'image.jpeg', type)
+            setDownloaded(true)
+            setTimeout(() => {
+              setIsDownloading(false)
+              setDownloaded(false)
+            }, 10000)
+          } catch {
+            throw new Error("Error processing file download")
+          }
+        }
+      })
   }
 
   if (typeof props.currentMessage.image === 'string') {

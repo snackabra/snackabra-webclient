@@ -16,12 +16,13 @@ const MotdDialog = observer((props) => {
     setOpen(props.open)
   }, [props.open])
 
-  const updateWhisperText = (e) => {
+  const updateMotdText = (e) => {
     setText(e.target.value)
   }
 
-  const sendWhisper = () => {
-    sbContext.sendMessage(text, true);
+  const sendMotdMessage = () => {
+    console.log(text)
+    props.sendSystemInfo(text);
     setText('')
     setOpen(false)
   }
@@ -43,16 +44,16 @@ const MotdDialog = observer((props) => {
         {!sbContext.owner ?
           <>
             <TextField
-              id="sb-whisper-text"
-              label="Whisper"
-              onChange={updateWhisperText}
+              id="sb-motd-text"
+              label="MOTD"
+              onChange={updateMotdText}
               multiline
               fullWidth
               rows={4}
               value={text}
               variant="filled"
             />
-            <StyledButton variant={'outlined'} onClick={sendWhisper}>Send</StyledButton>
+            <StyledButton variant={'outlined'} onClick={sendMotdMessage}>Send</StyledButton>
           </>
           : null
         }

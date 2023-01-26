@@ -3,7 +3,7 @@ import { red } from '@mui/material/colors';
 import BugReportIcon from "@mui/icons-material/BugReport";
 import { Fab } from "@mui/material";
 import DebugOverlay from "../components/Modals/DebugOverlay";
-
+import NavBarActionContext from "./NotificationContext";
 const LogContext = React.createContext(undefined);
 
 let log = console.log;
@@ -22,7 +22,8 @@ const fabRedStyle = {
   },
 };
 
-export const LogProvider = ({ children }) => {
+export const LogProvider = ({children }) => {
+  const notify = React.useContext(NavBarActionContext)
   const [logs, setLogs] = React.useState([])
   const [enabled, setEnabled] = React.useState(false)
   const [open, setOpened] = React.useState(false)
@@ -80,39 +81,58 @@ export const LogProvider = ({ children }) => {
         error.apply(console, args);
       }
     }
-    if(process.env.REACT_APP_LOG_LEVEL && !hasParam){
+    if (process.env.REACT_APP_LOG_LEVEL && !hasParam) {
       const level = process.env.REACT_APP_LOG_LEVEL
-      if(level === 'development'){
+      if (level === 'development') {
       }
-      if(level === 'stage'){
-        console.log = function () {}
-        console.assert = function () {}
-        console.count = function () {}
-        console.debug = function () {}
-        console.dir = function () {}
-        console.dirxml = function () {}
-        console.group = function () {}
-        console.table = function () {}
-        console.tine = function () {}
-        console.timeEnd = function () {}
-        console.timeLog = function () {}
-        console.trace = function () {}
-      }
-      if(level === 'production'){
+      if (level === 'stage') {
         console.log = function () { }
-        console.warn = function () {}
-        console.assert = function () {}
-        console.count = function () {}
-        console.debug = function () {}
-        console.dir = function () {}
-        console.dirxml = function () {}
-        console.group = function () {}
-        console.table = function () {}
-        console.tine = function () {}
-        console.timeEnd = function () {}
-        console.timeLog = function () {}
-        console.trace = function () {}
+        console.assert = function () { }
+        console.count = function () { }
+        console.debug = function () { }
+        console.dir = function () { }
+        console.dirxml = function () { }
+        console.group = function () { }
+        console.table = function () { }
+        console.tine = function () { }
+        console.timeEnd = function () { }
+        console.timeLog = function () { }
+        console.trace = function () { }
       }
+      if (level === 'production') {
+        console.log = function () { }
+        console.warn = function () { }
+        console.assert = function () { }
+        console.count = function () { }
+        console.debug = function () { }
+        console.dir = function () { }
+        console.dirxml = function () { }
+        console.group = function () { }
+        console.table = function () { }
+        console.tine = function () { }
+        console.timeEnd = function () { }
+        console.timeLog = function () { }
+        console.trace = function () { }
+      }
+      // Object.keys(window).forEach(key => {
+      //   if (/./.test(key)) {
+      //     window.addEventListener(key.slice(2), event => {
+      //       console.log(key, event)
+      //     })
+      //   }
+      // })
+
+      window.onunhandledrejection = (error) =>{
+        if(notify){
+          console.log(notify)
+          notify.setMessage("An uncaught exception has occured, view the console for details");
+          notify.setSeverity("error");
+          notify.setOpen(true)
+          console.trace(error)
+        }
+        
+      }
+
     }
   }, [])
 
@@ -122,14 +142,14 @@ export const LogProvider = ({ children }) => {
 
   return (
     <LogContext.Provider value={{ logs, enabled }}>
-              {enabled ?
-          <>
-            <Fab onClick={toggleDebugger} sx={{ ...fabRedStyle }}>
-              <BugReportIcon />
-            </Fab>
-            <DebugOverlay open={open} onClose={toggleDebugger} />
-          </> : ''
-        }
+      {enabled ?
+        <>
+          <Fab onClick={toggleDebugger} sx={{ ...fabRedStyle }}>
+            <BugReportIcon />
+          </Fab>
+          <DebugOverlay open={open} onClose={toggleDebugger} />
+        </> : ''
+      }
       {children}
     </LogContext.Provider>
   )

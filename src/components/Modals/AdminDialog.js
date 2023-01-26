@@ -51,6 +51,11 @@ const AdminDialog = observer((props) => {
     }
   }
 
+  const sendMotdMessage = () => {
+    console.log(motd)
+    props.sendSystemInfo(`MOTD: ${motd}`);
+  }
+
   return (<ResponsiveDialog
     title={'Admin Controls'}
     onClose={props.onClose}
@@ -81,6 +86,9 @@ const AdminDialog = observer((props) => {
         />
         <StyledButton variant={"contained"} onClick={() => {
           sbContext.setMOTD(motd)
+          if(motd !== ''){
+            sendMotdMessage()
+          }
           props.onClose()
         }}>
           <Typography variant={"button"}>Save MOTD</Typography>
@@ -104,10 +112,10 @@ const AdminDialog = observer((props) => {
         <Typography variant={"button"}>Save Capacity</Typography>
       </StyledButton>
 
-
+{/* 
       <StyledButton variant={"contained"} onClick={openConfirm} sx={{ pb: 1, pt: 1 }}>
         <Typography variant={"button"}>Restrict Room</Typography>
-      </StyledButton>
+      </StyledButton> */}
       <Grid item xs={12} sx={{ pb: 1, pt: 1 }}>
         <StyledButton variant={"contained"} onClick={props.onClose} sx={{ pb: 1, pt: 1 }}>
           <Typography variant={"button"}>Cancel</Typography>

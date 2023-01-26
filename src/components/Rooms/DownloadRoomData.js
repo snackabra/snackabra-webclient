@@ -11,10 +11,17 @@ const DownloadRoomData = observer(() => {
 
     const getRoomData = (roomId) => {
         sbContext.downloadRoomData().then((data) => {
-            downloadFile(JSON.stringify(data.storage), sbContext.rooms[roomId].name + "_storage.txt")
+            delete data.channel.SERVER_SECRET
             downloadFile(JSON.stringify(data.channel), sbContext.rooms[roomId].name + "_data.txt");
         })
     }
+
+    const getRoomStorage = (roomId) => {
+        sbContext.downloadRoomData().then((data) => {
+            downloadFile(JSON.stringify(data.storage), sbContext.rooms[roomId].name + "_shards.txt")
+        })
+    }
+
 
 
     const downloadFile = (text, file) => {
@@ -32,21 +39,31 @@ const DownloadRoomData = observer(() => {
 
 
     return (
-        <Grid id="key_export"
+        <Grid id="sb_room_data"
             container
             direction="row"
             justifyContent="flex-start"
             alignItems="flex-start"
-            spacing={2}>
+            >
             {Object.keys(sbContext.rooms).map((room) => {
                 return <Grid item key={room}>
                     <StyledButton 
+                    sx={{mr: 1}}
                     onClick={()=>{
                         getRoomData(room)
                     }}
                     variant="contained" 
                     endIcon={<DownloadIcon />}>
-                        {sbContext.rooms[room].name}
+                        {sbContext.rooms[room].name} Channel
+                    </StyledButton>
+                    <StyledButton 
+                    sx={{mr: 1}}
+                    onClick={()=>{
+                        getRoomStorage(room)
+                    }}
+                    variant="contained" 
+                    endIcon={<DownloadIcon />}>
+                        {sbContext.rooms[room].name} Shards
                     </StyledButton>
                 </Grid>
             })
