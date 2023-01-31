@@ -94,7 +94,7 @@ const NavAppBar = observer(() => {
                       autoFocus /> : <Typography noWrap>{sbContext.channels[sbContext.activeRoom].name}</Typography>
 
                   }
-                  {!editingRoomId ?
+                  {!editingRoomId && 
                     <RoomMenu
                       socket={sbContext.socket}
                       sbContext={sbContext}
@@ -104,7 +104,7 @@ const NavAppBar = observer(() => {
                         editRoom(sbContext.activeRoom)
                       }}
                     />
-                    : ''}
+                    }
                 </Grid>
                 : ''}
 

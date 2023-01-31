@@ -14,7 +14,7 @@ const DownloadRoomData = observer(() => {
         const room = await sbContext.getChannel(roomId)
         sbContext.downloadRoomData(roomId, room.key).then((data) => {
             delete data.channel.SERVER_SECRET
-            downloadFile(JSON.stringify(data.channel), sbContext.rooms[roomId].name + "_data.txt");
+            downloadFile(data.channel, sbContext.rooms[roomId].name + "_data.txt");
             onSuccess(roomId+'room')
         }).catch((e) => {
             console.error(e)
@@ -27,7 +27,7 @@ const DownloadRoomData = observer(() => {
     const getRoomStorage = React.useCallback(async (roomId, onSuccess, onError) => {
         const room = await sbContext.getChannel(roomId)
         sbContext.downloadRoomData(roomId, room.key).then((data) => {
-            downloadFile(JSON.stringify(data.storage), sbContext.rooms[roomId].name + "_shards.txt")
+            downloadFile(data.storage, sbContext.rooms[roomId].name + "_shards.txt")
             onSuccess(roomId+'shard')
         }).catch((e) => {
             console.error(e)
@@ -49,7 +49,7 @@ const DownloadRoomData = observer(() => {
     const downloadFile = (text, file) => {
         try {
             let element = document.createElement('a');
-            element.setAttribute('href', 'data:text/plain;charset=utf-8, ' + encodeURIComponent(text));
+            element.setAttribute('href', 'data:text/plain;charset=utf-8, ' + encodeURIComponent(JSON.stringify(text, null, 2).trim()));
             element.setAttribute('download', file);
             document.body.appendChild(element);
             element.click();
