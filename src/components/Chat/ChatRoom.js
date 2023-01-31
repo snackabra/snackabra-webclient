@@ -10,6 +10,7 @@ import RenderImage from "./RenderImage";
 import ChangeNameDialog from "../Modals/ChangeNameDialog";
 import RenderChatFooter from "./RenderChatFooter";
 import RenderMessage from "./RenderMessage";
+import RenderMessageText from "./RenderMessageText";
 import RenderTime from "./RenderTime";
 import { Dimensions } from "react-native";
 import AdminDialog from "../Modals/AdminDialog";
@@ -28,7 +29,7 @@ const _r = new Queue()
 const SB = require('snackabra')
 
 @observer
-class ChatRoom extends React.Component {
+class ChatRoom extends React.PureComponent {
   sending = {}
   state = {
     openAdminDialog: false,
@@ -62,7 +63,7 @@ class ChatRoom extends React.Component {
       const { height } = Dimensions.get('window')
       this.setState({ height: height })
     }
-
+    window.saveUsername = this.saveUsername
     window.addEventListener('resize', handleResize)
     window.addEventListener('orientationchange', handleResize)
     window.addEventListener('touchmove', (e) => {
@@ -408,17 +409,20 @@ class ChatRoom extends React.Component {
     const user_pubKey = JSON.parse(_id);
     contacts[user_pubKey.x + ' ' + user_pubKey.y] = newUsername;
     this.sbContext.contacts = contacts;
-    const _messages = this.state.messages.map((message) => {
-      if (message.user._id === _id) {
-        message.user.name = newUsername;
-        message.sender_username = newUsername;
+    const _m = Object.assign(this.state.messages)
+    _m.forEach((_message, i) => {
+      console.log(_message, i)
+      if (_message.user._id === _id) {
+        _message.user.name = newUsername;
+        _message.sender_username = newUsername;
+        _m[i] = _message;
       }
-      return message;
+    })
+
+    this.setState({ messages: _m, changeUserNameProps: {}, openChangeName: false }, () => {
+      this.sbContext.messages = _m;
     });
-    this.setState({ messages: [] }, () => {
-      this.setState({ messages: _messages, changeUserNameProps: {} })
-      this.sbContext.messages = _messages;
-    });
+
   }
 
   setFiles = (files) => {
@@ -470,7 +474,7 @@ class ChatRoom extends React.Component {
             onClose={this.imageOverlayClosed} />
           <ChangeNameDialog {...this.state.changeUserNameProps} open={this.state.openChangeName} onClose={(userName, _id) => {
             this.saveUsername(userName, _id)
-            this.setState({ openChangeName: false })
+            // this.setState({ openChangeName: false })
           }} />
           {/* <AttachMenu open={attachMenu} handleClose={this.handleClose} /> */}
           <FirstVisitDialog open={this.state.openFirstVisit} sbContext={this.sbContext} messageCallback={this.recieveMessages} onClose={(username) => {
@@ -478,6 +482,7 @@ class ChatRoom extends React.Component {
             this.connect(username)
           }} roomId={this.state.roomId} />
           <GiftedChat
+            isKeyboardInternallyHandled={true}
             wrapInSafeArea={false}
             className={'sb_chat_container'}
             style={{
@@ -492,6 +497,7 @@ class ChatRoom extends React.Component {
             loadEarlier={this.props.sbContext.moreMessages}
             isLoadingEarlier={this.props.sbContext.loadingMore}
             onLoadEarlier={this.getOldMessages}
+            renderMessage={RenderMessage}
             renderActions={(props) => {
               return <RenderAttachmentIcon
                 {...props}
@@ -512,7 +518,7 @@ class ChatRoom extends React.Component {
                 notify={this.notify}
                 sbContext={this.sbContext} />
             }}
-            renderMessageText={RenderMessage}
+            renderMessageText={RenderMessageText}
             scrollToBottom={true}
             showUserAvatar={true}
             onPressAvatar={this.promptUsername}

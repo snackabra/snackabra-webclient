@@ -10,14 +10,17 @@ import { SnackabraContext } from "mobx-snackabra-store";
 const ChangeNameDialog = observer((props) => {
   const sbContext = React.useContext(SnackabraContext);
   const [open, setOpen] = useState(props.open);
-  const [username, setUsername] = useState(props.name);
+  const [username, setUsername] = useState(props.name || "");
 
   useEffect(() => {
     setOpen(props.open)
   }, [props.open])
 
   useEffect(() => {
-    setUsername(props.name)
+    if (props.name) {
+      setUsername(props.name)
+    }
+
   }, [props.name])
 
   const updateUsername = (e) => {
@@ -26,7 +29,7 @@ const ChangeNameDialog = observer((props) => {
 
   const setMe = () => {
     setUsername('Me')
-    sbContext.username = username
+    sbContext.username = 'Me'
     props.onClose(sbContext.username, props._id)
   }
 
@@ -34,10 +37,10 @@ const ChangeNameDialog = observer((props) => {
     props.onClose(username, props._id)
   }
 
-  const close = () =>{
+  const close = () => {
     props.onClose(username, props._id)
   }
-
+  
   return (
     <ResponsiveDialog title={'Change Username'} open={open} onClose={close} showActions>
       <Grid container
