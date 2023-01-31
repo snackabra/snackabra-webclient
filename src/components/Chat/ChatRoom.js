@@ -23,6 +23,7 @@ import Queue from "../../utils/Queue";
 import { observer } from "mobx-react"
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { isMobile } from 'react-device-detect';
+import { Navigate } from "react-router-dom";
 
 const q = new Queue()
 const _r = new Queue()
@@ -53,7 +54,8 @@ class ChatRoom extends React.PureComponent {
     height: 0,
     visibility: 'visible',
     replyTo: null,
-    dzRef: null
+    dzRef: null,
+    to: null
   }
   sbContext = this.props.sbContext
 
@@ -96,6 +98,15 @@ class ChatRoom extends React.PureComponent {
     // Typical usage (don't forget to compare props):
     if (this.props.openAdminDialog !== prevProps.openAdminDialog) {
       this.setOpenAdminDialog(this.props.openAdminDialog);
+    }
+    if (prevProps.roomId !== this.props.roomId) {
+      this.sbContext.getChannel(this.props.roomId).then((data) => {
+        if (!data?.key) {
+          this.setState({ openFirstVisit: true })
+        } else {
+          this.connect();
+        }
+      })
     }
   }
   /**
@@ -176,14 +187,10 @@ class ChatRoom extends React.PureComponent {
       })
     }).catch((e) => {
       if (e.match(/^No such channel on this server/)) {
-        let i = 5
-        setInterval(() => {
-          this.notify(e + ` Channel ID: ${this.props.roomId}} redirecting you in ${i} seconds`, 'error')
-          i--
-        }, 1000)
+        this.notify(e + ` Channel ID: ${this.props.roomId}}`, 'error')
 
         setTimeout(() => {
-          window.location.replace(window.location.origin)
+          this.setState({ to: "/" })
         }, 5000)
       }
     })
@@ -456,6 +463,9 @@ class ChatRoom extends React.PureComponent {
 
   render() {
     // console.log(this.state.dzRef)
+    if (this.state.to) {
+      return (<Navigate to={this.state.to} />)
+    }
     return (
 
       <SafeAreaView id={'sb_chat_area'} style={{

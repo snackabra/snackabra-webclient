@@ -8,12 +8,12 @@ import { SnackabraContext } from 'mobx-snackabra-store';
 
 const ConnectionStatus = observer((props) => {
     const sbContext = React.useContext(SnackabraContext)
+    const socketStatus = sbContext.socket?.status
     const [status, setStatus] = React.useState('error')
     const [state, setState] = React.useState('error')
     React.useEffect(() => {
-        setInterval(()=>{
-            setState(sbContext.socket?.status)
-            switch (sbContext.socket?.status) {
+            setState(socketStatus)
+            switch (socketStatus) {
                 case 'CONNECTING':
                     setStatus('warning')
                     break;
@@ -27,8 +27,8 @@ const ConnectionStatus = observer((props) => {
                     setStatus('error')
                     break;
             }
-        }, 250)
-    }, [])
+   
+    }, [socketStatus])
 
     const reload = () =>{
         window.location.reload();

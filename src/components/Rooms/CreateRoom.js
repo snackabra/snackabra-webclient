@@ -14,11 +14,12 @@ import OutlinedInput from '@mui/material/OutlinedInput';
 import IconButton from '@mui/material/IconButton';
 import { observer } from "mobx-react"
 import { SnackabraContext } from "mobx-snackabra-store";
-
+import { useNavigate } from "react-router-dom";
 
 const CreateRoom = observer((props) => {
   const sbContext = React.useContext(SnackabraContext);
   const Notifications = useContext(NotificationContext);
+  const navigate = useNavigate();
   const isFirefox = typeof InstallTrigger !== 'undefined';
   const [secret, setSecret] = useState('');
   const [roomId, setRoomId] = useState('');
@@ -39,9 +40,7 @@ const CreateRoom = observer((props) => {
     Notifications.setSeverity('success');
     Notifications.setOpen(true)
     setCreating(false)
-    setTimeout(() => {
-      window.location.href = window.location.origin + `/${roomId}`
-    }, 750)
+    navigate("/" + roomId);
 
   }
 
@@ -102,7 +101,7 @@ const CreateRoom = observer((props) => {
             type={!isFirefox ? 'text' : showPassword ? 'text' : 'password'}
             value={secret}
             error={errored}
-            inputProps={{ autoFocus: true, autoComplete: "off",className: showPassword ? 'text-field' : 'password-field' }}
+            inputProps={{ autoFocus: true, autoComplete: "off", className: showPassword ? 'text-field' : 'password-field' }}
             onKeyUp={(e) => {
               if (e.keyCode === 13) {
                 createRoom()

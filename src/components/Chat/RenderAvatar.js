@@ -36,7 +36,6 @@ const styles = {
 };
 const RenderAvatar = observer((props) => {
   const sbContext = React.useContext(SnackabraContext);
-  console.log(sbContext)
   const { renderAvatarOnTop, showAvatarForEveryMessage, containerStyle, position, currentMessage, renderAvatar, previousMessage, nextMessage, imageStyle, } = props;
   const messageToCompare = renderAvatarOnTop ? previousMessage : nextMessage;
   const computedStyle = renderAvatarOnTop ? 'onTop' : 'onBottom';

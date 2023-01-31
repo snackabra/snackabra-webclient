@@ -30,6 +30,7 @@ import { SnackabraContext } from "mobx-snackabra-store";
 import { isMobile } from 'react-device-detect';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Dimensions } from "react-native";
+import { Link } from 'react-router-dom';
 
 const drawerWidth = 240;
 const ResponsiveDrawer = observer((props) => {
@@ -156,9 +157,9 @@ const ResponsiveDrawer = observer((props) => {
                   <Grid xs={7} item>
                     {editingRoomId !== room ?
 
-                      <a href={`/${room}`}>
+                      <Link to={`/${room}`}>
                         <Typography noWrap>{roomName}</Typography>
-                      </a> :
+                      </Link> :
                       <TextField
                         id={editingRoomId}
                         value={updatedName}

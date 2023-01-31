@@ -3,9 +3,12 @@ import ResponsiveDialog from "../ResponsiveDialog";
 import { Grid, TextField, Typography } from "@mui/material";
 import { StyledButton } from "../../styles/Buttons";
 import NotificationContext from "../../contexts/NotificationContext";
+import { useNavigate } from "react-router-dom";
 
 const JoinDialog = (props) => {
   const Notifications = React.useContext(NotificationContext);
+  const navigate = useNavigate();
+
   const [open, setOpen] = React.useState(props.open);
   const [roomId, setRoomId] = React.useState("");
   const [error, setErrored] = React.useState(false);
@@ -37,7 +40,7 @@ const JoinDialog = (props) => {
       console.log(domain, origin)
       if (domain[1] === origin[1]) {
         if (pathname.length === 64) {
-          window.location.replace(roomId)
+          navigate("/"+pathname);
           setRoomId("");
           props.onClose()
         } else {
@@ -51,7 +54,7 @@ const JoinDialog = (props) => {
     } else {
       console.log(window.location.origin + "/" + roomId)
       if (roomId.length === 64) {
-        window.location.replace(window.location.origin + "/" + roomId)
+        navigate("/"+roomId);
         setRoomId("");
         props.onClose()
       } else {
