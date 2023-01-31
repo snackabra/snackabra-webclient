@@ -492,7 +492,7 @@ class ChatRoom extends React.PureComponent {
             this.connect(username)
           }} roomId={this.state.roomId} />
           <GiftedChat
-            isKeyboardInternallyHandled={true}
+            isKeyboardInternallyHandled={false}
             wrapInSafeArea={false}
             className={'sb_chat_container'}
             style={{

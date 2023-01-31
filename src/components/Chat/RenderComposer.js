@@ -5,6 +5,7 @@ import { SnackabraContext } from "mobx-snackabra-store";
 import { observer } from "mobx-react"
 import { isDataURL } from '../../utils/misc';
 import { base64ToArrayBuffer } from "snackabra"
+import { KeyboardAvoidingView } from "react-native-web"
 
 const RenderComposer = observer((props) => {
   const { filesAttached, onTextChanged, inputErrored } = props
@@ -117,40 +118,42 @@ const RenderComposer = observer((props) => {
       props.setFiles(_files)
       setText('')
       // props.onSend({ text: '' }, true)
-      setTimeout(()=>{
+      setTimeout(() => {
         props.onTextChanged('')
         setError(false)
       }, 100)
-      
+
     }
   }
 
   return (
-    <TextField
-      id="sb_render_composer_textarea"
-      label=""
-      value={text}
-      error={error}
-      onFocus={props.onFocus}
-      onBlur={props.onBlur}
-      placeholder="Type a message..."
-      className="textinput-composer"
-      multiline
-      onPaste={pasteEvent}
-      onKeyUp={checkForSend}
-      onChange={handlChange}
-      readOnly={attachedFiles}
-      variant={'standard'}
-      InputProps={{
-        disableUnderline: true
-      }}
-      style={{
-        flexGrow: 1,
-        padding: 8,
-        maxHeight: '25vh',
-        overflowY: 'auto'
-      }}
-    />
+    // <KeyboardAvoidingView style={{flexGrow: 1}} behavior="padding" enabled={true}>
+      <TextField
+        id="sb_render_composer_textarea"
+        label=""
+        value={text}
+        error={error}
+        // onFocus={props.onFocus}
+        onBlur={props.onBlur}
+        placeholder="Type a message..."
+        className="textinput-composer"
+        multiline
+        onPaste={pasteEvent}
+        onKeyUp={checkForSend}
+        onChange={handlChange}
+        readOnly={attachedFiles}
+        variant={'standard'}
+        InputProps={{
+          disableUnderline: true
+        }}
+        style={{
+          flexGrow: 1,
+          padding: 8,
+          maxHeight: '25vh',
+          overflowY: 'auto'
+        }}
+      />
+    // </KeyboardAvoidingView>
   )
 })
 
