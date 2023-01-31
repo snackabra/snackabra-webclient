@@ -1,12 +1,11 @@
 import * as React from "react"
 import { Trans } from "@lingui/macro";
-import { FormControl, TextField, Grid, IconButton, InputAdornment, Checkbox, OutlinedInput, Typography } from "@mui/material";
+import { TextField, Grid, IconButton, InputAdornment, Checkbox, OutlinedInput, Typography } from "@mui/material";
 import { StyledButton } from "../../styles/Buttons";
 import { useState, useContext } from "react"
 import NotificationContext from "../../contexts/NotificationContext";
 import { observer } from "mobx-react"
 import { SnackabraContext } from "mobx-snackabra-store";
-import ContentCopy from '@mui/icons-material/ContentCopy';
 
 const ImportRoomKeys = observer((props) => {
   const sbContext = React.useContext(SnackabraContext);
@@ -14,7 +13,7 @@ const ImportRoomKeys = observer((props) => {
   const [key, setKey] = useState('');
   const [data, setData] = useState(false);
   const [existing, setExisting] = useState({});
-  const [toSave, setToSave] = useState({roomData:{}, contacts:{}, roomMetadata:{}});
+  const [toSave, setToSave] = useState({ roomData: {}, contacts: {}, roomMetadata: {} });
   const [toMerge, setToMerge] = useState({});
   const [selected, setSelected] = useState([]);
 
@@ -40,7 +39,7 @@ const ImportRoomKeys = observer((props) => {
           key: rooms[roomId].key,
           lastSeenMessage: rooms[roomId].lastSeenMessage
         }
-        metadata.contacts = Object.assign(metadata.contacts, rooms[roomId].contacts)
+        metadata.contacts = Object.assign(rooms[roomId].contacts, metadata.contacts)
         metadata.roomMetadata[roomId] = {
           name: rooms[roomId].name,
           lastMessageTime: rooms[roomId].lastMessageTime,
@@ -128,10 +127,10 @@ const ImportRoomKeys = observer((props) => {
         setToMerge(merge)
         setSelected(s)
         const roomData = Object.keys(newKeyData.roomData)
-        if (roomData.length > 0) {
-          newKeyData.contacts = Object.assign(newKeyData.contacts, existing.contacts)
-          setToSave(newKeyData)
-        }
+        console.log(roomData)
+        console.log(Object.assign(existing.contacts, newKeyData.contacts))
+        newKeyData.contacts = Object.assign(newKeyData.contacts, existing.contacts)
+        setToSave(newKeyData)
       } else {
         await sbContext.importKeys(content ? JSON.parse(content) : JSON.parse(key))
         Notifications.setMessage('Key file imported!');
@@ -170,7 +169,6 @@ const ImportRoomKeys = observer((props) => {
     console.log(toMerge)
     const saving = toSave;
     for (let x in selected) {
-      console.log(toMerge[x][selected[x].selected])
       saving.roomData = Object.assign(saving.roomData, toMerge[x][selected[x].selected].roomData)
       saving.roomMetadata = Object.assign(saving.roomMetadata, toMerge[x][selected[x].selected].roomMetadata)
     }
