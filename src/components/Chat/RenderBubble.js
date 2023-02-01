@@ -13,12 +13,12 @@ const RenderBubble = (props) => {
 
 
   React.useEffect(() => {
-    let current_user_key = currentMessage.user._id !== 'system' ? JSON.parse(currentMessage.user._id) : {};
     const init = async () => {
       //TODO: this is breaking the server for some reason
       // const verified = await props.socket.api.postPubKey(current_user_key)
       setVerifiedGuest(true);
-      setIsAdmin(sbCrypto.compareKeys(props.socket.exportable_owner_pubKey, current_user_key))
+      // console.log(JSON.stringify(props.socket), current_user_key)
+      setIsAdmin(props.socket.admin)
     }
     init();
   }, [currentMessage.user._id, props.socket.api, props.socket.exportable_owner_pubKey, props.socket.exportable_pubKey])
@@ -91,7 +91,6 @@ const RenderBubble = (props) => {
       })
     }
   }, [isVerifiedGuest, isAdmin, currentMessage, updateProps])
-
 
 
   return (

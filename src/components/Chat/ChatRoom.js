@@ -1,7 +1,7 @@
 /* Copyright (c) 2021 Magnusson Institute, All Rights Reserved */
 
 import * as React from 'react';
-import { GiftedChat } from 'react-native-gifted-chat';
+import GiftedChatCustom from '../Rooms/GiftedChatCustom';
 import RenderBubble from "./RenderBubble";
 import RenderAvatar from "./RenderAvatar";
 import RenderAttachmentIcon from "./RenderAttachmentIcon";
@@ -20,6 +20,7 @@ import WhisperUserDialog from "../Modals/WhisperUserDialog";
 import RenderComposer from "./RenderComposer";
 import DropZone from "../DropZone";
 import Queue from "../../utils/Queue";
+import { toJS } from "mobx"
 import { observer } from "mobx-react"
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { isMobile } from 'react-device-detect';
@@ -31,6 +32,7 @@ const SB = require('snackabra')
 
 @observer
 class ChatRoom extends React.PureComponent {
+  sbContext = this.props.sbContext
   sending = {}
   state = {
     openAdminDialog: false,
@@ -43,24 +45,23 @@ class ChatRoom extends React.PureComponent {
     anchorEl: null,
     img: '',
     imgLoaded: false,
-    messages: [],
+    messages: this.sbContext.rooms[this.props.roomId]?.messages ? toJS(this.sbContext.rooms[this.props.roomId].messages) : [],
     controlMessages: [],
     roomId: this.props.roomId || 'offline',
     files: [],
     images: [],
     loading: false,
     uploading: false,
-    user: {},
+    user: this.sbContext.rooms[this.props.roomId]?.userName && this.sbContext.rooms[this.props.roomId]?.key ? { _id: JSON.stringify(this.sbContext.rooms[this.props.roomId]?.key), name: this.sbContext.rooms[this.props.roomId]?.userName } : {},
     height: 0,
     visibility: 'visible',
     replyTo: null,
     dzRef: null,
     to: null
   }
-  sbContext = this.props.sbContext
+
 
   componentDidMount() {
-
     const handleResize = (e) => {
       const { height } = Dimensions.get('window')
       this.setState({ height: height })
@@ -87,7 +88,10 @@ class ChatRoom extends React.PureComponent {
       if (!data?.key) {
         this.setState({ openFirstVisit: true })
       } else {
+
         this.connect();
+
+
       }
     })
     this.processQueue()
@@ -95,6 +99,7 @@ class ChatRoom extends React.PureComponent {
   }
 
   componentDidUpdate(prevProps) {
+
     // Typical usage (don't forget to compare props):
     if (this.props.openAdminDialog !== prevProps.openAdminDialog) {
       this.setOpenAdminDialog(this.props.openAdminDialog);
@@ -104,10 +109,40 @@ class ChatRoom extends React.PureComponent {
         if (!data?.key) {
           this.setState({ openFirstVisit: true })
         } else {
+
           this.connect();
+
         }
       })
     }
+  }
+
+  componentWillUnmount(){
+    this.setState( {
+      openAdminDialog: false,
+      openWhisper: false,
+      openPreview: false,
+      openChangeName: false,
+      openFirstVisit: false,
+      changeUserNameProps: {},
+      openMotd: false,
+      anchorEl: null,
+      img: '',
+      imgLoaded: false,
+      messages: this.sbContext.rooms[this.props.roomId]?.messages ? toJS(this.sbContext.rooms[this.props.roomId].messages) : [],
+      controlMessages: [],
+      roomId: this.props.roomId || 'offline',
+      files: [],
+      images: [],
+      loading: false,
+      uploading: false,
+      user: this.sbContext.rooms[this.props.roomId]?.userName && this.sbContext.rooms[this.props.roomId]?.key ? { _id: JSON.stringify(this.sbContext.rooms[this.props.roomId]?.key), name: this.sbContext.rooms[this.props.roomId]?.userName } : {},
+      height: 0,
+      visibility: 'visible',
+      replyTo: null,
+      dzRef: null,
+      to: null
+    })
   }
   /**
    * Queue helps with order outgoing messages
@@ -155,36 +190,36 @@ class ChatRoom extends React.PureComponent {
       messageCallback: this.recieveMessages
     }
     this.sbContext.connect(options).then(() => {
-      this.setState({ messages: this.sbContext.messages }, () => {
-        this.sbContext.getOldMessages(0).then((r) => {
-          let controlMessages = [];
-          let messages = [];
-          r.forEach((m, i) => {
-            if (!m.control) {
-              const user_pubKey = m.user._id;
-              m.user._id = JSON.stringify(m.user._id);
-              m.user.name = this.sbContext.contacts[user_pubKey.x + ' ' + user_pubKey.y] !== undefined ? this.sbContext.contacts[user_pubKey.x + ' ' + user_pubKey.y] : m.user.name;
-              m.sender_username = m.user.name;
-              m.createdAt = new Date(parseInt(m.timestampPrefix, 2));
-              messages.push(m)
-            } else {
-              controlMessages.push(m)
-            }
-
-          })
-          this.setState({ controlMessages: controlMessages })
-          if (this.sbContext.motd !== '') {
-            this.sendSystemInfo('MOTD: ' + this.props.sbContext.motd, (systemMessage) => {
-              this.sbContext.messages = messages
-              this.setState({ messages: [...messages, systemMessage] })
-            })
+      this.setState({ user: this.sbContext.user })
+      this.sbContext.getOldMessages(0).then((r) => {
+        let controlMessages = [];
+        let messages = [];
+        r.forEach((m, i) => {
+          if (!m.control) {
+            const user_pubKey = m.user._id;
+            m.user._id = JSON.stringify(m.user._id);
+            m.user.name = this.sbContext.contacts[user_pubKey.x + ' ' + user_pubKey.y] !== undefined ? this.sbContext.contacts[user_pubKey.x + ' ' + user_pubKey.y] : m.user.name;
+            m.sender_username = m.user.name;
+            m.createdAt = new Date(parseInt(m.timestampPrefix, 2));
+            messages.push(m)
           } else {
-            this.sbContext.messages = messages
-            this.setState({ messages: [...messages] })
+            controlMessages.push(m)
           }
 
         })
+        this.setState({ controlMessages: controlMessages })
+        if (this.sbContext.motd !== '') {
+          this.sendSystemInfo('MOTD: ' + this.props.sbContext.motd, (systemMessage) => {
+            this.sbContext.messages = messages
+              this.setState({ messages: [...messages, systemMessage] })
+          })
+        } else {
+          this.sbContext.messages = messages
+            this.setState({ messages: this.sbContext.messages })
+        }
+
       })
+      
     }).catch((e) => {
       if (e.match(/^No such channel on this server/)) {
         this.notify(e + ` Channel ID: ${this.props.roomId}}`, 'error')
@@ -462,10 +497,13 @@ class ChatRoom extends React.PureComponent {
   }
 
   render() {
-    // console.log(this.state.dzRef)
     if (this.state.to) {
       return (<Navigate to={this.state.to} />)
     }
+    const _f_message = this.state.messages[0];
+    const _l_message = this.state.messages[this.state.messages.length - 1];
+    const messages = _f_message && _f_message.createdAt.getTime() < _l_message.createdAt.getTime() ?  this.state.messages.reverse() : this.state.messages
+
     return (
 
       <SafeAreaView id={'sb_chat_area'} style={{
@@ -478,6 +516,7 @@ class ChatRoom extends React.PureComponent {
         <DropZone notify={this.notify} dzRef={this.setDropzoneRef} addFile={this.loadFiles} showLoading={this.showLoading}>
           <AdminDialog open={this.state.openAdminDialog} sendSystemInfo={this.sendSystemInfo} onClose={() => {
             this.setOpenAdminDialog(false)
+            this.props.onCloseAdminDialog()
           }} />
           <WhisperUserDialog replyTo={this.state.replyTo} open={this.state.openWhisper} onClose={this.closeWhisper} />
           <ImageOverlay open={this.state.openPreview} img={this.state.img} imgLoaded={this.state.imgLoaded}
@@ -491,18 +530,18 @@ class ChatRoom extends React.PureComponent {
             this.setState({ openFirstVisit: false })
             this.connect(username)
           }} roomId={this.state.roomId} />
-          <GiftedChat
+          <GiftedChatCustom
             isKeyboardInternallyHandled={false}
             wrapInSafeArea={false}
             className={'sb_chat_container'}
             style={{
               width: '100%'
             }}
-            messages={this.state.messages}
+            messages={messages}
             onSend={this.sendMessages}
             // timeFormat='L LT'
-            user={this.sbContext.user}
-            inverted={false}
+            user={this.state.user}
+            inverted={true}
             alwaysShowSend={true}
             loadEarlier={this.props.sbContext.moreMessages}
             isLoadingEarlier={this.props.sbContext.loadingMore}

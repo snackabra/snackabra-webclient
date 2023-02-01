@@ -5,6 +5,7 @@ import { StyledButton } from "../../styles/Buttons";
 import CircularProgress from '@mui/material/CircularProgress';
 import { useState, useContext } from "react"
 import NotificationContext from "../../contexts/NotificationContext";
+import NavBarActionContext from "../../contexts/NavBarActionContext";
 import FirstVisitDialog from "../Modals/FirstVisitDialog";
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
@@ -17,6 +18,7 @@ import { SnackabraContext } from "mobx-snackabra-store";
 import { useNavigate } from "react-router-dom";
 
 const CreateRoom = observer((props) => {
+  const NavAppBarContext = React.useContext(NavBarActionContext)
   const sbContext = React.useContext(SnackabraContext);
   const Notifications = useContext(NotificationContext);
   const navigate = useNavigate();
@@ -40,6 +42,7 @@ const CreateRoom = observer((props) => {
     Notifications.setSeverity('success');
     Notifications.setOpen(true)
     setCreating(false)
+    NavAppBarContext.setMenuOpen(false)
     navigate("/" + roomId);
 
   }
@@ -54,6 +57,7 @@ const CreateRoom = observer((props) => {
   const createRoom = async () => {
     setCreating(true)
     sbContext.createRoom(secret).then((channel) => {
+      sbContext.socket.close()
       setRoomId(channel)
       setOpenFirstVisit(true)
     }).catch((e) => {

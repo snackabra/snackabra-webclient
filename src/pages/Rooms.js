@@ -30,7 +30,31 @@ import { SnackabraContext } from "mobx-snackabra-store";
 import { isMobile } from 'react-device-detect';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Dimensions } from "react-native";
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useTheme } from '@mui/material/styles';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import SwipeableViews from 'react-swipeable-views';
+
+function TabPanel(props) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`vertical-tabpanel-${index}`}
+      aria-labelledby={`vertical-tab-${index}`}
+      {...other}
+    >
+      {value === index && (
+        <Box sx={{ p: 3 }}>
+          <Typography>{children}</Typography>
+        </Box>
+      )}
+    </div>
+  );
+}
 
 const drawerWidth = 240;
 const ResponsiveDrawer = observer((props) => {
@@ -38,7 +62,10 @@ const ResponsiveDrawer = observer((props) => {
   const sbContext = React.useContext(SnackabraContext);
   const Notifications = React.useContext(NotificationContext)
   let { room_id } = useParams();
+  const navigate = useNavigate()
   const { window } = props;
+  const theme = useTheme();
+  const [value, setValue] = React.useState(0);
   const [roomId, setRoomId] = React.useState(false);
   const [openImportDialog, setOpenImportDialog] = React.useState(false);
   const [openDataOperations, setOpenDataOperations] = React.useState(false);
@@ -50,13 +77,21 @@ const ResponsiveDrawer = observer((props) => {
   const [channelList, setChannelList] = React.useState([]);
 
   React.useEffect(() => {
-    setRoomId(room_id)
+    if(room_id !== roomId){
+      setRoomId(room_id)
+    }
+    
   }, [room_id])
 
   React.useEffect(() => {
     let _c = []
+    let i = 0
     for (let x in sbContext.channels) {
       _c.push(sbContext.channels[x])
+      if(room_id === sbContext.channels[x]._id){
+        setValue(i)
+      }
+      i++
     }
     setChannelList(_c)
   }, [sbContext.channels])
@@ -83,6 +118,31 @@ const ResponsiveDrawer = observer((props) => {
   const updateName = (e) => {
     setUpdatedName(e.target.value)
   }
+
+  function a11yProps(index) {
+    return {
+      id: `vertical-tab-${index}`,
+      'aria-controls': `vertical-tabpanel-${index}`,
+    };
+  }
+
+  const handleChange = (event, newValue) => {
+    sbContext.socket.close()
+    setValue(newValue);
+    NavAppBarContext.setMenuOpen(false)
+  };
+
+  const handleChangeIndex = (index) => {
+    const to =channelList[index]._id;
+    navigate('/'+to)
+    setRoomId(to)
+    setValue(index);
+  };
+
+  const onCloseAdminDialog = () =>{
+    setOpenAdminDialog(false)
+  }
+
   const drawer = (
     <div>
       <Toolbar />
@@ -91,6 +151,7 @@ const ResponsiveDrawer = observer((props) => {
         <ListItem disablePadding>
           <ListItemButton onClick={() => {
             setOpenJoinDialog(true)
+            NavAppBarContext.setMenuOpen(false)
           }}>
             <ListItemIcon>
               <AddCircleOutlinedIcon />
@@ -101,6 +162,7 @@ const ResponsiveDrawer = observer((props) => {
         <ListItem disablePadding>
           <ListItemButton onClick={() => {
             setOpenCreateDialog(true)
+            NavAppBarContext.setMenuOpen(false)
           }}>
             <ListItemIcon>
               <AddCommentIcon />
@@ -108,19 +170,10 @@ const ResponsiveDrawer = observer((props) => {
             <ListItemText primary={'Create a room'} />
           </ListItemButton>
         </ListItem>
-        {/* <ListItem disablePadding>
-          <ListItemButton onClick={() => {
-            setOpenImportDialog(true)
-          }}>
-            <ListItemIcon>
-              <FileUploadIcon />
-            </ListItemIcon>
-            <ListItemText primary={'Import a room'} />
-          </ListItemButton>
-        </ListItem> */}
         <ListItem disablePadding>
           <ListItemButton onClick={() => {
             setOpenDataOperations(true)
+            NavAppBarContext.setMenuOpen(false)
           }}>
             <ListItemIcon>
               <FileUploadIcon />
@@ -132,6 +185,7 @@ const ResponsiveDrawer = observer((props) => {
         <ListItem sx={{ display: !sbContext.admin ? 'none' : 'inherit' }} disablePadding>
           <ListItemButton onClick={() => {
             setOpenAdminDialog(true)
+            NavAppBarContext.setMenuOpen(false)
           }}>
             <ListItemIcon>
               <AdminPanelSettingsIcon />
@@ -141,24 +195,32 @@ const ResponsiveDrawer = observer((props) => {
         </ListItem>
 
         <Divider />
-        {channelList.map((item, index) => {
-          const room = item._id
-          const roomName = item.name
-          const bgColor = room === roomId ? '#ff5c42' : 'inherit';
-          const color = room === roomId ? '#fff' : 'inherit';
-          return (
-            <ListItem key={index} disablePadding sx={{ backgroundColor: bgColor, color: color }}>
-              <ListItemButton>
+        <Tabs
+          value={value}
+          onChange={handleChange}
+          indicatorColor='#ff5c42'
+          textColor="#000"
+          variant="scrollable"
+          orientation="vertical"
+          aria-label="room tabs"
+        >
+          {channelList.map((item, index) => {
+            const room = item._id
+            const roomName = item.name
+            const bgColor = room === roomId ? '#ff5c42' : 'inherit';
+            const color = room === roomId ? '#fff' : 'inherit';
+            return (
+              <Tab disableRipple disableTouchRipple key={index} {...a11yProps(index)} sx={{ backgroundColor: bgColor, color: color, textAlign: "left" }} label={
                 <Grid container
                   direction="row"
-                  justifyContent={'space-between'}
+                  justifyContent={'flex-start'}
                   alignItems={'center'}
                 >
                   <Grid xs={7} item>
                     {editingRoomId !== room ?
 
                       <Link to={`/${room}`}>
-                        <Typography noWrap>{roomName}</Typography>
+                        <Typography className='sb-tab-link' noWrap>{roomName}</Typography>
                       </Link> :
                       <TextField
                         id={editingRoomId}
@@ -198,11 +260,11 @@ const ResponsiveDrawer = observer((props) => {
                     />
                   </Grid>
                 </Grid>
-              </ListItemButton>
-            </ListItem>
+              } />
 
-          )
-        })}
+            )
+          })}
+        </Tabs>
       </List>
     </div>
   );
@@ -282,14 +344,31 @@ const ResponsiveDrawer = observer((props) => {
           borderStyle: "solid"
         }}
       >
-        {(!roomId || !sbContext.activeroom) && (<Grid style={{ height: height }}>
+        {!roomId && (<Grid style={{ height: height }}>
           <Toolbar />
-          <Typography variant={'h6'}>Select a room or create a new one to get started.</Typography>
+          <Typography textAlign={'center'} variant={'h6'}>Select a room or create a new one to get started.</Typography>
         </Grid>)
         }
-        {(roomId && sbContext) &&
+        {/* {(roomId && sbContext) &&
           (<ChatRoom roomId={roomId ? roomId : sbContext.activeroom} sbContext={sbContext} Notifications={Notifications} openAdminDialog={openAdminDialog} />)
-        }
+        } */}
+        <SwipeableViews
+          axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
+          index={value}
+          onChangeIndex={handleChangeIndex}
+          style={{ padding: 0 }}
+        >
+          {channelList.map((item, index) => {
+            return (<TabPanel 
+              key={`${index}-tab-panel`} 
+              value={value} 
+              index={index} 
+              dir={theme.direction} 
+              className="RoomSwipable">
+              <ChatRoom active={value === index} roomId={item._id} sbContext={sbContext} Notifications={Notifications} openAdminDialog={openAdminDialog} onCloseAdminDialog={onCloseAdminDialog}/>
+            </TabPanel>)
+          })}
+        </SwipeableViews>
       </Box>
     </SafeAreaView >
   );

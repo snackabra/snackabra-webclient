@@ -72,3 +72,11 @@ html {
   height: 100%;
   overflow: hidden
 }
+
+.RoomSwipable .MuiBox-root {
+  padding: 0
+}
+
+.sb-tab-link {
+  text-transform: none;
+}
