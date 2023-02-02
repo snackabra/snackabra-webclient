@@ -7,22 +7,29 @@ import CloseIcon from '@mui/icons-material/Close';
 import Slide from '@mui/material/Slide';
 import DialogContent from "@mui/material/DialogContent";
 import { Image } from 'mui-image'
+import { isMobile } from 'react-device-detect';
+import { useDrag } from '@use-gesture/react'
+import { a, useSpring, config } from '@react-spring/web'
+import { CatchingPokemonSharp } from '@mui/icons-material';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
 export default function ImageOverlay(props) {
-  const [open, setOpen] = React.useState(props.open);
+  const [isOpen, setOpen] = React.useState(props.open);
   const [img, setImage] = React.useState(props.img);
   const [imgLoaded, setImageLoaded] = React.useState(props.imgLoaded);
+  const myRef = React.createRef();
 
+  let height = window.innerHeight - (window.innerHeight / 4)
   React.useEffect(() => {
     setOpen(props.open)
   }, [props.open])
 
   React.useEffect(() => {
     setImage(props.img)
+    open(myRef)
     // window.pinchZoomEvent = document.addEventListener('touchmove', function (event) {
 
     // }, { passive: false });
@@ -36,27 +43,68 @@ export default function ImageOverlay(props) {
   React.useEffect(() => {
     setImageLoaded(props.imgLoaded)
   }, [props.imgLoaded])
+
+  const [{ y }, api] = useSpring(() => ({ y: height }))
+
+  const open = ({ canceled }) => {
+    // when cancel is true, it means that the user passed the upwards threshold
+    // so we change the spring config to create a nice wobbly effect
+    console.log(canceled)
+    api.start({ y: 0, immediate: false, config: canceled ? config.wobbly : config.stiff })
+  }
+  const close = (velocity = 0) => {
+    api.start({ y: height, immediate: false, config: { ...config.stiff, velocity } })
+  }
+
+  const bind = useDrag(
+    ({ last, velocity: [, vy], direction: [, dy], movement: [, my], cancel, canceled }) => {
+      // if the user drags up passed a threshold, then we cancel
+      // the drag so that the sheet resets to its open position
+      if (my < -70) {
+        props.onClose()
+        // cancel()
+      }
+
+      // when the user releases the sheet, we check whether it passed
+      // the threshold for it to close, or if we reset it to its open positino
+      if (last) {
+        my > height * 0.5 || (vy > 0.5 && dy > 0) ? 
+        props.onClose() :
+        open({ canceled })
+      }
+      // when the user keeps dragging, we just move the sheet according to
+      // the cursor position
+      else api.start({ y: my, immediate: true })
+    },
+    { from: () => [0, y.get()], filterTaps: true, bounds: { top: 0 }, rubberband: true }
+  )
+
   return (
-    <div>
+    <div style={{ overflow: 'hidden' }} ref={myRef}>
       <Dialog
         fullScreen
-        open={open}
+        open={isOpen}
         onClose={props.onClose}
         TransitionComponent={Transition}
       >
-        <AppBar sx={{ position: 'relative', backgroundColor: 'black', textTransform: 'none' }}>
-          <Toolbar>
-            <IconButton
-              edge="end"
-              color="inherit"
-              onClick={props.onClose}
-              aria-label="close"
-            >
-              <CloseIcon />
-            </IconButton>
-          </Toolbar>
-        </AppBar>
+        {!isMobile &&
+          <AppBar sx={{ position: 'relative', backgroundColor: 'black', textTransform: 'none' }}>
+            <Toolbar>
+              <IconButton
+                edge="end"
+                color="inherit"
+                onClick={props.onClose}
+                aria-label="close"
+              >
+                <CloseIcon />
+              </IconButton>
+            </Toolbar>
+          </AppBar>
+        }
         <DialogContent sx={{ p: 0 }}>
+          <a.div {...bind()} style={{ display: 'block', top: `400px`, y }}>
+            {img &&
+            
             <Image
               src={img}
               height="100%"
@@ -71,8 +119,9 @@ export default function ImageOverlay(props) {
               shiftDuration={imgLoaded ? 0 : 1000}
               bgColor="inherit"
             />
+            }
 
-
+          </a.div>
         </DialogContent>
       </Dialog>
     </div>

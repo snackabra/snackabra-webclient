@@ -165,7 +165,7 @@ const RenderChatFooter = (props) => {
                     <Fab onClick={() => { removeItem(index) }} sx={{ position: 'absolute', top: 11, left: 11, opacity: isShown === index + 'img' && !isMobile ? 1 : 0 }} size="small" color="#AAA" aria-label="add">
                       <DeleteForever />
                     </Fab>
-                    <TouchableOpacity disabled={!isMobile} onLongPress={() => { onLongPress(index) }} accessibilityRole='image'>
+                    <TouchableOpacity disabled={!isMobile} onPress={() => { onLongPress(index) }} accessibilityRole='image'>
                       <img className='previewImage'
                         width='150px'
                         height='150px'
