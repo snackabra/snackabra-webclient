@@ -8,18 +8,42 @@ import Slide from '@mui/material/Slide';
 import DialogContent from "@mui/material/DialogContent";
 import { Image } from 'mui-image'
 import { isMobile } from 'react-device-detect';
-import { useDrag } from '@use-gesture/react'
+import { useDrag, usePinch, createUseGesture, dragAction, pinchAction } from '@use-gesture/react'
 import { a, useSpring, config } from '@react-spring/web'
+import { CodeSharp } from '@mui/icons-material';
+import zIndex from '@mui/material/styles/zIndex';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
+
+const useGesture = createUseGesture([dragAction, pinchAction])
 
 export default function ImageOverlay(props) {
   const [isOpen, setOpen] = React.useState(props.open);
   const [img, setImage] = React.useState(props.img);
   const [imgLoaded, setImageLoaded] = React.useState(props.imgLoaded);
   const myRef = React.createRef();
+
+  let [{ x, y, scale, rotateZ }, api] = useSpring(() => ({
+    x: 0,
+    y: 0,
+    scale: 1,
+    rotateZ: 0,
+  }))
+
+
+  React.useEffect(() => {
+    const handler = (e) => e.preventDefault()
+    document.addEventListener('gesturestart', handler)
+    document.addEventListener('gesturechange', handler)
+    document.addEventListener('gestureend', handler)
+    return () => {
+      document.removeEventListener('gesturestart', handler)
+      document.removeEventListener('gesturechange', handler)
+      document.removeEventListener('gestureend', handler)
+    }
+  }, [])
 
   let height = window.innerHeight - (window.innerHeight / 4)
   React.useEffect(() => {
@@ -31,104 +55,116 @@ export default function ImageOverlay(props) {
     if (isMobile) {
       open(myRef)
     }
+    api.start({ y: 0, x: 0, scale: 1, rotateZ: 0, immediate: false })
 
-    // window.pinchZoomEvent = document.addEventListener('touchmove', function (event) {
-
-    // }, { passive: false });
-    // return () =>{
-    //   window.pinchZoomEvent = document.addEventListener('touchmove', function (event) {
-    //     if (event.scale !== 1) { event.preventDefault(); }
-    //   }, { passive: false });
-    // }
   }, [props.img])
 
   React.useEffect(() => {
     setImageLoaded(props.imgLoaded)
   }, [props.imgLoaded])
 
-  const [{ y }, api] = useSpring(() => ({ y: height }))
+
 
   const open = ({ canceled }) => {
     // when cancel is true, it means that the user passed the upwards threshold
     // so we change the spring config to create a nice wobbly effect
-    console.log(canceled)
-    api.start({ y: 0, immediate: false, config: canceled ? config.wobbly : config.stiff })
+    if (canceled)
+      api.start({ y: 0, x: 0, scale: 1, rotateZ: 0, pinching: false, immediate: false, config: canceled ? config.wobbly : config.stiff })
   }
+
   const close = (velocity = 0) => {
-    api.start({ y: height, immediate: false, config: { ...config.stiff, velocity } })
+    api.start({ y: 0, x: 0, scale: 1, rotateZ: 0, immediate: false, config: { ...config.stiff, velocity } })
+    props.onClose()
   }
 
-  const bind = useDrag(
-    ({ last, velocity: [, vy], direction: [, dy], movement: [, my], cancel, canceled }) => {
-      // if the user drags up passed a threshold, then we cancel
-      // the drag so that the sheet resets to its open position
-      if (my < -70) {
-        props.onClose()
-        // cancel()
-      }
-
-      // when the user releases the sheet, we check whether it passed
-      // the threshold for it to close, or if we reset it to its open positino
-      if (last) {
-        my > height * 0.5 || (vy > 0.5 && dy > 0) ?
-          props.onClose() :
-          open({ canceled })
-      }
-      // when the user keeps dragging, we just move the sheet according to
-      // the cursor position
-      else api.start({ y: my, immediate: true })
-    },
-    { from: () => [0, y.get()], filterTaps: true, bounds: { top: 0 }, rubberband: true }
-  )
-
-  return (
-    <div style={{ overflow: 'hidden' }} ref={myRef}>
-      <Dialog
-        fullScreen
-        open={isOpen}
-        onClose={props.onClose}
-        TransitionComponent={Transition}
-      >
-        {!isMobile &&
-          <AppBar sx={{ position: 'relative', backgroundColor: 'black', textTransform: 'none' }}>
-            <Toolbar>
-              <IconButton
-                edge="end"
-                color="inherit"
-                onClick={props.onClose}
-                aria-label="close"
-              >
-                <CloseIcon />
-              </IconButton>
-            </Toolbar>
-          </AppBar>
+  useGesture(
+    {
+      onDrag: (state) => {
+        console.log(state)
+        const { down, dragging, offset: [x, y], last, velocity: [vy], direction: [, dy], movement: [my] } = state
+        // if the user drags up passed a threshold, then we cancel
+        // the drag so that the sheet resets to its open position
+        if (down && !dragging) {
+          return;
         }
-        {isMobile ?
-          <DialogContent sx={{ p: 0 }}>
-            <a.div {...bind()} style={{ display: 'block', y }}>
-              {img &&
+        const s = scale.animation.to;
+        if (last && s <= 1) {
+          Math.abs(my) > height * 0.5 || (vy > 0.5 && dy > 0) ? close(vy) : open({ canceled: true })
+        } else {
+          if (s <= 1) {
+            api.start({ y: y, x: 0, immediate: true, rubberband: false })
+          } else {
+            api.start({ y: y, x: x, immediate: true, rubberband: false })
+          }
 
-                <Image
-                  src={img}
-                  height="100%"
-                  // width="100%"
-                  fit="contain"
-                  duration={imgLoaded ? 0 : 1000}
-                  easing="cubic-bezier(0.7, 0, 0.6, 1)"
-                  showLoading={true}
-                  errorIcon={true}
-                  shift={null}
-                  distance="100px "
-                  shiftDuration={imgLoaded ? 0 : 1000}
-                  bgColor="inherit"
-                />
-              }
+        }
+      },
+      onPinch: (state) => {
 
-            </a.div>
-          </DialogContent>
-          :
-          <DialogContent sx={{ p: 0 }}>
+        let { offset: [s] } = state;
+        console.log(s)
+        if (s < 1) s = 1
+        api.start({ scale: s })
+        if (s === 1) {
+          open({ canceled: true })
+        }
+      },
+    },
+    {
+      target: myRef,
+      drag: { filterTaps: isMobile, rubberband: false },
+      pinch: { scaleBounds: { min: 1, max: 20 }, pinchOnWheel: true, rubberband: true },
+    }
+  )
+  return (
+
+    <Dialog
+      fullScreen
+      open={isOpen}
+      onClose={props.onClose}
+      TransitionComponent={Transition}
+    >
+
+      {!isMobile ?
+        <AppBar sx={{ position: 'relative', backgroundColor: 'black', textTransform: 'none' }}>
+          <Toolbar>
+            <IconButton
+              edge="end"
+              color="inherit"
+              onClick={props.onClose}
+              aria-label="close"
+            >
+              <CloseIcon />
+            </IconButton>
+          </Toolbar>
+        </AppBar> :
+        <IconButton
+          edge="end"
+          color="inherit"
+          style={{
+            right: 0,
+            width: 40,
+            height: 40,
+            backgroundColor: 'gray',
+            position: 'fixed',
+            right: 16,
+            zIndex: 1000
+          }}
+          onClick={props.onClose}
+          aria-label="close"
+        >
+          <CloseIcon />
+        </IconButton>
+      }
+
+
+      <DialogContent sx={{ p: 0 }}>
+
+        <a.div ref={myRef} style={{ touchAction: 'none', display: 'block', x, y, scale, rotateZ }} className={`flex fill center`}>
+          {img &&
+
             <Image
+
               src={img}
               height="100%"
               // width="100%"
@@ -142,9 +178,12 @@ export default function ImageOverlay(props) {
               shiftDuration={imgLoaded ? 0 : 1000}
               bgColor="inherit"
             />
-          </DialogContent>
-        }
-      </Dialog>
-    </div>
+          }
+
+        </a.div>
+      </DialogContent>  
+
+    </Dialog>
+
   );
 }
