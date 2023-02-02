@@ -1,6 +1,8 @@
 import React from 'react'
 import { Grid, CircularProgress, Paper, IconButton, LinearProgress, ImageList, ImageListItem } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
+import DeleteForever from '@mui/icons-material/DeleteForever';
+import Fab from '@mui/material/Fab';
 
 const RenderChatFooter = (props) => {
   const incomingFiles = props.files
@@ -9,8 +11,9 @@ const RenderChatFooter = (props) => {
   const [containerHeight, setContainerHeight] = React.useState(50)
   const [uploading, setUploading] = React.useState(props.uploading)
   const [columns, setColumns] = React.useState(3)
+  const [isShown, setIsShown] = React.useState('')
 
-  React.useEffect(()=>{    
+  React.useEffect(() => {
     window.addEventListener('resize', handleResize)
     window.addEventListener('orientationchange', handleResize)
     window.addEventListener('touchmove', (e) => {
@@ -23,7 +26,7 @@ const RenderChatFooter = (props) => {
 
   const handleResize = (e) => {
     const el = document.getElementById("preview-container");
-    if(el){
+    if (el) {
       setColumns(Math.floor(el.offsetWidth / 150))
     }
 
@@ -55,7 +58,7 @@ const RenderChatFooter = (props) => {
       setFiles(incomingFiles)
     }
 
-  }, [incomingFiles])
+  }, [files.length, incomingFiles])
 
   React.useEffect(() => {
     setLoading(props.loading)
@@ -73,6 +76,14 @@ const RenderChatFooter = (props) => {
     if (height > containerHeight) {
       setContainerHeight(height)
     }
+  }
+
+  const removeItem = (index) =>{
+    const newFiles = Object.assign(files)
+    console.log(newFiles.splice(index,1))
+    console.log(newFiles)
+    setFiles(newFiles)
+    setIsShown('')
   }
 
   const removeFiles = () => {
@@ -112,25 +123,29 @@ const RenderChatFooter = (props) => {
   if (files.length > 0) {
     return (
       <Grid item>
-        <Paper 
-        id='preview-container'
-        style={{
-          height: '30vh',
-          overflow: 'hidden',
-          position: 'absolute',
-          bottom: 0,
-          width: '100%'
-        }}>
-          <ImageList sx={{ width: '100%',  height: '30vh',overflowY: 'auto',}} cols={columns} rowHeight={164}>
+        <Paper
+          id='preview-container'
+          style={{
+            height: '30vh',
+            overflow: 'hidden',
+            position: 'absolute',
+            bottom: 0,
+            width: '100%'
+          }}>
+          <ImageList sx={{ width: '100%', height: '30vh', overflowY: 'auto', }} cols={columns} rowHeight={164}>
             {files.map((file, index) => {
-              if (file.url || file.thumbnail) {
+              if (file.url) {
                 return (
-                  <ImageListItem key={index + 'img'}>
+                  <ImageListItem key={index + 'img'} onMouseEnter={() => setIsShown(index + 'img')} onMouseLeave={() => setIsShown('')}>
+                    <Fab onClick={()=>{removeItem(index)}} sx={{position:'absolute', top: 11, left: 11, opacity: isShown === index + 'img' ? 1 : 0}} size="small" color="#AAA" aria-label="add">
+                      <DeleteForever />
+                    </Fab>
                     <img className='previewImage'
                       width='150px'
-                      style={{ padding: 8 }}
-                      src={`${file.url ? file.url : file.thumbnail}`}
-                      srcSet={`${file.url ? file.url : file.thumbnail}`}
+                      height='150px'
+                      style={{ padding: 8, overflow: "hidden" }}
+                      src={`${file.url}`}
+                      srcSet={`${file.url}`}
                       alt='Thumbnail Preview'
                       loading="lazy"
                     />

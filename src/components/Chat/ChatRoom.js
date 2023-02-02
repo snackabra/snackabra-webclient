@@ -62,6 +62,7 @@ class ChatRoom extends React.PureComponent {
 
 
   componentDidMount() {
+    console.log(this.props.roomId)
     const handleResize = (e) => {
       const { height } = Dimensions.get('window')
       this.setState({ height: height })
@@ -88,10 +89,7 @@ class ChatRoom extends React.PureComponent {
       if (!data?.key) {
         this.setState({ openFirstVisit: true })
       } else {
-
         this.connect();
-
-
       }
     })
     this.processQueue()
@@ -314,7 +312,7 @@ class ChatRoom extends React.PureComponent {
       _files.forEach((file, i) => {
 
         const message = {
-          createdAt: new Date().toString(),
+          createdAt: new Date(),
           text: "",
           image: file.url,
           user: this.sbContext.user,
@@ -398,6 +396,7 @@ class ChatRoom extends React.PureComponent {
     const systemMessage = {
       _id: this.state.messages.length,
       text: msg_string,
+      createdAt: new Date(),
       user: { _id: 'system', name: 'System Message' },
       whispered: false,
       verified: true,
@@ -417,6 +416,7 @@ class ChatRoom extends React.PureComponent {
       messages: [...this.state.messages, {
         _id: `${this.state.messages.length}_${Date.now()}`,
         user: { _id: 'system', name: 'System Message' },
+        createdAt: new Date(),
         text: message + '\n\n Details in console'
       }]
     })
@@ -502,7 +502,7 @@ class ChatRoom extends React.PureComponent {
     }
     const _f_message = this.state.messages[0];
     const _l_message = this.state.messages[this.state.messages.length - 1];
-    const messages = _f_message && _f_message.createdAt.getTime() < _l_message.createdAt.getTime() ?  this.state.messages.reverse() : this.state.messages
+    const messages = _f_message && _f_message?.createdAt?.getTime() < _l_message?.createdAt?.getTime() ?  this.state.messages.reverse() : this.state.messages
 
     return (
 

@@ -37,24 +37,18 @@ const JoinDialog = (props) => {
       const pathname = uriParts[uriParts.length - 1]
       const domain = roomId.match(/([\w\d]+\..+|localhost:3000)\//)
       const origin = window.location.origin.match(/([\w\d]+\..+|localhost:3000)/)
-      console.log(domain, origin)
-      if (domain[1] === origin[1]) {
-        if (pathname.length === 64) {
-          navigate("/"+pathname);
-          setRoomId("");
-          props.onClose()
-        } else {
-          errorNotify('The room id provided is not the correct format.')
-        }
-
+      if (pathname.length === 64) {
+        navigate("/" + pathname);
+        setRoomId("");
+        props.onClose()
       } else {
-        errorNotify('Invalid URL for connecting to a room id.')
+        errorNotify('The room id provided is not the correct format.')
       }
 
     } else {
       console.log(window.location.origin + "/" + roomId)
       if (roomId.length === 64) {
-        navigate("/"+roomId);
+        navigate("/" + roomId);
         setRoomId("");
         props.onClose()
       } else {

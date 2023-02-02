@@ -80,10 +80,11 @@ const ResponsiveDrawer = observer((props) => {
     if(room_id !== roomId){
       setRoomId(room_id)
     }
-    
+
   }, [room_id])
 
   React.useEffect(() => {
+
     let _c = []
     let i = 0
     for (let x in sbContext.channels) {
@@ -93,8 +94,23 @@ const ResponsiveDrawer = observer((props) => {
       }
       i++
     }
+    if(!sbContext.channels[room_id] && room_id){
+      const options = {
+        roomId: room_id,
+        username: 'Unnamed',
+        key:  null,
+        secret: null,
+        messageCallback: console.log
+      }
+      console.log(options)
+      sbContext.connect(options).then(() => {
+        sbContext.socket.close()
+      })
+      _c.push({_id: room_id, name: `Room ${_c.length + 1}`})
+    }
+    
     setChannelList(_c)
-  }, [sbContext.channels])
+  }, [room_id, sbContext.channels])
 
   const handleDrawerToggle = () => {
     NavAppBarContext.setMenuOpen(!NavAppBarContext.state.menuOpen)
