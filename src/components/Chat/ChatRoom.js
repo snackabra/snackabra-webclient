@@ -521,7 +521,7 @@ class ChatRoom extends React.PureComponent {
         width: '100%',
         paddingTop: 48
       }}>
-        <DropZone notify={this.notify} dzRef={this.setDropzoneRef} addFile={this.loadFiles} showLoading={this.showLoading}>
+        <DropZone notify={this.notify} dzRef={this.setDropzoneRef} addFile={this.loadFiles} showLoading={this.showLoading} overlayOpen={this.state.openPreview}>
           <AdminDialog open={this.state.openAdminDialog} sendSystemInfo={this.sendSystemInfo} onClose={() => {
             this.setOpenAdminDialog(false)
             this.props.onCloseAdminDialog()

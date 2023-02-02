@@ -36,8 +36,9 @@ const rejectStyle = {
 }
 
 const DropZone = observer((props) => {
-  const { onDrop, children, dzRef, notify } = props;
+  const { onDrop, children, dzRef, notify, overlayOpen } = props;
   const [success, setSuccess] = React.useState(false)
+  const [previewOpen, setPreviewOpen] = React.useState(false)
   const sbContext = React.useContext(SnackabraContext);
 
   let maxFiles = isMobile ? 15 : 30
@@ -76,6 +77,11 @@ const DropZone = observer((props) => {
   }
 
   React.useEffect(() => {
+    console.log(overlayOpen)
+    setPreviewOpen(overlayOpen)
+  }, [overlayOpen])
+
+  React.useEffect(() => {
     if (success) {
       setTimeout(() => {
         setSuccess(false)
@@ -85,9 +91,10 @@ const DropZone = observer((props) => {
 
 
   const onDropCallback = (acceptedFiles) => {
-    console.log(acceptedFiles)
-    selectFiles(acceptedFiles)
-    // onDrop(acceptedFiles)
+    if(!previewOpen){
+      selectFiles(acceptedFiles)
+    } 
+    
   }
 
   const onRejected = (e) => {
@@ -111,7 +118,7 @@ const DropZone = observer((props) => {
 
   //This is where we would want to do something with the files when they are uploaded
   //https://mozilla.github.io/pdf.js/examples/
-  const onDropZone = useCallback(onDropCallback, [onDrop])
+  const onDropZone = useCallback(onDropCallback, [previewOpen, selectFiles])
 
 
   return (

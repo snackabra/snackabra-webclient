@@ -74,7 +74,10 @@ export default function ImageOverlay(props) {
 
   const close = (velocity = 0) => {
     api.start({ y: 0, x: 0, scale: 1, rotateZ: 0, immediate: false, config: { ...config.stiff, velocity } })
-    props.onClose()
+    if(isMobile){
+      props.onClose()
+    }
+    
   }
 
   useGesture(
