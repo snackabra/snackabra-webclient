@@ -53,9 +53,9 @@ export default function ImageOverlay(props) {
   React.useEffect(() => {
     setImage(props.img)
     if (isMobile) {
-      open(myRef)
+      console.log()
+      open({ canceled: true })
     }
-    api.start({ y: 0, x: 0, scale: 1, rotateZ: 0, immediate: false })
 
   }, [props.img])
 
@@ -69,33 +69,36 @@ export default function ImageOverlay(props) {
     // when cancel is true, it means that the user passed the upwards threshold
     // so we change the spring config to create a nice wobbly effect
     if (canceled)
-      api.start({ y: 0, x: 0, scale: 1, rotateZ: 0, pinching: false, immediate: false, config: canceled ? config.wobbly : config.stiff })
+      api.start({ y: 0, x: 0, scale: 1, rotateZ: 0, pinching: false, reset: true, immediate: false, config: canceled ? config.wobbly : config.stiff })
   }
 
-  const close = (velocity = 0) => {
-    api.start({ y: 0, x: 0, scale: 1, rotateZ: 0, immediate: false, config: { ...config.stiff, velocity } })
-    if(isMobile){
+  const close = () => {
+    api.start({ y: 0, x: 0, scale: 1, rotateZ: 0, reset: true, immediate: false, config: { ...config.stiff, velocity: 0 } })
+    setTimeout(() => {
       props.onClose()
-    }
-    
+    }, 50)
+
   }
 
   useGesture(
     {
       onDrag: (state) => {
-        console.log(state)
-        const { down, dragging, offset: [x, y], last, velocity: [vy], direction: [, dy], movement: [my] } = state
+        const { down, dragging, offset: [x, y], last, velocity: [vy], direction: [, dy] } = state
         // if the user drags up passed a threshold, then we cancel
         // the drag so that the sheet resets to its open position
         if (down && !dragging) {
           return;
         }
         const s = scale.animation.to;
+        console.log(last, s)
         if (last && s <= 1) {
-          Math.abs(my) > height * 0.5 || (vy > 0.5 && dy > 0) ? close(vy) : open({ canceled: true })
+          console.log(Math.abs(y), height * 0.5)
+          console.log(Math.abs(y) > height * 0.5)
+          Math.abs(y) > height * 0.5 || (vy > 0.5 && dy > 0) ? close(vy) : open({ canceled: true })
         } else {
           if (s <= 1) {
             api.start({ y: y, x: 0, immediate: true, rubberband: false })
+
           } else {
             api.start({ y: y, x: x, immediate: true, rubberband: false })
           }
@@ -115,7 +118,7 @@ export default function ImageOverlay(props) {
     },
     {
       target: myRef,
-      drag: { filterTaps: isMobile, rubberband: false },
+      drag: { from: () => [0, y.get()], filterTaps: true, rubberband: false },
       pinch: { scaleBounds: { min: 1, max: 20 }, pinchOnWheel: true, rubberband: true },
     }
   )
@@ -161,9 +164,9 @@ export default function ImageOverlay(props) {
       }
 
 
-      <DialogContent sx={{ p: 0 }}>
+      <DialogContent sx={{ p: 0 }} ref={myRef}>
 
-        <a.div ref={myRef} style={{ touchAction: 'none', display: 'block', x, y, scale, rotateZ }} className={`flex fill center`}>
+        <a.div style={{ touchAction: 'none', display: 'block', x, y, scale, rotateZ }} className={`flex fill center`}>
           {img &&
 
             <Image
@@ -184,7 +187,7 @@ export default function ImageOverlay(props) {
           }
 
         </a.div>
-      </DialogContent>  
+      </DialogContent>
 
     </Dialog>
 
