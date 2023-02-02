@@ -10,7 +10,6 @@ import { Image } from 'mui-image'
 import { isMobile } from 'react-device-detect';
 import { useDrag } from '@use-gesture/react'
 import { a, useSpring, config } from '@react-spring/web'
-import { CatchingPokemonSharp } from '@mui/icons-material';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -29,7 +28,10 @@ export default function ImageOverlay(props) {
 
   React.useEffect(() => {
     setImage(props.img)
-    open(myRef)
+    if (isMobile) {
+      open(myRef)
+    }
+
     // window.pinchZoomEvent = document.addEventListener('touchmove', function (event) {
 
     // }, { passive: false });
@@ -68,9 +70,9 @@ export default function ImageOverlay(props) {
       // when the user releases the sheet, we check whether it passed
       // the threshold for it to close, or if we reset it to its open positino
       if (last) {
-        my > height * 0.5 || (vy > 0.5 && dy > 0) ? 
-        props.onClose() :
-        open({ canceled })
+        my > height * 0.5 || (vy > 0.5 && dy > 0) ?
+          props.onClose() :
+          open({ canceled })
       }
       // when the user keeps dragging, we just move the sheet according to
       // the cursor position
@@ -101,10 +103,31 @@ export default function ImageOverlay(props) {
             </Toolbar>
           </AppBar>
         }
-        <DialogContent sx={{ p: 0 }}>
-          <a.div {...bind()} style={{ display: 'block', y }}>
-            {img &&
-            
+        {isMobile ?
+          <DialogContent sx={{ p: 0 }}>
+            <a.div {...bind()} style={{ display: 'block', y }}>
+              {img &&
+
+                <Image
+                  src={img}
+                  height="100%"
+                  // width="100%"
+                  fit="contain"
+                  duration={imgLoaded ? 0 : 1000}
+                  easing="cubic-bezier(0.7, 0, 0.6, 1)"
+                  showLoading={true}
+                  errorIcon={true}
+                  shift={null}
+                  distance="100px "
+                  shiftDuration={imgLoaded ? 0 : 1000}
+                  bgColor="inherit"
+                />
+              }
+
+            </a.div>
+          </DialogContent>
+          :
+          <DialogContent sx={{ p: 0 }}>
             <Image
               src={img}
               height="100%"
@@ -119,10 +142,8 @@ export default function ImageOverlay(props) {
               shiftDuration={imgLoaded ? 0 : 1000}
               bgColor="inherit"
             />
-            }
-
-          </a.div>
-        </DialogContent>
+          </DialogContent>
+        }
       </Dialog>
     </div>
   );
