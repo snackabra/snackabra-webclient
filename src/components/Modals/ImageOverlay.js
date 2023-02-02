@@ -102,13 +102,13 @@ export default function ImageOverlay(props) {
           </AppBar>
         }
         <DialogContent sx={{ p: 0 }}>
-          <a.div {...bind()} style={{ display: 'block', top: `400px`, y }}>
+          <a.div {...bind()} style={{ display: 'block', y }}>
             {img &&
             
             <Image
               src={img}
               height="100%"
-              width="100%"
+              // width="100%"
               fit="contain"
               duration={imgLoaded ? 0 : 1000}
               easing="cubic-bezier(0.7, 0, 0.6, 1)"
