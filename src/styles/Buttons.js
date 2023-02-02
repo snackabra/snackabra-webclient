@@ -19,10 +19,10 @@ color: white;
 
 &.MuiButton-outlined{
   border: 1px solid rgba(0, 0, 0, 0.12);
-  background: gray;
-  color: white;
+  background: white;
+  color: gray;
   &:hover{
-    border-color: gray;
+    background: gray;
     color: darkgray;
   }
 }

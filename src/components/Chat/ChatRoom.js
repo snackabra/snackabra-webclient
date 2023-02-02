@@ -1,7 +1,7 @@
 /* Copyright (c) 2021 Magnusson Institute, All Rights Reserved */
 
 import * as React from 'react';
-import GiftedChatCustom from '../Rooms/GiftedChatCustom';
+import GiftedChatCustom from './GiftedChatCustom';
 import RenderBubble from "./RenderBubble";
 import RenderAvatar from "./RenderAvatar";
 import RenderAttachmentIcon from "./RenderAttachmentIcon";

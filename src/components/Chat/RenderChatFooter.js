@@ -3,6 +3,9 @@ import { Grid, CircularProgress, Paper, IconButton, LinearProgress, ImageList, I
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteForever from '@mui/icons-material/DeleteForever';
 import Fab from '@mui/material/Fab';
+import { TouchableOpacity } from 'react-native';
+import ConfirmationDialog from '../Modals/ConfirmationDialog';
+import { isMobile } from 'react-device-detect';
 
 const RenderChatFooter = (props) => {
   const incomingFiles = props.files
@@ -12,8 +15,12 @@ const RenderChatFooter = (props) => {
   const [uploading, setUploading] = React.useState(props.uploading)
   const [columns, setColumns] = React.useState(3)
   const [isShown, setIsShown] = React.useState('')
+  const [toRemove, setToRemove] = React.useState('')
+  const [showConfirm, setShowConfirm] = React.useState(false)
 
   React.useEffect(() => {
+    setToRemove('')
+    setShowConfirm(false)
     window.addEventListener('resize', handleResize)
     window.addEventListener('orientationchange', handleResize)
     window.addEventListener('touchmove', (e) => {
@@ -78,9 +85,9 @@ const RenderChatFooter = (props) => {
     }
   }
 
-  const removeItem = (index) =>{
+  const removeItem = (index) => {
     const newFiles = Object.assign(files)
-    console.log(newFiles.splice(index,1))
+    console.log(newFiles.splice(index, 1))
     console.log(newFiles)
     setFiles(newFiles)
     setIsShown('')
@@ -120,9 +127,26 @@ const RenderChatFooter = (props) => {
     );
   }
 
+  const onLongPress = (i) => {
+    setToRemove(i)
+    setShowConfirm(true)
+  }
+
   if (files.length > 0) {
     return (
       <Grid item>
+        <ConfirmationDialog
+          text={'Are you sure you want to remove this image?'}
+          onConfirm={() => {
+            removeItem(toRemove)
+            setToRemove('')
+            setShowConfirm(false)
+          }}
+          onCancel={() => {
+            setToRemove('')
+            setShowConfirm(false)
+          }}
+          open={showConfirm} />
         <Paper
           id='preview-container'
           style={{
@@ -137,18 +161,21 @@ const RenderChatFooter = (props) => {
               if (file.url) {
                 return (
                   <ImageListItem key={index + 'img'} onMouseEnter={() => setIsShown(index + 'img')} onMouseLeave={() => setIsShown('')}>
-                    <Fab onClick={()=>{removeItem(index)}} sx={{position:'absolute', top: 11, left: 11, opacity: isShown === index + 'img' ? 1 : 0}} size="small" color="#AAA" aria-label="add">
+
+                    <Fab onClick={() => { removeItem(index) }} sx={{ position: 'absolute', top: 11, left: 11, opacity: isShown === index + 'img' && !isMobile ? 1 : 0 }} size="small" color="#AAA" aria-label="add">
                       <DeleteForever />
                     </Fab>
-                    <img className='previewImage'
-                      width='150px'
-                      height='150px'
-                      style={{ padding: 8, overflow: "hidden" }}
-                      src={`${file.url}`}
-                      srcSet={`${file.url}`}
-                      alt='Thumbnail Preview'
-                      loading="lazy"
-                    />
+                    <TouchableOpacity disabled={!isMobile} onLongPress={() => { onLongPress(index) }} accessibilityRole='image'>
+                      <img className='previewImage'
+                        width='150px'
+                        height='150px'
+                        style={{ padding: 8, overflow: "hidden" }}
+                        src={`${file.url}`}
+                        srcSet={`${file.url}`}
+                        alt='Thumbnail Preview'
+                        loading="lazy"
+                      />
+                    </TouchableOpacity>
                   </ImageListItem>
                 )
               } else {
