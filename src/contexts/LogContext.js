@@ -22,7 +22,7 @@ const fabRedStyle = {
   },
 };
 
-export const LogProvider = ({children }) => {
+export const LogProvider = ({ children }) => {
   const notify = React.useContext(NavBarActionContext)
   const [logs, setLogs] = React.useState([])
   const [enabled, setEnabled] = React.useState(false)
@@ -32,6 +32,7 @@ export const LogProvider = ({children }) => {
     const url = new URL(window.location.href);
     const params = new URLSearchParams(url.search);
     const hasParam = (params.get('debug') === 'true' || params.get('debug') === '1' || params.get('debug') === 'on')
+    const logEvents = (params.get('events') === 'true' || params.get('events') === '1' || params.get('events') === 'on')
     if (hasParam) {
       setEnabled(true)
 
@@ -114,23 +115,30 @@ export const LogProvider = ({children }) => {
         console.timeLog = function () { }
         console.trace = function () { }
       }
-      // Object.keys(window).forEach(key => {
-      //   if (/./.test(key)) {
-      //     window.addEventListener(key.slice(2), event => {
-      //       console.log(key, event)
-      //     })
-      //   }
-      // })
+      window.addEventListener('popstate', (e) => {
+        e.preventDefault();
+      });
 
-      window.onunhandledrejection = (error) =>{
-        if(notify){
+      if (logEvents) {
+        Object.keys(window).forEach(key => {
+          if (/./.test(key)) {
+            window.addEventListener(key.slice(2), event => {
+              console.log(key, event)
+            })
+          }
+        })
+      }
+
+
+      window.onunhandledrejection = (error) => {
+        if (notify) {
           console.log(notify)
           notify.setMessage("An uncaught exception has occured, view the console for details");
           notify.setSeverity("error");
           notify.setOpen(true)
           console.trace(error)
         }
-        
+
       }
 
     }

@@ -91,8 +91,6 @@ export default function ImageOverlay(props) {
         }
         const s = scale.animation.to;
         if (last && s <= 1) {
-          console.log(Math.abs(y), height * 0.5)
-          console.log(Math.abs(y) > height * 0.5)
           if (Math.abs(y) > height * 0.5) {
             close(vy)
           } else {
@@ -100,10 +98,10 @@ export default function ImageOverlay(props) {
           }
         } else {
           if (s <= 1) {
-            api.start({ y: y, x: 0, immediate: true, rubberband: false })
+            api.start({ y: y, x: 0, immediate: false, duration: 50, rubberband: false })
 
           } else {
-            api.start({ y: y, x: x, immediate: true, rubberband: false })
+            api.start({ y: y, x: x, immediate: false, duration: 5, rubberband: false })
           }
 
         }
@@ -111,18 +109,19 @@ export default function ImageOverlay(props) {
       onPinch: (state) => {
         let { offset: [s] } = state;
         if (s < 1) s = 1
-        api.start({ scale: s })
+        api.start({ scale: s, rubberband: false, config: { duration: 250 } })
         if (s === 1) {
-          open({ canceled: true })
+          api.start({ scale: 1, y: 0, x: 0, rubberband: false, config: { duration: 250 } })
         }
       },
     },
     {
       target: myRef,
-      drag: { from: () => [x.get(), y.get()], filterTaps: true, rubberband: false },
-      pinch: { scaleBounds: { min: 1, max: 20 }, pinchOnWheel: true, rubberband: true },
+      drag: { from: () => [x.get(), y.get()], filterTaps: true, rubberband: false, constant: 1 },
+      pinch: { scaleBounds: { min: 1, max: 20 }, pinchOnWheel: true, rubberband: false, duration: 10, immediate: true },
     }
   )
+  // console.log(scale)
   return (
 
     <Dialog
@@ -130,6 +129,7 @@ export default function ImageOverlay(props) {
       open={isOpen}
       onClose={props.onClose}
       TransitionComponent={Transition}
+      style={{ backgroundColor: 'black' }}
     >
 
       {!isMobile ?
@@ -155,7 +155,8 @@ export default function ImageOverlay(props) {
             backgroundColor: 'gray',
             position: 'fixed',
             right: 16,
-            zIndex: 1000
+            zIndex: 1000,
+            display: scale.animation.to > 1 ? 'none' : 'inherit'
           }}
           onClick={props.onClose}
           aria-label="close"
@@ -165,7 +166,7 @@ export default function ImageOverlay(props) {
       }
 
 
-      <DialogContent sx={{ p: 0 }} style={{ touchAction: 'none' }}>
+      <DialogContent sx={{ p: 0, bgcolor: 'black' }} style={{ touchAction: 'none' }}>
 
         <a.div ref={myRef} style={{ touchAction: 'none', display: 'block', x, y, scale, rotateZ }} className={`flex fill center`}>
           {img &&

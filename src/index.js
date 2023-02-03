@@ -15,12 +15,13 @@ window.addEventListener('touchmove', function (event) {
   event.preventDefault();
 });
 
-
-window.addEventListener('touchstart', (e) => {
+// document.location.replace(window.location.href)
+// console.log(window.location)
+window.onpopstate = function (e) {
 
   e.preventDefault();
-});
-
+  window.history.go(1);
+}
 
 
 const localKV = new IndexedKV({ db: 'sb_files', table: 'files' })
