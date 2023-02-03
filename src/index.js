@@ -10,11 +10,18 @@ import IndexedKV from "./utils/IndexedKV";
 const container = document.getElementById('root');
 const root = createRoot(container);
 
-// if(isMobile){
-//   document.addEventListener('touchmove', function (event) {
-//     if (event.scale !== 1) { event.preventDefault(); }
-//   }, { passive: false });
-// }
+
+window.addEventListener('touchmove', function (event) {
+  event.preventDefault();
+});
+
+
+window.addEventListener('touchstart', (e) => {
+
+  e.preventDefault();
+});
+
+
 
 const localKV = new IndexedKV({ db: 'sb_files', table: 'files' })
 

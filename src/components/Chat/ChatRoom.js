@@ -256,10 +256,11 @@ class ChatRoom extends React.PureComponent {
   }
 
   openImageOverlay = (message) => {
-    this.setState({ img: message.image, openPreview: true })
+    this.setState({ img: message.image, openPreview: true }) // <----
     console.log(this.sbContext)
     console.log("image metadata")
     console.log(message.imageMetaData)
+    this.props.inhibitSwipe(1)
     this.sbContext.SB.storage.retrieveImage(message.imageMetaData, this.state.controlMessages).then((data) => {
       console.log(data)
       if (data.hasOwnProperty('error')) {
@@ -277,6 +278,7 @@ class ChatRoom extends React.PureComponent {
   }
 
   imageOverlayClosed = () => {
+    this.props.inhibitSwipe(0)
     this.setState({ openPreview: false, img: '', imgLoaded: false })
   }
 

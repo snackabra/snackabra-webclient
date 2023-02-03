@@ -90,11 +90,14 @@ export default function ImageOverlay(props) {
           return;
         }
         const s = scale.animation.to;
-        console.log(last, s)
         if (last && s <= 1) {
           console.log(Math.abs(y), height * 0.5)
           console.log(Math.abs(y) > height * 0.5)
-          Math.abs(y) > height * 0.5 || (vy > 0.5 && dy > 0) ? close(vy) : open({ canceled: true })
+          if (Math.abs(y) > height * 0.5) {
+            close(vy)
+          } else {
+            open({ canceled: true })
+          }
         } else {
           if (s <= 1) {
             api.start({ y: y, x: 0, immediate: true, rubberband: false })
@@ -106,9 +109,7 @@ export default function ImageOverlay(props) {
         }
       },
       onPinch: (state) => {
-
         let { offset: [s] } = state;
-        console.log(s)
         if (s < 1) s = 1
         api.start({ scale: s })
         if (s === 1) {
@@ -118,7 +119,7 @@ export default function ImageOverlay(props) {
     },
     {
       target: myRef,
-      drag: { from: () => [0, y.get()], filterTaps: true, rubberband: false },
+      drag: { from: () => [x.get(), y.get()], filterTaps: true, rubberband: false },
       pinch: { scaleBounds: { min: 1, max: 20 }, pinchOnWheel: true, rubberband: true },
     }
   )
@@ -164,9 +165,9 @@ export default function ImageOverlay(props) {
       }
 
 
-      <DialogContent sx={{ p: 0 }} ref={myRef}>
+      <DialogContent sx={{ p: 0 }} style={{ touchAction: 'none' }}>
 
-        <a.div style={{ touchAction: 'none', display: 'block', x, y, scale, rotateZ }} className={`flex fill center`}>
+        <a.div ref={myRef} style={{ touchAction: 'none', display: 'block', x, y, scale, rotateZ }} className={`flex fill center`}>
           {img &&
 
             <Image

@@ -75,6 +75,7 @@ const ResponsiveDrawer = observer((props) => {
   const [editingRoomId, setEditingRoomId] = React.useState(false);
   const [updatedName, setUpdatedName] = React.useState(false);
   const [channelList, setChannelList] = React.useState([]);
+  const [swipeInhibiter, inhibitSwipe] = React.useState(0);
 
   React.useEffect(() => {
     if(room_id !== roomId){
@@ -373,6 +374,7 @@ const ResponsiveDrawer = observer((props) => {
           index={value}
           onChangeIndex={handleChangeIndex}
           style={{ padding: 0 }}
+          disabled={!!swipeInhibiter}
         >
           {channelList.map((item, index) => {
             return (<TabPanel 
@@ -381,7 +383,15 @@ const ResponsiveDrawer = observer((props) => {
               index={index} 
               dir={theme.direction} 
               className="RoomSwipable">
-              <ChatRoom active={value === index} roomId={item._id} sbContext={sbContext} Notifications={Notifications} openAdminDialog={openAdminDialog} onCloseAdminDialog={onCloseAdminDialog}/>
+              <ChatRoom inhibitSwipe={(weighted)=>{
+                inhibitSwipe(weighted)
+              }} 
+              active={value === index} 
+              roomId={item._id} 
+              sbContext={sbContext} 
+              Notifications={Notifications} 
+              openAdminDialog={openAdminDialog} 
+              onCloseAdminDialog={onCloseAdminDialog}/>
             </TabPanel>)
           })}
         </SwipeableViews>
