@@ -8,10 +8,8 @@ import Slide from '@mui/material/Slide';
 import DialogContent from "@mui/material/DialogContent";
 import { Image } from 'mui-image'
 import { isMobile } from 'react-device-detect';
-import { useDrag, usePinch, createUseGesture, dragAction, pinchAction } from '@use-gesture/react'
+import { createUseGesture, dragAction, pinchAction } from '@use-gesture/react'
 import { a, useSpring, config } from '@react-spring/web'
-import { CodeSharp } from '@mui/icons-material';
-import zIndex from '@mui/material/styles/zIndex';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
