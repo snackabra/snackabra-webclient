@@ -53,7 +53,7 @@ export default function ImageOverlay(props) {
 
   React.useEffect(() => {
     open({ canceled: true })
-    if (props.img !== img) {
+    if(props.img !== img){
       setImage(props.img)
       setClosing(false)
     }
@@ -92,24 +92,24 @@ export default function ImageOverlay(props) {
         }
         const s = scale.animation.to;
         if (last && s === 1) {
-          if (Math.abs(y) > height * 0.45) {
+          if (Math.abs(y) > height * 0.4) {
 
             api.start({
               y: Math.sign(mx) < 0 ? window.innerHeight : -Math.abs(window.innerHeight), x: 0
             })
             setTimeout(() => {
               setClosing(true)
-            }, 25)
+            }, 50)
             setTimeout(() => {
               close(vy)
-            }, 75)
+            }, 200)
           } else {
             open({ canceled: true })
           }
         } else {
           if (s <= 1) {
             api.start({
-              y: y, x: 0, immediate: false
+              y: y, x: 0
             })
 
           } else {
@@ -118,25 +118,19 @@ export default function ImageOverlay(props) {
             if (xLimit) return
             api.start({
               y: y,
-              x: x,
-              immediate: true
+              x: x
             })
           }
 
         }
       },
       onPinch: (state) => {
-        console.log(state)
-        let { offset: [s], direction: [d] } = state;
+        // console.log(state)
+        let { offset: [s] } = state;
         if (s < 1) s = 1
-        if (Math.sign(d) < 0) {
-          api.start({ scale: s, y: 0, x: 0,rubberband: false, immediate: false, duration: 1000 })
-        } else {
-          api.start({ scale: s, immediate: true })
-        }
-
+        api.start({ scale: s })
         if (s === 1) {
-          api.start({ scale: 1, y: 0, x: 0, rubberband: true, immediate: true })
+          api.start({ scale: 1, y: 0, x: 0 })
         }
       },
     },
@@ -175,7 +169,7 @@ export default function ImageOverlay(props) {
 
       <DialogContent sx={{ p: 0, bgcolor: 'black' }} style={{ touchAction: 'none' }}>
 
-        <a.div id={'gesture-container'} ref={myRef} style={{ touchAction: 'none', display: 'block', x, y, scale, rotateZ, overflow: 'none' }} className={`flex fill center`}>
+        <a.div id={'gesture-container'} ref={myRef} style={{ touchAction: 'none', display: 'block', x, y, scale, rotateZ }} className={`flex fill center`}>
           {img &&
 
             <Image
