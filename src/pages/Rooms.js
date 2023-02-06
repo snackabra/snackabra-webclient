@@ -78,7 +78,7 @@ const ResponsiveDrawer = observer((props) => {
   const [swipeInhibiter, inhibitSwipe] = React.useState(0);
 
   React.useEffect(() => {
-    if(room_id !== roomId){
+    if (room_id !== roomId) {
       setRoomId(room_id)
     }
 
@@ -90,16 +90,16 @@ const ResponsiveDrawer = observer((props) => {
     let i = 0
     for (let x in sbContext.channels) {
       _c.push(sbContext.channels[x])
-      if(room_id === sbContext.channels[x]._id){
+      if (room_id === sbContext.channels[x]._id) {
         setValue(i)
       }
       i++
     }
-    if(!sbContext.channels[room_id] && room_id){
+    if (!sbContext.channels[room_id] && room_id) {
       const options = {
         roomId: room_id,
         username: 'Unnamed',
-        key:  null,
+        key: null,
         secret: null,
         messageCallback: console.log
       }
@@ -107,9 +107,9 @@ const ResponsiveDrawer = observer((props) => {
       sbContext.connect(options).then(() => {
         sbContext.socket.close()
       })
-      _c.push({_id: room_id, name: `Room ${_c.length + 1}`})
+      _c.push({ _id: room_id, name: `Room ${_c.length + 1}` })
     }
-    
+
     setChannelList(_c)
   }, [room_id, sbContext.channels])
 
@@ -150,13 +150,13 @@ const ResponsiveDrawer = observer((props) => {
   };
 
   const handleChangeIndex = (index) => {
-    const to =channelList[index]._id;
-    navigate('/'+to)
+    const to = channelList[index]._id;
+    navigate('/' + to)
     setRoomId(to)
     setValue(index);
   };
 
-  const onCloseAdminDialog = () =>{
+  const onCloseAdminDialog = () => {
     setOpenAdminDialog(false)
   }
 
@@ -377,21 +377,21 @@ const ResponsiveDrawer = observer((props) => {
           disabled={!!swipeInhibiter}
         >
           {channelList.map((item, index) => {
-            return (<TabPanel 
-              key={`${index}-tab-panel`} 
-              value={value} 
-              index={index} 
-              dir={theme.direction} 
+            return (<TabPanel
+              key={`${index}-tab-panel`}
+              value={value}
+              index={index}
+              dir={theme.direction}
               className="RoomSwipable">
-              <ChatRoom inhibitSwipe={(weighted)=>{
+              <ChatRoom inhibitSwipe={(weighted) => {
                 inhibitSwipe(weighted)
-              }} 
-              active={value === index} 
-              roomId={item._id} 
-              sbContext={sbContext} 
-              Notifications={Notifications} 
-              openAdminDialog={openAdminDialog} 
-              onCloseAdminDialog={onCloseAdminDialog}/>
+              }}
+                active={value === index}
+                roomId={item._id}
+                sbContext={sbContext}
+                Notifications={Notifications}
+                openAdminDialog={openAdminDialog}
+                onCloseAdminDialog={onCloseAdminDialog} />
             </TabPanel>)
           })}
         </SwipeableViews>

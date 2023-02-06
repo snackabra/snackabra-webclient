@@ -97,3 +97,7 @@ html {
 .flex.center {
   justify-content: center;
 }
+
+#image-carousel .react-swipeable-view-container {
+  height: 100%
+}

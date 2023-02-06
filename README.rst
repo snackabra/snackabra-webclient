@@ -50,6 +50,8 @@ Once done, you can simply:
    yarn build
    yarn start
 
+It should be accessible on ``localhost:3000``.
+
 If you're changing messages in the UI, you will occasionally need:
 
 ::
@@ -138,72 +140,6 @@ The app is written in (mostly) React Native and based on the
 currently using a slightly modified fork. [#f04]_
 
 
-
-
-Directory
-=========
-
-Following files should be in the git::
-
-
-
-    .
-    ├── LICENSE.rst
-    ├── README.rst
-    ├── build
-    ├── config-overrides.js
-    ├── package.json
-    ├── public
-    │   ├── apple-touch-icon.png
-    │   ├── favicon.ico
-    │   ├── index.html
-    │   ├── manifest.json
-    │   └── robots.txt
-    ├── snackabra.svg
-    ├── src
-    │   ├── App.css
-    │   ├── App.tsx
-    │   ├── components
-    │   │   ├── AdminDialog
-    │   │   │   ├── AdminDialog.css
-    │   │   │   └── AdminDialog.js
-    │   │   ├── Guide
-    │   │   │   ├── Guide.css
-    │   │   │   └── Guide.js
-    │   │   └── LandingPage
-    │   │       ├── LandingPage.css
-    │   │       └── LandingPage.js
-    │   ├── containers
-    │   │   ├── Modal
-    │   │   │   ├── Modal.css
-    │   │   │   └── Modal.jsx
-    │   │   ├── Room
-    │   │   │   ├── Room.css
-    │   │   │   └── Rooms.js
-    │   │   └── Snackabra
-    │   │       ├── Snackabra.css
-    │   │       └── Snackabra.js
-    │   ├── index.css
-    │   ├── index.js
-    │   ├── locales
-    │   │   └── en
-    │   │       ├── messages.js
-    │   │       └── messages.po
-    │   ├── react-app-env.d.ts
-    │   ├── static
-    │   │   ├── attach.png
-    │   │   ├── icons8-edit-24.png
-    │   │   ├── icons8-lock-64.png
-    │   │   ├── icons8-menu-48.png
-    │   │   ├── icons8-open-in-popup-24.png
-    │   │   ├── icons8-refresh-24.png
-    │   │   ├── icons8-unlock-64.png
-    │   │   ├── icons8-user-64.png
-    │   │   └── lock_secure.png
-    │   └── utils
-    │       └── utils.js
-    ├── tsconfig.json
-    └── yarn.lock
 
 
 
