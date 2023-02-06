@@ -115,8 +115,8 @@ class ChatRoom extends React.PureComponent {
     }
   }
 
-  componentWillUnmount(){
-    this.setState( {
+  componentWillUnmount() {
+    this.setState({
       openAdminDialog: false,
       openWhisper: false,
       openPreview: false,
@@ -209,15 +209,15 @@ class ChatRoom extends React.PureComponent {
         if (this.sbContext.motd !== '') {
           this.sendSystemInfo('MOTD: ' + this.props.sbContext.motd, (systemMessage) => {
             this.sbContext.messages = messages
-              this.setState({ messages: [...messages, systemMessage] })
+            this.setState({ messages: [...messages, systemMessage] })
           })
         } else {
           this.sbContext.messages = messages
-            this.setState({ messages: this.sbContext.messages })
+          this.setState({ messages: this.sbContext.messages })
         }
 
       })
-      
+
     }).catch((e) => {
       if (e.match(/^No such channel on this server/)) {
         this.notify(e + ` Channel ID: ${this.props.roomId}}`, 'error')
@@ -256,25 +256,14 @@ class ChatRoom extends React.PureComponent {
   }
 
   openImageOverlay = (message) => {
-    this.setState({ img: message.image, openPreview: true }) // <----
-    console.log(this.sbContext)
-    console.log("image metadata")
-    console.log(message.imageMetaData)
     this.props.inhibitSwipe(1)
-    this.sbContext.SB.storage.retrieveImage(message.imageMetaData, this.state.controlMessages).then((data) => {
-      console.log(data)
-      if (data.hasOwnProperty('error')) {
-        console.error(data['error'])
-        this.notify('Could not load full size image', 'warning')
-      } else {
-        this.setState({ img: data['url'], imgLoaded: true })
+    let _images = [];
+    for (let x in this.state.messages) {
+      if (this.state.messages[x].image !== '') {
+        _images.push(this.state.messages[x])
       }
-    }).catch((error) => {
-      console.error('openPreview() exception: ' + error.message);
-      this.notify('Could not load full size image', 'warning')
-      this.setState({ openPreview: false })
-    })
-
+    }
+    this.setState({ img: message, openPreview: true, images: _images })
   }
 
   imageOverlayClosed = () => {
@@ -437,7 +426,7 @@ class ChatRoom extends React.PureComponent {
 
       document.getElementById('fileInput').value = '';
     }
-    this.setState({ files: [], images: [] })
+    this.setState({ files: [] })
   }
 
   showLoading = (bool) => {
@@ -473,10 +462,6 @@ class ChatRoom extends React.PureComponent {
     this.setState({ files: [...files, ...this.state.files] })
   }
 
-  setImageFiles = (files) => {
-    this.setState({ images: files })
-  }
-
   closeWhisper = () => {
     this.setState({ openWhisper: false })
   }
@@ -504,12 +489,12 @@ class ChatRoom extends React.PureComponent {
     }
     let inverted = false;
     let messages = this.state.messages
-    try{
+    try {
       const _f_message = this.state.messages[0];
       const _l_message = this.state.messages[this.state.messages.length - 1];
-      messages = _f_message && _f_message?.createdAt?.getTime() < _l_message?.createdAt?.getTime() ?  this.state.messages.reverse() : this.state.messages
+      messages = _f_message && _f_message?.createdAt?.getTime() < _l_message?.createdAt?.getTime() ? this.state.messages.reverse() : this.state.messages
       inverted = true;
-    }catch(e){
+    } catch (e) {
       console.warn(e)
     }
 
@@ -529,7 +514,13 @@ class ChatRoom extends React.PureComponent {
             this.props.onCloseAdminDialog()
           }} />
           <WhisperUserDialog replyTo={this.state.replyTo} open={this.state.openWhisper} onClose={this.closeWhisper} />
-          <ImageOverlay open={this.state.openPreview} img={this.state.img} imgLoaded={this.state.imgLoaded}
+          <ImageOverlay
+            sbContext={this.sbContext}
+            images={this.state.images}
+            open={this.state.openPreview}
+            img={this.state.img}
+            controlMessages={this.state.controlMessages}
+            imgLoaded={this.state.imgLoaded}
             onClose={this.imageOverlayClosed} />
           <ChangeNameDialog {...this.state.changeUserNameProps} open={this.state.openChangeName} onClose={(userName, _id) => {
             this.saveUsername(userName, _id)
@@ -621,9 +612,6 @@ class ChatRoom extends React.PureComponent {
           />
         </DropZone>
       </SafeAreaView>
-
-
-
     )
   }
 }
