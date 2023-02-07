@@ -101,3 +101,6 @@ html {
 #image-carousel .react-swipeable-view-container {
   height: 100%
 }
+#image-carousel .react-swipeable-view-container div {
+  overflow: hidden !important;
+}

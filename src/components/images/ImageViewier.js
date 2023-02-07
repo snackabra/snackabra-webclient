@@ -3,13 +3,14 @@ import NotificationContext from "../../contexts/NotificationContext";
 import { Image } from 'mui-image'
 import { createUseGesture, dragAction, pinchAction } from '@use-gesture/react'
 import { a, useSpring, config } from '@react-spring/web'
+import { isMobile } from 'react-device-detect';
 
 const useGesture = createUseGesture([dragAction, pinchAction])
 
 export default function ImageViewer(props) {
     const { loadImage, image, controlMessages, sbContext, onClose, inhibitSwipe } = props
     const notify = React.useContext(NotificationContext)
-    const [img, setImage] = React.useState(props.image.image);
+    const [img, setImage] = React.useState(image?.image);
     const [imgLoaded, setImageLoaded] = React.useState(false);
     const [closing, setClosing] = React.useState(false);
     const myRef = React.createRef();
@@ -23,20 +24,22 @@ export default function ImageViewer(props) {
 
     React.useEffect(() => {
         setImage(image.image)
-        sbContext.SB.storage.retrieveImage(image.imageMetaData, controlMessages).then((data) => {
-            if (data.hasOwnProperty('error')) {
-                console.error(data['error'])
+        if(image?.image){
+            
+            sbContext.SB.storage.retrieveImage(image.imageMetaData, controlMessages).then((data) => {
+                if (data.hasOwnProperty('error')) {
+                    console.error(data['error'])
+                    notify.warn('Could not load full size image')
+                } else {
+                    setImage(data['url'])
+                    setImageLoaded(true)
+                }
+            }).catch((error) => {
+                console.error('openPreview() exception: ' + error.message);
                 notify.warn('Could not load full size image')
-            } else {
-                setImage(data['url'])
-                setImageLoaded(true)
-            }
-        }).catch((error) => {
-            console.error('openPreview() exception: ' + error.message);
-            notify.warn('Could not load full size image')
-        })
-
-
+            })
+    
+        }
     }, [])
 
 
@@ -123,45 +126,9 @@ export default function ImageViewer(props) {
                 }
             },
             onPinch: (state) => {
-                let { origin: [ox, oy], first, movement: [ms], offset: [s], memo, cancel } = state
+                let { origin: [ox, oy], first, movement: [ms], offset: [s], memo } = state
+                console.log(state)
                 inhibitSwipe(1)
-                // let { offset: [s], direction: [d] } = state;
-                // if (s < 1) s = 1
-                // if (Math.sign(d) < 0) {
-                //     api.start({ scale: s, y: 0, x: 0, rubberband: false, immediate: false, duration: 1000 })
-                // } else {
-                //     api.start({ scale: s, immediate: true })
-                // }
-
-                // if (s === 1) {
-                //     setTimeout(() => {
-                //         inhibitSwipe(0)
-                //     }, 200)
-
-                //     api.start({ scale: 1, y: 0, x: 0, rubberband: false, immediate: true })
-                // }
-                // if (s < 1) s = 1
-                // if (first) {
-                //     const { width, height, x, y } = myRef.current?.getBoundingClientRect()
-                //     const tx = ox - (x + width / 2)
-                //     const ty = oy - (y + height / 2)
-                //     memo = [style.x.get(), style.y.get(), tx, ty]
-                // }
-                // const x = memo[0] - (ms - 1) * memo[2]
-                // const y = memo[1] - (ms - 1) * memo[3]
-                // if (s === 1) {
-                //     setTimeout(() => {
-                //         inhibitSwipe(0)
-                //     }, 200)
-
-                //     api.start({ scale: 1, y: 0, x: 0, rubberband: true, immediate: true })
-
-                // } else {
-
-                //     api.start({ scale: s, x, y })
-
-                // }
-                // return memo
                 if (first) {
                     const { width, height, x, y } = myRef.current?.getBoundingClientRect()
                     const tx = ox - (x + width / 2)
@@ -176,7 +143,7 @@ export default function ImageViewer(props) {
                         inhibitSwipe(0)
                     }, 200)
 
-                    api.start({ scale: 1, y: 0, x: 0, rubberband: true, immediate: true })
+                    api.start({ scale: 1, y: 0, x: 0, rubberband: false, immediate: true })
                 } else {
 
                     api.start({ scale: s, x, y })
@@ -192,27 +159,25 @@ export default function ImageViewer(props) {
         }
     )
     return (
-        <div className={`flex fill center`} style={{ touchAction: 'none' }}>
-            <a.div ref={myRef} style={{ touchAction: 'none', ...style }} >
-                {img && <Image
-                    style={{
-                        display: closing ? 'none' : 'inherit'
-                    }}
-                    src={img}
-                    width="100%"
-                    fit="contain"
-                    duration={imgLoaded ? 0 : 1000}
-                    easing="cubic-bezier(0.7, 0, 0.6, 1)"
-                    showLoading={true}
-                    errorIcon={true}
-                    shift={null}
-                    distance="100px "
-                    shiftDuration={imgLoaded ? 0 : 1000}
-                    bgColor="inherit"
-                />
-                }
+        <a.div ref={myRef} style={{ touchAction: 'none', ...style }} className={`flex fill center`} >
+            {img && <Image
+                style={{
+                    display: closing ? 'none' : 'inherit'
+                }}
+                src={img}
+                width="100%"
+                fit="contain"
+                duration={imgLoaded ? 0 : 1000}
+                easing="cubic-bezier(0.7, 0, 0.6, 1)"
+                showLoading={true}
+                errorIcon={true}
+                shift={null}
+                distance="100px "
+                shiftDuration={imgLoaded ? 0 : 1000}
+                bgColor="inherit"
+            />
+            }
 
-            </a.div>
-        </div>
+        </a.div>
     );
 }
