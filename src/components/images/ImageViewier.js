@@ -10,7 +10,7 @@ const useGesture = createUseGesture([dragAction, pinchAction])
 export default function ImageViewer(props) {
     const { loadImage, image, controlMessages, sbContext, onClose, inhibitSwipe } = props
     const notify = React.useContext(NotificationContext)
-    const [img, setImage] = React.useState(image?.image);
+    const [img, setImage] = React.useState(false);
     const [imgLoaded, setImageLoaded] = React.useState(false);
     const [closing, setClosing] = React.useState(false);
     const myRef = React.createRef();
@@ -23,24 +23,27 @@ export default function ImageViewer(props) {
     }))
 
     React.useEffect(() => {
+        console.log(loadImage, image.image)
         setImage(image.image)
-        if(image?.image){
-            
-            sbContext.SB.storage.retrieveImage(image.imageMetaData, controlMessages).then((data) => {
-                if (data.hasOwnProperty('error')) {
-                    console.error(data['error'])
+        if (loadImage) {
+            setTimeout(() => {
+                sbContext.SB.storage.retrieveImage(image.imageMetaData, controlMessages).then((data) => {
+                    if (data.hasOwnProperty('error')) {
+                        console.error(data['error'])
+                        notify.warn('Could not load full size image')
+                    } else {
+                        setImage(data['url'])
+                        setImageLoaded(true)
+                    }
+                }).catch((error) => {
+                    console.error('openPreview() exception: ' + error.message);
                     notify.warn('Could not load full size image')
-                } else {
-                    setImage(data['url'])
-                    setImageLoaded(true)
-                }
-            }).catch((error) => {
-                console.error('openPreview() exception: ' + error.message);
-                notify.warn('Could not load full size image')
-            })
-    
+                })
+
+            }, 50)
+
         }
-    }, [])
+    }, [loadImage, image.image])
 
 
     React.useEffect(() => {
@@ -146,7 +149,7 @@ export default function ImageViewer(props) {
                     api.start({ scale: 1, y: 0, x: 0, rubberband: false, immediate: true })
                 } else {
 
-                    api.start({ scale: s, x, y })
+                    api.start({ scale: s, x, y, rubberband: false, immediate: true })
 
                 }
                 return memo
@@ -155,29 +158,30 @@ export default function ImageViewer(props) {
         {
             target: myRef,
             drag: { from: () => [style.x.get(), style.y.get()], filterTaps: true, rubberband: true, immediate: true },
-            pinch: { scaleBounds: { min: 1, max: 20 }, pinchOnWheel: true, rubberband: true, immediate: true },
+            pinch: { scaleBounds: { min: 1, max: 20 }, pinchOnWheel: true, rubberband: false, immediate: true },
         }
     )
     return (
         <a.div ref={myRef} style={{ touchAction: 'none', ...style }} className={`flex fill center`} >
-            {img && <Image
-                style={{
-                    display: closing ? 'none' : 'inherit'
-                }}
-                src={img}
-                width="100%"
-                fit="contain"
-                duration={imgLoaded ? 0 : 1000}
-                easing="cubic-bezier(0.7, 0, 0.6, 1)"
-                showLoading={true}
-                errorIcon={true}
-                shift={null}
-                distance="100px "
-                shiftDuration={imgLoaded ? 0 : 1000}
-                bgColor="inherit"
-            />
+            {img ?
+                <Image
+                    alt={'gallary'}
+                    style={{
+                        display: closing ? 'none' : 'inherit'
+                    }}
+                    src={img}
+                    width="100%"
+                    fit="contain"
+                    duration={imgLoaded ? 0 : 1000}
+                    easing="cubic-bezier(0.7, 0, 0.6, 1)"
+                    showLoading={true}
+                    errorIcon={true}
+                    shift={null}
+                    distance="100px "
+                    shiftDuration={imgLoaded ? 0 : 1000}
+                    bgColor="inherit"
+                /> : null
             }
-
         </a.div>
     );
 }

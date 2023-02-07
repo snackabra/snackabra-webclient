@@ -14,7 +14,7 @@ import Paper from '@mui/material/Paper';
 import { isMobile } from 'react-device-detect';
 import { autoPlay, virtualize, bindKeyboard } from 'react-swipeable-views-utils';
 
-const EnhancedSwipeableViews = bindKeyboard(autoPlay(SwipeableViews));
+const EnhancedSwipeableViews = bindKeyboard(autoPlay(virtualize(SwipeableViews)));
 
 export default function ImageCarousel(props) {
     let mouseMoveTimeout;
@@ -48,6 +48,7 @@ export default function ImageCarousel(props) {
     const slideRenderer = ({ key, index }) => {
         return (<ImageViewer
             key={key}
+            loadImage={index === value}
             image={imageList[index]}
             sbContext={sbContext}
             controlMessages={controlMessages}
@@ -87,7 +88,7 @@ export default function ImageCarousel(props) {
                 onMouseMove={showMediaControls}
                 // onMouseLeave={() => { toggleShowControls(false) }}
                 id={'image-carousel'}
-                axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
+                axis={'x-reverse'}
                 index={value}
                 disableLazyLoading
                 resistance
@@ -95,27 +96,13 @@ export default function ImageCarousel(props) {
                 onChangeIndex={handleChangeIndex}
                 style={{ padding: 0, height: '100%' }}
                 disabled={!!swipeInhibiter}
-            >
-                {imageList.map((item, index) => {
-                    return (<ImageViewer
-                        key={'image-viewer-' + index}
-                        image={item}
-                        loadImage={index === value}
-                        sbContext={sbContext}
-                        controlMessages={controlMessages}
-                        inhibitSwipe={inhibitSwipe}
-                        onOpen={() => {
-                            props.onOpen()
-                        }}
-                        onClose={() => {
-                            props.onClose()
-                        }} />
-                    );
-                })
-
-                }
-
-            </EnhancedSwipeableViews>
+                overscanSlideAfter={3}
+                overscanSlideBefore={3}
+                slideRenderer={slideRenderer}
+                slideCount={imageList.length}
+                direction={'decremental'}
+                interval={30000}
+            />
             <Grid
                 container
                 direction="row"
