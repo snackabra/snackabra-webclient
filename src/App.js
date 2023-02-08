@@ -23,9 +23,9 @@ i18n.load('en', messages)
 i18n.activate('en')
 
 const sbConfig = {
-  channel_server: process.env.REACT_APP_ROOM_SERVER,
-  channel_ws: process.env.REACT_APP_ROOM_SERVER_WS,
-  storage_server: process.env.REACT_APP_STORAGE_SERVER
+  channel_server: process.env.REACT_APP_CHANNEL_SERVER,
+  channel_ws: process.env.REACT_APP_CHANNEL_SERVER_WS,
+  storage_server: process.env.REACT_APP_SHARD_SERVER
 }
 
 const App = () => {

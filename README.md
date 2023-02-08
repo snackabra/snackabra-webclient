@@ -39,11 +39,18 @@ Once done, you can simply:
 
 ``` bash
 yarn install
-yarn build
 yarn start
 ```
 
 It should be accessible on ``localhost:3000``.
+
+To create an optimized production build:
+
+``` bash
+yarn build
+```
+
+In your project root a new folder ``build`` will contain your optimized production build. You can serve this build using the ``serve`` package from npmjs or whatever else you'd prefer.
 
 If you're changing messages in the UI, you will occasionally need:
 
@@ -69,15 +76,24 @@ Private Servers
 By default this build will point your web app to the
 https://Privacy.App servers, you can change this in the env file:
 
-If you are running your own snackabra room server, you will need to
-replace ``REACT_APP_ROOM_SERVER`` with the domain - it'll be something
-like ``r.example.workers.dev``.
+Using the examples in ``.env.example`` in the root of the project, update the enviornmental variables for your enviornment.
 
-You can run a personal room server and still use public storage
-servers, but you will only be able to read files, not upload. If you
-want to be able to share photos and files, you will need your own
-storage server as well, and set ``REACT_APP_STORAGE_SERVER`` to point
-to it.
+Included the appropriate protocol for the servers you are attempting to reach. 
+
+```
+REACT_APP_CHANNEL_SERVER=https://r.example.workers.dev
+REACT_APP_SHARD_SERVER=https://s.example.workers.dev
+REACT_APP_CHANNEL_SERVER_WS=wss://r.example.workers.dev
+```
+
+``REACT_APP_CHANNEL_SERVER`` is for api calls over the ``channel`` server
+
+
+``REACT_APP_SHARD_SERVER`` is for api calls over the ``shard`` server
+
+
+``REACT_APP_CHANNEL_SERVER_WS`` communicatin over the ``channel`` socket
+
 
 Of course you can also point it to any other public host as well. [^2]
 
@@ -112,12 +128,11 @@ take less than 10-15 minutes.
 Reminder: if you are setting up your own domain ("acme.com"), then
 you should end up with something like this:
 
-::
-
+```
    acme.com    -> will server the static pages of this (web) client
    r.acme.com  -> this runs your snackabra-roomserver
    s.acme.com  -> this runs your snackabra-storageserver
-
+```
 
 Notes
 =====
@@ -129,11 +144,7 @@ on https://privacy.app or you can configure it to connect
 to any snackabra server, including personal server.
 
 The app is written in (mostly) React Native and based on the
-(exellent) Gifted Chat code. [^3] For a few reasons, we are
-currently using a slightly modified fork. [^4]
-
-
-
+(exellent) Gifted Chat code. [^3]
 
 
 LICENSE
@@ -171,7 +182,4 @@ Footnotes
 [^2]: Future improvement will support having a list of snackabara servers that the client
 	  can query for any room, "DNS-style".
 
-[^3]: https://github.com/FaridSafi/react-native-gifted-chat
-
-[^4]: https://github.com/Magnusson-Institute/react-native-gifted-chat
-
+[^3]: [https://github.com/FaridSafi/react-native-gifted-chat](https://github.com/FaridSafi/react-native-gifted-chat)
