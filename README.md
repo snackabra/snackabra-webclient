@@ -44,13 +44,11 @@ yarn start
 
 It should be accessible on ``localhost:3000``.
 
-To create an optimized production build:
 
 ``` bash
 yarn build
 ```
 
-In your project root a new folder ``build`` will contain your optimized production build. You can serve this build using the ``serve`` package from npmjs or whatever else you'd prefer.
 
 If you're changing messages in the UI, you will occasionally need:
 
@@ -76,14 +74,12 @@ Private Servers
 By default this build will point your web app to the
 https://Privacy.App servers, you can change this in the env file:
 
-Using the examples in ``.env.example`` in the root of the project, update the enviornmental variables for your enviornment.
+Using the examples in ``example.env`` in the root of the project, update
+the enviornmental variables for your enviornment.
 
 Included the appropriate protocol for the servers you are attempting to reach. 
 
 ```
-REACT_APP_CHANNEL_SERVER=https://r.example.workers.dev
-REACT_APP_SHARD_SERVER=https://s.example.workers.dev
-REACT_APP_CHANNEL_SERVER_WS=wss://r.example.workers.dev
 ```
 
 ``REACT_APP_CHANNEL_SERVER`` is for api calls over the ``channel`` server

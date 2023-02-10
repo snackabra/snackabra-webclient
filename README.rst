@@ -19,25 +19,22 @@ snackabra@protonmail.com
 Introduction
 ============
 
-This react native web client can connect to any Snackabra server -
+This react web client can connect to any Snackabra server -
 public or private.
 
-To run your own private "room server", you can install:
-
-* https://github.com/snackabra/snackabra-roomserver
+To run your own servers please see https://snackabra.io for documentation
 
 
-Setup
-=====
+Webclient Setup
+===============
 
-You need to copy the template ".env" file to the root:
+First copy the template ''.env''' file to the root:
 
 ::
 
-   cp setup/template.env .env
+   cp example.env .env
 
-See below (Private Servers) for details: this file points your
-webclient to your preferred ``snackabra`` servers (room and storage).
+See below (Private Servers) for details.
 
 Currently you also need to clone ''mobx-snackabra-store'' into the
 top directory (this will become an npm package).
@@ -47,10 +44,18 @@ Once done, you can simply:
 ::
 
    yarn install
-   yarn build
    yarn start
 
 It should be accessible on ``localhost:3000``.
+
+To create an optimized production build:
+
+::
+
+   yarn build
+
+In your project root a new folder ``build`` will contain your optimized production build.
+You can serve this build using the ``serve`` package from npmjs or whatever else you'd prefer.
 
 If you're changing messages in the UI, you will occasionally need:
 
@@ -69,24 +74,36 @@ extension against your local version (``yarn start``), you get the
 build (which can also be tested locally).
 
 
-
 Private Servers
 ===============
 
-By default this build will point your web app to the
-https://Privacy.App servers, you can change this in the env file:
+By default this build will point your web app to Snackabra test servers:
+
+::
+
+   REACT_APP_CHANNEL_SERVER=https://channel.384co.workers.dev
+   REACT_APP_CHANNEL_SERVER_WS=wss://r.example.workers.dev
+   REACT_APP_SHARD_SERVER=https://storage.384co.workers.dev
+
 
 If you are running your own snackabra room server, you will need to
-replace ``REACT_APP_ROOM_SERVER`` with the domain - it'll be something
-like ``r.example.workers.dev``.
+change contents of ''.env'' file.
+
+For example if you are running local SDK servers, you'll need:
+
+::
+
+   REACT_APP_CHANNEL_SERVER=http://localhost:4000
+   REACT_APP_SHARD_SERVER=http://localhost:4000
+   REACT_APP_CHANNEL_SERVER_WS=ws://localhost:4000
+
 
 You can run a personal room server and still use public storage
-servers, but you will only be able to read files, not upload. If you
-want to be able to share photos and files, you will need your own
-storage server as well, and set ``REACT_APP_STORAGE_SERVER`` to point
-to it.
+servers, but you will only be able to read files, not upload. 
 
-Of course you can also point it to any other public host as well. [#f02]_
+Remember to always run a full ''yarn build'' after any changes to
+the ''.env'' file. Of course you can also point it to any other
+public host as well. [#f02]_
 
 
 Hosting your Client
@@ -136,7 +153,7 @@ on https://privacy.app or you can configure it to connect
 to any snackabra server, including personal server.
 
 The app is written in (mostly) React Native and based on the
-(exellent) Gifted Chat code. [#f03]_ For a few reasons, we are
+(excellent) Gifted Chat code. [#f03]_ For a few reasons, we are
 currently using a slightly modified fork. [#f04]_
 
 
@@ -146,7 +163,7 @@ currently using a slightly modified fork. [#f04]_
 LICENSE
 =======
 
-Copyright (c) 2016-2021 Magnusson Institute, All Rights Reserved.
+Copyright (c) 2016-2023 Magnusson Institute, All Rights Reserved.
 
 "Snackabra" is a registered trademark
 
