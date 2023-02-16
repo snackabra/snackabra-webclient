@@ -1,6 +1,5 @@
 import * as React from 'react';
 import Grid from '@mui/material/Grid';
-import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import IconButton from '@mui/material/IconButton';
 import Stop from '@mui/icons-material/Stop';
 import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
@@ -14,7 +13,7 @@ import Paper from '@mui/material/Paper';
 import { isMobile } from 'react-device-detect';
 import { autoPlay, virtualize, bindKeyboard } from 'react-swipeable-views-utils';
 
-const EnhancedSwipeableViews = bindKeyboard(autoPlay(SwipeableViews));
+const EnhancedSwipeableViews = bindKeyboard(autoPlay(virtualize(SwipeableViews)));
 
 export default function ImageCarousel(props) {
     let mouseMoveTimeout;
@@ -95,6 +94,11 @@ export default function ImageCarousel(props) {
                 onChangeIndex={handleChangeIndex}
                 style={{ padding: 0, height: '100%' }}
                 disabled={!!swipeInhibiter}
+                overscanSlideAfter={3}
+                overscanSlideBefore={3}
+                slideRenderer={slideRenderer}
+                slideCount={imageList.length}
+                interval={30000}
             >
                 {imageList.map((key, index) => {
                     return (<ImageViewer
