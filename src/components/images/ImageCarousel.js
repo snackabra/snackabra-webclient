@@ -96,11 +96,10 @@ export default function ImageCarousel(props) {
                 style={{ padding: 0, height: '100%' }}
                 disabled={!!swipeInhibiter}
             >
-                {imageList.map((item, index) => {
+                {imageList.map((key, index) => {
                     return (<ImageViewer
-                        key={'image-viewer-' + index}
-                        image={item}
-                        loadImage={index === value}
+                        key={key}
+                        image={imageList[index]}
                         sbContext={sbContext}
                         controlMessages={controlMessages}
                         inhibitSwipe={inhibitSwipe}

@@ -10,7 +10,7 @@ const useGesture = createUseGesture([dragAction, pinchAction])
 export default function ImageViewer(props) {
     const { loadImage, image, controlMessages, sbContext, onClose, inhibitSwipe } = props
     const notify = React.useContext(NotificationContext)
-    const [img, setImage] = React.useState(false);
+    const [img, setImage] = React.useState(image?.image);
     const [imgLoaded, setImageLoaded] = React.useState(false);
     const [closing, setClosing] = React.useState(false);
     const myRef = React.createRef();
@@ -25,25 +25,23 @@ export default function ImageViewer(props) {
     React.useEffect(() => {
         console.log(loadImage, image.image)
         setImage(image.image)
-        if (loadImage) {
-            setTimeout(() => {
-                sbContext.SB.storage.retrieveImage(image.imageMetaData, controlMessages).then((data) => {
-                    if (data.hasOwnProperty('error')) {
-                        console.error(data['error'])
-                        notify.warn('Could not load full size image')
-                    } else {
-                        setImage(data['url'])
-                        setImageLoaded(true)
-                    }
-                }).catch((error) => {
-                    console.error('openPreview() exception: ' + error.message);
+        if(image?.image){
+            
+            sbContext.SB.storage.retrieveImage(image.imageMetaData, controlMessages).then((data) => {
+                if (data.hasOwnProperty('error')) {
+                    console.error(data['error'])
                     notify.warn('Could not load full size image')
-                })
-
-            }, 50)
-
+                } else {
+                    setImage(data['url'])
+                    setImageLoaded(true)
+                }
+            }).catch((error) => {
+                console.error('openPreview() exception: ' + error.message);
+                notify.warn('Could not load full size image')
+            })
+    
         }
-    }, [loadImage, image.image])
+    }, [])
 
 
     React.useEffect(() => {
@@ -163,24 +161,22 @@ export default function ImageViewer(props) {
     )
     return (
         <a.div ref={myRef} style={{ touchAction: 'none', ...style }} className={`flex fill center`} >
-            {img ?
-                <Image
-                    alt={'gallary'}
-                    style={{
-                        display: closing ? 'none' : 'inherit'
-                    }}
-                    src={img}
-                    width="100%"
-                    fit="contain"
-                    duration={imgLoaded ? 0 : 1000}
-                    easing="cubic-bezier(0.7, 0, 0.6, 1)"
-                    showLoading={true}
-                    errorIcon={true}
-                    shift={null}
-                    distance="100px "
-                    shiftDuration={imgLoaded ? 0 : 1000}
-                    bgColor="inherit"
-                /> : null
+            {img && <Image
+                style={{
+                    display: closing ? 'none' : 'inherit'
+                }}
+                src={img}
+                width="100%"
+                fit="contain"
+                duration={imgLoaded ? 0 : 1000}
+                easing="cubic-bezier(0.7, 0, 0.6, 1)"
+                showLoading={true}
+                errorIcon={true}
+                shift={null}
+                distance="100px "
+                shiftDuration={imgLoaded ? 0 : 1000}
+                bgColor="inherit"
+            />
             }
         </a.div>
     );
