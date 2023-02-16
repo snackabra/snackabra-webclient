@@ -6,6 +6,7 @@ import RenderBubble from "./RenderBubble";
 import RenderAvatar from "./RenderAvatar";
 import RenderAttachmentIcon from "./RenderAttachmentIcon";
 import ImageOverlay from "../Modals/ImageOverlay";
+import ImageGallery from "../Modals/ImageGallery";
 import RenderImage from "./RenderImage";
 import ChangeNameDialog from "../Modals/ChangeNameDialog";
 import RenderChatFooter from "./RenderChatFooter";
@@ -25,6 +26,7 @@ import { observer } from "mobx-react"
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { isMobile } from 'react-device-detect';
 import { Navigate } from "react-router-dom";
+import SharedRoomStateContext from "../../contexts/SharedRoomState";
 
 const q = new Queue()
 const _r = new Queue()
@@ -62,7 +64,6 @@ class ChatRoom extends React.PureComponent {
 
 
   componentDidMount() {
-    console.log(this.props.roomId)
     const handleResize = (e) => {
       const { height } = Dimensions.get('window')
       this.setState({ height: height })
@@ -215,6 +216,10 @@ class ChatRoom extends React.PureComponent {
           this.sbContext.messages = messages
           this.setState({ messages: this.sbContext.messages })
         }
+        setTimeout(() => {
+
+          this.openImageGallery()
+        }, 1000)
 
       })
 
@@ -269,6 +274,22 @@ class ChatRoom extends React.PureComponent {
   imageOverlayClosed = () => {
     this.props.inhibitSwipe(0)
     this.setState({ openPreview: false, img: '', imgLoaded: false })
+  }
+
+  openImageGallery = () => {
+    this.props.inhibitSwipe(1)
+    let _images = [];
+    for (let x in this.state.messages) {
+      if (this.state.messages[x].image !== '') {
+        _images.push(this.state.messages[x])
+      }
+    }
+    this.setState({ openGallery: true, images: _images })
+  }
+
+  imageGalleryClosed = () => {
+    this.props.inhibitSwipe(0)
+    this.setState({ openGallery: false, img: '', imgLoaded: false })
   }
 
   promptUsername = (context) => {
@@ -522,6 +543,21 @@ class ChatRoom extends React.PureComponent {
             controlMessages={this.state.controlMessages}
             imgLoaded={this.state.imgLoaded}
             onClose={this.imageOverlayClosed} />
+          <SharedRoomStateContext.Consumer>
+            {(roomState) => (
+              <ImageGallery
+                sbContext={this.sbContext}
+                images={this.state.images}
+                open={roomState.state.openImageGallery}
+                img={this.state.img}
+                controlMessages={this.state.controlMessages}
+                imgLoaded={this.state.imgLoaded}
+                onClose={()=>{
+                  roomState.setOpenImageGallery(false)
+                }} />
+            )}
+          </SharedRoomStateContext.Consumer>
+
           <ChangeNameDialog {...this.state.changeUserNameProps} open={this.state.openChangeName} onClose={(userName, _id) => {
             this.saveUsername(userName, _id)
             // this.setState({ openChangeName: false })

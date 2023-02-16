@@ -83,11 +83,11 @@ export default function ImageCarousel(props) {
     return (
         <>
             <EnhancedSwipeableViews
-                on={toggleShowControls}
+                // on={toggleShowControls}
                 onMouseMove={showMediaControls}
                 // onMouseLeave={() => { toggleShowControls(false) }}
                 id={'image-carousel'}
-                axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
+                axis={'x-reverse'}
                 index={value}
                 disableLazyLoading
                 resistance
@@ -98,7 +98,7 @@ export default function ImageCarousel(props) {
             >
                 {imageList.map((key, index) => {
                     return (<ImageViewer
-                        key={key}
+                        key={`image-${index}`}
                         image={imageList[index]}
                         sbContext={sbContext}
                         controlMessages={controlMessages}

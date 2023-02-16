@@ -150,33 +150,39 @@ const RenderChatFooter = (props) => {
         <Paper
           id='preview-container'
           style={{
-            height: '30vh',
+            flexGrow: '1',
+            maxHeight: 200,
             overflow: 'hidden',
-            position: 'absolute',
+            overflowY: "auto",
+            position: 'relative',
             bottom: 0,
-            width: '100%'
+            width: '100%',
+            paddingTop: 32
           }}>
-          <ImageList sx={{ width: '100%', height: '30vh', overflowY: 'auto', }} cols={columns} rowHeight={164}>
+          <IconButton sx={{ position: "absolute", right: 0, top: 0 }} size={'small'} onClick={removeFiles} aria-label="close">
+            <CloseIcon />
+          </IconButton>
+          <Grid className='gallery-container'>
             {files.map((file, index) => {
               if (file.url) {
                 return (
-                  <ImageListItem key={index + 'img'} onMouseEnter={() => setIsShown(index + 'img')} onMouseLeave={() => setIsShown('')}>
-
-                    <Fab onClick={() => { removeItem(index) }} sx={{ position: 'absolute', top: 11, left: 11, opacity: isShown === index + 'img' && !isMobile ? 1 : 0 }} size="small" color="#AAA" aria-label="add">
+                  <Grid key={index + 'img'} style={{ position: "relative" }} onMouseEnter={() => setIsShown(index + 'img')} onMouseLeave={() => setIsShown('')}>
+                    <Fab onClick={() => { removeItem(index) }} sx={{ cursor: "pointer !important", position: 'absolute', top: 11, left: 11, opacity: isShown === index + 'img' && !isMobile ? 1 : 0 }} size="small" color="#AAA" aria-label="add">
                       <DeleteForever />
                     </Fab>
-                    <TouchableOpacity disabled={!isMobile} onPress={() => { onLongPress(index) }} accessibilityRole='image'>
+                    <TouchableOpacity style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover"
+                    }} disabled={!isMobile} onPress={() => { onLongPress(index) }} accessibilityRole='image'>
                       <img className='previewImage'
-                        width='150px'
-                        height='150px'
-                        style={{ padding: 8, overflow: "hidden" }}
                         src={`${file.url}`}
                         srcSet={`${file.url}`}
                         alt='Thumbnail Preview'
                         loading="lazy"
                       />
                     </TouchableOpacity>
-                  </ImageListItem>
+                  </Grid>
                 )
               } else {
                 return (<Grid key={index + 'grid'} className='previewImage' sx={{ width: containerHeight - 8, minHeight: containerHeight - 8, padding: 8 }}
@@ -193,11 +199,7 @@ const RenderChatFooter = (props) => {
             })
 
             }
-
-            <IconButton sx={{ position: "absolute", right: 0 }} onClick={removeFiles} aria-label="close">
-              <CloseIcon />
-            </IconButton>
-          </ImageList>
+          </Grid>
         </Paper>
       </Grid>)
   }

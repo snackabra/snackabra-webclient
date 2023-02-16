@@ -7,10 +7,12 @@ import MenuList from '@mui/material/MenuList';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import CollectionsIcon from '@mui/icons-material/Collections';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import IosShareOutlinedIcon from '@mui/icons-material/IosShareOutlined';
 import NotificationContext from "../../contexts/NotificationContext";
 import ConnectionStatus from "./ConnectionStatus"
+import SharedRoomStateContext from "../../contexts/SharedRoomState";
 import { observer } from "mobx-react"
 import { SnackabraContext } from "mobx-snackabra-store";
 
@@ -19,6 +21,7 @@ const ITEM_HEIGHT = 48;
 const RoomMenu = observer((props) => {
   const sbContext = React.useContext(SnackabraContext);
   const notify = React.useContext(NotificationContext);
+  const roomState = React.useContext(SharedRoomStateContext);
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
   const handleClick = (event) => {
@@ -100,7 +103,7 @@ const RoomMenu = observer((props) => {
         onClose={handleClose}
         PaperProps={{
           style: {
-            maxHeight: ITEM_HEIGHT * 4.5,
+            maxHeight: ITEM_HEIGHT * 6,
             width: '20ch',
           },
         }}
@@ -114,6 +117,15 @@ const RoomMenu = observer((props) => {
               <EditOutlinedIcon />
             </ListItemIcon>
             <ListItemText>Edit Name</ListItemText>
+          </MenuItem>
+          <MenuItem onClick={() => {
+            roomState.setOpenImageGallery(true)
+            handleClose()
+          }}>
+            <ListItemIcon>
+              <CollectionsIcon />
+            </ListItemIcon>
+            <ListItemText>Images</ListItemText>
           </MenuItem>
           <MenuItem onClick={() => {
             handleClose()

@@ -3,15 +3,14 @@ import NotificationContext from "../../contexts/NotificationContext";
 import { Image } from 'mui-image'
 import { createUseGesture, dragAction, pinchAction } from '@use-gesture/react'
 import { a, useSpring, config } from '@react-spring/web'
-import { isMobile } from 'react-device-detect';
 
 const useGesture = createUseGesture([dragAction, pinchAction])
 
 export default function ImageViewer(props) {
-    const { loadImage, image, controlMessages, sbContext, onClose, inhibitSwipe } = props
+    const { image, controlMessages, sbContext, inhibitSwipe } = props
     const notify = React.useContext(NotificationContext)
     const [img, setImage] = React.useState(image?.image);
-    const [imgLoaded, setImageLoaded] = React.useState(false);
+    const [imgLoaded, setImageLoaded] = React.useState(true);
     const [closing, setClosing] = React.useState(false);
     const myRef = React.createRef();
 
@@ -23,10 +22,8 @@ export default function ImageViewer(props) {
     }))
 
     React.useEffect(() => {
-        console.log(loadImage, image.image)
         setImage(image.image)
-        if(image?.image){
-            
+        if (image?.image) {
             sbContext.SB.storage.retrieveImage(image.imageMetaData, controlMessages).then((data) => {
                 if (data.hasOwnProperty('error')) {
                     console.error(data['error'])
@@ -39,9 +36,8 @@ export default function ImageViewer(props) {
                 console.error('openPreview() exception: ' + error.message);
                 notify.warn('Could not load full size image')
             })
-    
         }
-    }, [])
+    }, [controlMessages, image, notify, sbContext.SB.storage])
 
 
     React.useEffect(() => {
@@ -128,8 +124,9 @@ export default function ImageViewer(props) {
             },
             onPinch: (state) => {
                 let { origin: [ox, oy], first, movement: [ms], offset: [s], memo } = state
-                console.log(state)
-                inhibitSwipe(1)
+                if (inhibitSwipe)
+                    inhibitSwipe(1)
+
                 if (first) {
                     const { width, height, x, y } = myRef.current?.getBoundingClientRect()
                     const tx = ox - (x + width / 2)
@@ -141,7 +138,8 @@ export default function ImageViewer(props) {
                 const y = memo[1] - (ms - 1) * memo[3]
                 if (s === 1) {
                     setTimeout(() => {
-                        inhibitSwipe(0)
+                        if (inhibitSwipe)
+                            inhibitSwipe(0)
                     }, 200)
 
                     api.start({ scale: 1, y: 0, x: 0, rubberband: false, immediate: true })

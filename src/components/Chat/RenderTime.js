@@ -49,7 +49,7 @@ const RenderTime = (props) => {
         backgroundColor: 'transparent',
         color: props.currentMessage.whispered || props.position === 'left' ? '#aaa' : 'white'
       }}>
-      {props.currentMessage._id.match(/^sending_/) ? <Sending /> : return_str}
+      {String(props.currentMessage._id).match(/^sending_/) ? <Sending /> : return_str}
     </Typography>
   </div>);
 }

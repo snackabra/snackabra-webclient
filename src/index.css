@@ -1,6 +1,8 @@
-html, body {
+html,
+body {
   overscroll-behavior-x: none;
 }
+
 a {
   color: inherit;
   text-decoration: none;
@@ -66,7 +68,7 @@ body {
   border-radius: 20px
 } */
 
-div[data-testid="GC_WRAPPER"]{
+div[data-testid="GC_WRAPPER"] {
   width: 100%
 }
 
@@ -101,6 +103,32 @@ html {
 #image-carousel .react-swipeable-view-container {
   height: 100%
 }
+
 #image-carousel .react-swipeable-view-container div {
   overflow: hidden !important;
+}
+
+.gallery-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-auto-rows: 200px;
+  grid-gap: 8px;
+}
+
+.gallery-container .previewImage,
+.gallery-container > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gallery-container div:only-child,
+.gallery-container > img:only-child {
+  width: 200px;
+  object-fit: contain;
+}
+@media (max-width: 600px) {
+  .gallery-container {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  }
 }

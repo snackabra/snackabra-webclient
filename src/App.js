@@ -11,6 +11,7 @@ import theme from "./theme";
 import { ThemeProvider } from "@mui/material";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import { NavBarActionProvider } from "./contexts/NavBarActionContext";
+import { SharedRoomStateProvider } from "./contexts/SharedRoomState";
 import { LogProvider } from "./contexts/LogContext";
 import { SnackabraProvider } from "mobx-snackabra-store";
 import NotificationBar from "./components/NotificationBar";
@@ -35,12 +36,14 @@ const App = () => {
         <ThemeProvider theme={theme}>
           <SnackabraProvider config={sbConfig}>
             <NotificationProvider>
-              <NavBarActionProvider>
-                <LogProvider>
-                  <AppRoutes />
-                </LogProvider>
-                <NotificationBar />
-              </NavBarActionProvider>
+              <SharedRoomStateProvider>
+                <NavBarActionProvider>
+                  <LogProvider>
+                    <AppRoutes />
+                  </LogProvider>
+                  <NotificationBar />
+                </NavBarActionProvider>
+              </SharedRoomStateProvider>
             </NotificationProvider>
           </SnackabraProvider>
         </ThemeProvider>

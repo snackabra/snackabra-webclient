@@ -1,6 +1,5 @@
 import * as React from 'react';
 import Grid from '@mui/material/Grid';
-import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import IconButton from '@mui/material/IconButton';
 import Stop from '@mui/icons-material/Stop';
 import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
@@ -22,7 +21,6 @@ export default function ImageCarousel(props) {
     const [imageList, setImageList] = React.useState(images);
     const [autoplay, setAutoplay] = React.useState(false);
     const [showControls, setShowControls] = React.useState(false);
-    const theme = useTheme();
     const [value, setValue] = React.useState(null);
     const [swipeInhibiter, inhibitSwipe] = React.useState(0);
 

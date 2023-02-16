@@ -5,7 +5,6 @@ import { SnackabraContext } from "mobx-snackabra-store";
 import { observer } from "mobx-react"
 import { isDataURL } from '../../utils/misc';
 import { base64ToArrayBuffer } from "snackabra"
-import { KeyboardAvoidingView } from "react-native-web"
 
 const RenderComposer = observer((props) => {
   const { filesAttached, onTextChanged, inputErrored } = props
@@ -127,7 +126,6 @@ const RenderComposer = observer((props) => {
   }
 
   return (
-    // <KeyboardAvoidingView style={{flexGrow: 1}} behavior="padding" enabled={true}>
       <TextField
         id="sb_render_composer_textarea"
         label=""
@@ -153,7 +151,6 @@ const RenderComposer = observer((props) => {
           overflowY: 'auto'
         }}
       />
-    // </KeyboardAvoidingView>
   )
 })
 
