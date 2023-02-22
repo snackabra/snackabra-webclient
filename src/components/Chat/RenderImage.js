@@ -2,6 +2,7 @@ import React from 'react';
 import { CircularProgress, Grid, IconButton } from "@mui/material";
 import InputIcon from '@mui/icons-material/Download';
 import CheckIcon from '@mui/icons-material/Check';
+import { isSameUser } from "react-native-gifted-chat";
 import { downloadFile } from '../../utils/misc'
 
 const styles = {
@@ -10,6 +11,15 @@ const styles = {
   },
   right: {
     left: -60
+  }
+}
+
+const imageStyleSameUser = {
+  left: {
+    borderRadius: '0px 11px 0px 0px'
+  },
+  right: {
+    borderRadius: '11px 0px 0px 0px'
   }
 }
 
@@ -52,6 +62,13 @@ const RenderImage = (props) => {
       })
   }
 
+  const getStyle = () => {
+    if (isSameUser(props.currentMessage, props.previousMessage)) {
+      return imageStyleSameUser[props.position]
+    }
+    return {}
+  }
+
   if (typeof props.currentMessage.image === 'string') {
     return (<Grid sx={{ cursor: 'pointer' }} >
       {!isDling ?
@@ -70,7 +87,7 @@ const RenderImage = (props) => {
 
       }
 
-      <img className='msgImg' onClick={() => props.openImageOverlay(props.currentMessage)}
+      <img className='msgImg' style={getStyle()} onClick={() => props.openImageOverlay(props.currentMessage)}
         src={props.currentMessage.image} alt='Previewed'></img>
     </Grid>)
   }

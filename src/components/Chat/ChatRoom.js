@@ -541,16 +541,8 @@ class ChatRoom extends React.PureComponent {
     if (this.state.to) {
       return (<Navigate to={this.state.to} />)
     }
-    let inverted = false;
+    // let inverted = false;
     let messages = this.state.messages
-    try {
-      const _f_message = this.state.messages[0];
-      const _l_message = this.state.messages[this.state.messages.length - 1];
-      messages = _f_message && _f_message?.createdAt?.getTime() < _l_message?.createdAt?.getTime() ? this.state.messages.reverse() : this.state.messages
-      inverted = true;
-    } catch (e) {
-      console.warn(e)
-    }
 
 
     return (
@@ -611,7 +603,7 @@ class ChatRoom extends React.PureComponent {
             onSend={this.sendMessages}
             // timeFormat='L LT'
             user={this.state.user}
-            inverted={inverted}
+            inverted={false}
             alwaysShowSend={true}
             loadEarlier={this.props.sbContext.moreMessages}
             isLoadingEarlier={this.props.sbContext.loadingMore}

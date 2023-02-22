@@ -43,7 +43,7 @@ class MessageContainerCustom extends MessageContainer {
                         nextMessage,
                         position: _m_u_id.x + ' ' + _m_u_id.y === _u_id.x + ' ' + _u_id.y ? 'right' : 'left',
                     };
-                } catch(e) {
+                } catch (e) {
                     console.warn(e)
                 }
                 if (this.props.renderMessage) {
@@ -79,6 +79,7 @@ class GiftedChatCustom extends GiftedChat {
         if (this.props !== prevProps) {
             this.setMessages(messages || []);
         }
+
         if (inverted === false &&
             messages &&
             prevProps.messages &&
@@ -86,7 +87,12 @@ class GiftedChatCustom extends GiftedChat {
             setTimeout(() => this.scrollToBottom(true), 200);
         }
         if (text !== prevProps.text) {
-            super.setTextFromProp(text);
+            this.setTextFromProp(text);
+        }
+        if (messages &&
+            prevProps.messages &&
+            messages.length !== prevProps.messages.length) {
+            setTimeout(() => this.scrollToBottom(false), 300);
         }
     }
     renderMessages() {
