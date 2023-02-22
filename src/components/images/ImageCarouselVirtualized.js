@@ -98,7 +98,6 @@ export default function ImageCarousel(props) {
                 overscanSlideBefore={3}
                 slideRenderer={slideRenderer}
                 slideCount={imageList.length}
-                direction={'decremental'}
                 interval={30000}
             />
             <Grid

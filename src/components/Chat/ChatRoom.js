@@ -95,6 +95,7 @@ class ChatRoom extends React.PureComponent {
     })
     this.processQueue()
     this.processSQueue()
+    this.subscribeToNotifications()
   }
 
   componentDidUpdate(prevProps) {
@@ -143,6 +144,38 @@ class ChatRoom extends React.PureComponent {
       to: null
     })
   }
+
+  subscribeToNotifications = async () => {
+    console.log(window.sw_registration)
+    try {
+
+
+      if (!('pushManager' in window.sw_registration)) {
+        console.log('pushManager not found in registration object...')
+      }
+      console.dir(window.sw_registration)
+
+      console.log('Registering push')
+      const subscription = await window.sw_registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: SB.base64ToArrayBuffer(process.env.REACT_APP_PUBLIC_VAPID_KEY),
+      })
+
+      await fetch(process.env.REACT_APP_NOTIFICATION_SERVER + '/subscription', {
+        method: 'POST',
+        body: JSON.stringify({
+          channel_id: this.props.roomId,
+          subscription: subscription
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
   /**
    * Queue helps with order outgoing messages
    * when sending many images, some were getting lost
@@ -552,7 +585,7 @@ class ChatRoom extends React.PureComponent {
                 img={this.state.img}
                 controlMessages={this.state.controlMessages}
                 imgLoaded={this.state.imgLoaded}
-                onClose={()=>{
+                onClose={() => {
                   roomState.setOpenImageGallery(false)
                 }} />
             )}

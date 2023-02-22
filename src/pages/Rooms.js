@@ -85,6 +85,17 @@ const ResponsiveDrawer = observer((props) => {
   }, [room_id])
 
   React.useEffect(() => {
+    navigator.serviceWorker.addEventListener("message", (event) => {
+      console.log(event);
+      const to = event.data.channel_id
+      const index = channelList.findIndex((x) => x._id === to)
+      navigate('/' + to)
+      setRoomId(to)
+      setValue(index);
+    });
+  }, [])
+
+  React.useEffect(() => {
 
     let _c = []
     let i = 0

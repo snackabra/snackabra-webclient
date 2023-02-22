@@ -12,6 +12,7 @@ import { ExpirationPlugin } from 'workbox-expiration';
 import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
 import { StaleWhileRevalidate } from 'workbox-strategies';
+const base64ToArrayBuffer = require('snackabra').base64ToArrayBuffer
 
 clientsClaim();
 
@@ -50,13 +51,13 @@ registerRoute(
 // precache, in this case same-origin .png requests like those from in public/
 registerRoute(
   // Add in any other file extensions or routing criteria as needed.
-  ({ url }) => url.origin === self.location.origin && url.pathname.endsWith('.png'), // Customize this strategy as needed, e.g., by changing to CacheFirst.
+  ({ url }) => (url.origin === self.location.origin && url.pathname.endsWith('.png')) || url.pathname.startsWith('data:image'), // Customize this strategy as needed, e.g., by changing to CacheFirst.
   new StaleWhileRevalidate({
     cacheName: 'images',
     plugins: [
       // Ensure that once this runtime cache reaches a maximum size the
       // least-recently used images are removed.
-      new ExpirationPlugin({ maxEntries: 50 }),
+      new ExpirationPlugin({ maxEntries: 500 }),
     ],
   })
 );
@@ -77,15 +78,74 @@ self.addEventListener('message', (event) => {
 
 // Any other custom service worker logic can go here.
 // For push notifications
-self.addEventListener('push', (ev) => {
-  const data = ev.data.json()
+self.addEventListener('push', (event) => {
+  const data = event.data.json()
 
   console.log('Got push', data)
+  const clients = self.clients;
+  const channel_id = data.data.channel_id;
+  data.icon = "https://sn.ac/mstile-144x144.png"
 
-  self.registration.showNotification(data.title, {
-    body: data.text
-  })
+  event.waitUntil(clients.matchAll({ includeUncontrolled: true }).then((clientList) => {
+    console.log(clientList)
+    for (const client of clientList) {
+      console.log(client.url, channel_id)
+      if (client.url.endsWith(channel_id)) {
+        return client.focus();
+      }
+    }
+
+    self.registration.showNotification(data.title, {
+      ...data
+    })
+    return;
+
+  }));
 })
+
+self.addEventListener("pushsubscriptionchange", async (event) => {
+  console.log('Subscription expired... renweing');
+  const subscription = await window.sw_registration.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: base64ToArrayBuffer(process.env.REACT_APP_PUBLIC_VAPID_KEY),
+  })
+
+  await fetch(process.env.REACT_APP_NOTIFICATION_SERVER + '/subscribe', {
+    method: 'POST',
+    body: JSON.stringify({
+      channel_id: this.props.roomId,
+      subscription: subscription
+    }),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+}, false);
+
+self.addEventListener('notificationclick', (event) => {
+  console.log('On notification click: ', event.notification);
+  const channel_id = event.notification.data.channel_id;
+  event.notification.close();
+  const clients = self.clients;
+
+  // This looks to see if the current is already open and
+  // focuses if it is
+  event.waitUntil(clients.matchAll({ includeUncontrolled: true }).then((clientList) => {
+    console.log(clientList)
+    for (const client of clientList) {
+      console.log(client.url, channel_id)
+      if ('focus' in client) {
+        client.postMessage({
+          channel_id: channel_id,
+        })
+        return client.focus();
+      }
+    }
+
+    if (clients.openWindow) return clients.openWindow('/' + channel_id);
+
+  }));
+});
 
 function getNotifications() {
   return new Promise((resolve, reject) => {
@@ -96,7 +156,7 @@ function getNotifications() {
           resolve('not subscribed')
         }
         console.log('Existing sub:', subscription)
-        fetch('https://heylisten-384co.herokuapp.com/subscription', {
+        fetch(process.env.REACT_APP_NOTIFICATION_SERVER, {
           method: 'POST',
           body: JSON.stringify(subscription),
           headers: {
