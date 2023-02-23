@@ -65,8 +65,12 @@ registerRoute(
 // This allows the web app to trigger skipWaiting via
 // registration.waiting.postMessage({type: 'SKIP_WAITING'})
 self.addEventListener('message', (event) => {
+  console.log('message', event)
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
+  }
+  if (event.data && event.data.type === 'NOTIFICATION_RESPOND') {
+    notify(event.data.notification)
   }
 });
 
@@ -78,6 +82,19 @@ self.addEventListener('message', (event) => {
 
 // Any other custom service worker logic can go here.
 // For push notifications
+let notificationTimeout = {}
+const notify = (data) => {
+  if (notificationTimeout[data.tag]) {
+    clearTimeout(notificationTimeout[data.tag])
+  }
+  notificationTimeout[data.tag] = setTimeout(() => {
+    self.registration.showNotification(data.title, {
+      ...data
+    })
+    delete notificationTimeout[data.tag]
+  }, 250)
+}
+
 self.addEventListener('push', (event) => {
   const data = event.data.json()
 
@@ -85,21 +102,20 @@ self.addEventListener('push', (event) => {
   const clients = self.clients;
   const channel_id = data.data.channel_id;
   data.icon = "https://sn.ac/mstile-144x144.png"
-
-  event.waitUntil(clients.matchAll({ includeUncontrolled: true }).then((clientList) => {
-    console.log(clientList)
-    for (const client of clientList) {
-      console.log(client.url, channel_id)
-      if (client.url.endsWith(channel_id)) {
-        return client.focus();
+  event.waitUntil(clients.matchAll({ type: "window" }).then((clientList) => {
+    console.log(clientList, clientList[0].url, clientList[0].url.endsWith(channel_id))
+    if (clientList.length > 0) {
+      for (let x in clientList) {
+        console.log(clientList[x])
+        clientList[x].postMessage({
+          type: 'notification',
+          channel_id: channel_id,
+          notification: data
+        })
       }
+    } else {
+      notify(data)
     }
-
-    self.registration.showNotification(data.title, {
-      ...data
-    })
-    return;
-
   }));
 })
 
@@ -130,12 +146,12 @@ self.addEventListener('notificationclick', (event) => {
 
   // This looks to see if the current is already open and
   // focuses if it is
-  event.waitUntil(clients.matchAll({ includeUncontrolled: true }).then((clientList) => {
-    console.log(clientList)
+  event.waitUntil(clients.matchAll({ type: "window" }).then((clientList) => {
     for (const client of clientList) {
       console.log(client.url, channel_id)
       if ('focus' in client) {
         client.postMessage({
+          type: 'focus',
           channel_id: channel_id,
         })
         return client.focus();

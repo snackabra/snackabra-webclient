@@ -145,35 +145,39 @@ class ChatRoom extends React.PureComponent {
     })
   }
 
-  subscribeToNotifications = async () => {
-    console.log(window.sw_registration)
-    try {
+  subscribeToNotifications = () => {
+    setTimeout(async () => {
+
+      console.log(window.sw_registration)
+      try {
 
 
-      if (!('pushManager' in window.sw_registration)) {
-        console.log('pushManager not found in registration object...')
+        if (!window.sw_registration || !('pushManager' in window.sw_registration)) {
+          console.log('pushManager not found in registration object...')
+          return;
+        }
+        console.dir(window.sw_registration)
+
+        console.log('Registering push')
+        const subscription = await window.sw_registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: SB.base64ToArrayBuffer(process.env.REACT_APP_PUBLIC_VAPID_KEY),
+        })
+
+        await fetch(process.env.REACT_APP_NOTIFICATION_SERVER + '/subscription', {
+          method: 'POST',
+          body: JSON.stringify({
+            channel_id: this.props.roomId,
+            subscription: subscription
+          }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+      } catch (e) {
+        console.error(e)
       }
-      console.dir(window.sw_registration)
-
-      console.log('Registering push')
-      const subscription = await window.sw_registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: SB.base64ToArrayBuffer(process.env.REACT_APP_PUBLIC_VAPID_KEY),
-      })
-
-      await fetch(process.env.REACT_APP_NOTIFICATION_SERVER + '/subscription', {
-        method: 'POST',
-        body: JSON.stringify({
-          channel_id: this.props.roomId,
-          subscription: subscription
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-    } catch (e) {
-      console.error(e)
-    }
+    }, 1000)
   }
 
   /**

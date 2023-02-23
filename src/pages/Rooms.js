@@ -85,15 +85,33 @@ const ResponsiveDrawer = observer((props) => {
   }, [room_id])
 
   React.useEffect(() => {
-    navigator.serviceWorker.addEventListener("message", (event) => {
+    const listenForMessages = (event) => {
       console.log(event);
-      const to = event.data.channel_id
-      const index = channelList.findIndex((x) => x._id === to)
-      navigate('/' + to)
-      setRoomId(to)
-      setValue(index);
-    });
-  }, [])
+      if (event.data && event.data.type === "focus") {
+        const to = event.data.channel_id
+        const index = channelList.findIndex((x) => x._id === to)
+        navigate('/' + to)
+        setRoomId(to)
+        setValue(index);
+      }
+
+      if (event.data && event.data.type === "notification") {
+        console.log(event.data.channel_id, roomId)
+        if (event.data.channel_id !== roomId && roomId !== false) {
+          navigator.serviceWorker.controller.postMessage({
+            type: 'NOTIFICATION_RESPOND',
+            channel_id: event.data.channel_id,
+            notification: event.data.notification
+          });
+        }
+      }
+    }
+
+    navigator.serviceWorker.addEventListener("message", listenForMessages);
+    return () => {
+      navigator.serviceWorker.removeEventListener("message", listenForMessages);
+    }
+  }, [channelList, navigate, roomId])
 
   React.useEffect(() => {
 
