@@ -137,7 +137,8 @@ self.addEventListener('push', (event) => {
       }
       return;
     } else {
-      data.title = data.title + " (New Message)"
+      data.title = "Snackabra"
+      data.body = "You have a new message"
       notify(data)
       return;
     }
