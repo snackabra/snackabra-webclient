@@ -126,6 +126,8 @@ self.addEventListener('push', (event) => {
   const clients = self.clients;
   const channel_id = data.data.channel_id;
   data.icon = "https://sn.ac/mstile-144x144.png"
+  data.title = "Snackabra"
+  data.body = "You have a new message"
   event.waitUntil(clients.matchAll({ includeUncontrolled: true }).then((clientList) => {
     if (clientList.length > 0) {
       for (const client of clientList) {
@@ -137,8 +139,6 @@ self.addEventListener('push', (event) => {
       }
       return;
     } else {
-      data.title = "Snackabra"
-      data.body = "You have a new message"
       notify(data)
       return;
     }

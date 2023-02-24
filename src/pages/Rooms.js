@@ -96,13 +96,13 @@ const ResponsiveDrawer = observer((props) => {
       }
 
       if (event.data && event.data.type === "notification") {
-        // if (event.data.channel_id !== roomId && roomId !== false) {
+        if (event.data.channel_id !== roomId && roomId !== false) {
           navigator.serviceWorker.controller.postMessage({
             type: 'NOTIFICATION_RESPOND',
             channel_id: event.data.channel_id,
             notification: event.data.notification
           });
-        // }
+        }
       }
     }
 
