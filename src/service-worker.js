@@ -106,14 +106,7 @@ self.addEventListener('message', (event) => {
 //   }
 // });
 
-// Forces the tag to be respected since apple doesnt want to do that.
-self['notificationTags'] = []
 const notify = (data) => {
-  console.log('notify', data)
-  if (self['notificationTags'].length >= 100) self['notificationTags'].shift()
-
-  if (self['notificationTags'].includes(data.tag)) return;
-  self['notificationTags'].push(data.tag)
   self.registration.showNotification(data.title, {
     ...data
   })
