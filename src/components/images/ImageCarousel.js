@@ -7,7 +7,7 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
 import SwipeableViews from 'react-swipeable-views';
 import { useTheme } from '@mui/material/styles';
-import ImageViewer from './ImageViewier';
+import ImageViewer from './ImageViewer';
 import Slide from '@mui/material/Slide';
 import Paper from '@mui/material/Paper';
 import { isMobile } from 'react-device-detect';

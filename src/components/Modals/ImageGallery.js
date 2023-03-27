@@ -1,5 +1,5 @@
 import * as React from 'react';
-import ImageViewer from '../Images/ImageViewier';
+import ImageViewer from '../Images/ImageViewer';
 import Dialog from '@mui/material/Dialog';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
