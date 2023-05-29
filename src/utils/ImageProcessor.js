@@ -243,6 +243,7 @@ export async function restrictPhoto(sbImage, maxSize, type) {
   return _final_b1;
 }
 
+
 export function scaleCanvas(canvas, scale, sCanvas) {
 
   var start = new Date().getTime();
@@ -267,8 +268,6 @@ export function scaleCanvas(canvas, scale, sCanvas) {
   }
 
 }
-
-
 
 export function padImage(image_buffer) {
   let _sizes = [128, 256, 512, 1024, 2048, 4096];   // in KB
@@ -362,7 +361,6 @@ export class SBImage {
   constructor(image, SB) {
     this.SB = SB
     this.image = image; // file
-
 
     this.thumbnailReady = new Promise((resolve) => {
       // block on getting width and height...

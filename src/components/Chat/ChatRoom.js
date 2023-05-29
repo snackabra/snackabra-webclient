@@ -30,7 +30,9 @@ import SharedRoomStateContext from "../../contexts/SharedRoomState";
 
 const q = new Queue()
 const _r = new Queue()
-const SB = require('snackabra')
+let SB = require('snackabra')
+if ((!SB) && (globalThis) && (globalThis.SB)) SB = globalThis.SB
+console.log("SB Version: ", SB.version)
 
 @observer
 class ChatRoom extends React.PureComponent {
@@ -424,6 +426,7 @@ class ChatRoom extends React.PureComponent {
   }
 
   sendMessages = async (giftedMessage) => {
+    await new Promise(resolve => setTimeout(resolve, 0)); // JS breathing room
     if (giftedMessage[0].text === "") {
       if (this.state.files.length > 0) {
         this.sendFiles(giftedMessage)

@@ -16,7 +16,10 @@
     "compile": "lingui compile"
   },
   "eslintConfig": {
-    "extends": "react-app"
+    "extends": "react-app",
+    "rules": {
+      "no-global-this": "off"
+    }
   },
   "browserslist": {
     "production": [

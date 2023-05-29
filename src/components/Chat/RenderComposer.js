@@ -15,7 +15,6 @@ const RenderComposer = observer((props) => {
   const [error, setError] = React.useState(false)
   const [attachedFiles, setFilesAttached] = React.useState(filesAttached)
 
-
   React.useEffect(() => {
     const sendButton = document.getElementById('send-button');
     sendButton.addEventListener('click', handleSend)
