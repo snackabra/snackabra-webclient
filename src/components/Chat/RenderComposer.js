@@ -4,7 +4,9 @@ import { SBImage } from "../../utils/ImageProcessor";
 import { SnackabraContext } from "mobx-snackabra-store";
 import { observer } from "mobx-react"
 import { isDataURL } from '../../utils/misc';
-import { base64ToArrayBuffer } from "snackabra"
+
+// import { base64ToArrayBuffer } from "snackabra"
+const SB = require('snackabra');
 
 const RenderComposer = observer((props) => {
   const { filesAttached, onTextChanged, inputErrored } = props
@@ -101,7 +103,7 @@ const RenderComposer = observer((props) => {
     if (isDataURL(text) && text.match(/data:image/)) {
       setText('')
       const base64 = e.nativeEvent.clipboardData.getData('text/plain').split(/data:image\/[a-zA-Z]{3,4};base64,/)[1]
-      const ab = base64ToArrayBuffer(base64)
+      const ab = SB.base64ToArrayBuffer(base64)
       _files.push(await getSbImage(new Blob([ab]), props, sbContext))
     }
 

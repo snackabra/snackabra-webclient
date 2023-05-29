@@ -14,7 +14,8 @@
 import ImageWorker from './ImageWorker.js';
 import ArrayBufferWorker from './ArrayBufferWorker.js';
 
-import { _appendBuffer } from "snackabra";
+// import { _appendBuffer } from "snackabra";
+const SB = require('snackabra');
 
 export async function getFileData(file, outputType) {
   try {
@@ -299,8 +300,8 @@ export function padImage(image_buffer) {
   // _padding_array.push(image_size);
   const _padding = new Uint8Array(_padding_array).buffer;
   console.log('Padding size: ', _padding.byteLength)
-  let final_data = _appendBuffer(image_buffer, _padding);
-  final_data = _appendBuffer(final_data, new Uint32Array([image_size]).buffer);
+  let final_data = SB._appendBuffer(image_buffer, _padding);
+  final_data = SB._appendBuffer(final_data, new Uint32Array([image_size]).buffer);
   // console.log('AFTER PADDING: ', final_data.byteLength)
   return final_data;
 }

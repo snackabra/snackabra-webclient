@@ -2,8 +2,8 @@ import React from 'react'
 import { Grid, Typography } from "@mui/material";
 import { isSameUser, isSameDay, Bubble } from "react-native-gifted-chat";
 import { getColorFromId } from "../../utils/misc"
-const SB = require('snackabra')
-const sbCrypto = new SB.SBCrypto();
+// const SB = require('snackabra')
+// const sbCrypto = new SB.SBCrypto();
 
 const RenderBubble = (props) => {
   const { currentMessage, previousMessage } = props
