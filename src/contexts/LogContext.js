@@ -142,7 +142,7 @@ export const LogProvider = ({ children }) => {
       }
 
     }
-  }, [])
+  }, [logs, notify])
 
   const toggleDebugger = () => {
     setOpened(!open)

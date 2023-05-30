@@ -9,15 +9,12 @@ import DialogContent from "@mui/material/DialogContent";
 import { Grid } from '@mui/material';
 
 export default function ImageGallery(props) {
-    const { img, images, sbContext, controlMessages } = props
+    const { images, sbContext, controlMessages } = props
     const [selected, setSelected] = React.useState(null);
     return (
         <Dialog
             fullScreen
             open={props.open}
-            // onClick={()=>{
-            //     selected ? setSelected(null) : props.onClose()
-            // }}
             style={{ backgroundColor: 'black' }}
         >
 

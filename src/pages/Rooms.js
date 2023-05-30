@@ -82,7 +82,7 @@ const ResponsiveDrawer = observer((props) => {
       setRoomId(room_id)
     }
 
-  }, [room_id])
+  }, [roomId, room_id])
 
   React.useEffect(() => {
     const listenForMessages = (event) => {
@@ -139,7 +139,7 @@ const ResponsiveDrawer = observer((props) => {
     }
 
     setChannelList(_c)
-  }, [room_id, sbContext.channels])
+  }, [room_id, sbContext, sbContext.channels])
 
   const handleDrawerToggle = () => {
     NavAppBarContext.setMenuOpen(!NavAppBarContext.state.menuOpen)
@@ -394,9 +394,6 @@ const ResponsiveDrawer = observer((props) => {
           <Typography textAlign={'center'} variant={'h6'}>Select a room or create a new one to get started.</Typography>
         </Grid>)
         }
-        {/* {(roomId && sbContext) &&
-          (<ChatRoom roomId={roomId ? roomId : sbContext.activeroom} sbContext={sbContext} Notifications={Notifications} openAdminDialog={openAdminDialog} />)
-        } */}
         <SwipeableViews
           axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
           index={value}
@@ -409,6 +406,7 @@ const ResponsiveDrawer = observer((props) => {
               key={`${index}-tab-panel`}
               value={value}
               index={index}
+              component={'div'}
               dir={theme.direction}
               className="RoomSwipable">
               <ChatRoom inhibitSwipe={(weighted) => {

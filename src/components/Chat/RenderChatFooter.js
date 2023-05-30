@@ -1,5 +1,5 @@
 import React from 'react'
-import { Grid, CircularProgress, Paper, IconButton, LinearProgress, ImageList, ImageListItem } from "@mui/material";
+import { Grid, CircularProgress, Paper, IconButton, LinearProgress } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteForever from '@mui/icons-material/DeleteForever';
 import Fab from '@mui/material/Fab';
@@ -11,33 +11,18 @@ const RenderChatFooter = (props) => {
   const incomingFiles = props.files
   const [files, setFiles] = React.useState([])
   const [loading, setLoading] = React.useState(props.loading)
-  const [containerHeight, setContainerHeight] = React.useState(50)
   const [uploading, setUploading] = React.useState(props.uploading)
-  const [columns, setColumns] = React.useState(3)
   const [isShown, setIsShown] = React.useState('')
   const [toRemove, setToRemove] = React.useState('')
   const [showConfirm, setShowConfirm] = React.useState(false)
 
+  const containerHeight = 50
+
   React.useEffect(() => {
     setToRemove('')
     setShowConfirm(false)
-    window.addEventListener('resize', handleResize)
-    window.addEventListener('orientationchange', handleResize)
-    window.addEventListener('touchmove', (e) => {
-      setTimeout(() => {
-        handleResize(e)
-      }, 400)
-
-    });
   }, [])
 
-  const handleResize = (e) => {
-    const el = document.getElementById("preview-container");
-    if (el) {
-      setColumns(Math.floor(el.offsetWidth / 150))
-    }
-
-  }
 
   React.useEffect(() => {
     const getImageUrls = () => {
@@ -48,11 +33,9 @@ const RenderChatFooter = (props) => {
         let file = incomingFiles[x]
         // setHeight(file)
         filesPromises.push(file.processThumbnail())
-        handleResize()
       }
       // Does all image processing 15kb thumbnail, 2MB Preview and 16MB Fullsize
       Promise.all(filesPromises).then((files) => {
-        handleResize()
         files.forEach((file) => {
           file.processImage()
         })
@@ -75,15 +58,6 @@ const RenderChatFooter = (props) => {
     setUploading(props.uploading)
   }, [props.uploading])
 
-  /** @param {SBImage} file */
-  const setHeight = (file) => {
-    const imageElement = document.getElementsByClassName("previewImage");
-    const height = imageElement.width / file.aspect;
-    // file.aspectRatio.then(())
-    if (height > containerHeight) {
-      setContainerHeight(height)
-    }
-  }
 
   const removeItem = (index) => {
     const newFiles = Object.assign(files)

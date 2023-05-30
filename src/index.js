@@ -1,7 +1,6 @@
 /* Copyright (c) 2021 Magnusson Institute, All Rights Reserved */
 
 import React from 'react';
-import { isMobile } from 'react-device-detect';
 import './index.css';
 import App from './App';
 import { createRoot } from 'react-dom/client';

@@ -3,24 +3,10 @@ import IndexedKV from "../utils/IndexedKV";
 
 console.log("=========== mobx-snackabra-store loading ===========")
 let SB = require(process.env.NODE_ENV === 'development' ? 'snackabra/dist/snackabra' : 'snackabra')
-if (SB.version) {
-  console.log("mobx-snackabra-store loading SB Version: ")
-  console.log(SB.version)
-} else {
-  console.log("mobx-snackabra-store overriding require(): ")
-  if (globalThis) {
-    if (globalThis.SB) {
-      SB = globalThis.SB
-      console.log("mobx-snackabra-store loading SB Version:")
-      console.log(SB)
-      console.log(SB.version)
-    } else {
-      console.log("ERROR - ... no globalThis.SB??")
-    }
-  } else {
-    console.log("ERROR - ... no globalThis??")
-  }
-}
+
+console.log("mobx-snackabra-store loading SB Version: ")
+console.log(SB.version)
+
 
 
 let cacheDb;
@@ -139,17 +125,8 @@ class SnackabraStore {
   }
 
   init = () => {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       try {
-        // const start = async () => {
-        //   const sb_data = JSON.parse(await cacheDb.getItem('sb_data'));
-        //   for (let x in sb_data) {
-        //     if (x !== 'SB' && x !== "sbConfig" && x !== "Crypto") {
-        //       this[x] = sb_data[x];
-        //     }
-        //   }
-        //   resolve('success');
-        // };
 
         const start = async () => {
           // give interpreter a breather

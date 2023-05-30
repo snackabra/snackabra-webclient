@@ -15,10 +15,6 @@ const RenderComposer = observer((props) => {
   const [error, setError] = React.useState(false)
   const [attachedFiles, setFilesAttached] = React.useState(filesAttached)
 
-  React.useEffect(() => {
-    const sendButton = document.getElementById('send-button');
-    sendButton.addEventListener('click', handleSend)
-  }, [])
 
   const validateText = React.useCallback(async (text) => {
     const enc = new TextEncoder()
@@ -36,19 +32,24 @@ const RenderComposer = observer((props) => {
       setError(true)
       inputErrored(true)
     }
-  }, []);
+  }, [inputErrored]);
 
   React.useEffect(() => {
     validateText(text)
   }, [text, validateText])
 
-  const handleSend = () => {
+  const handleSend = React.useCallback(() => {
     setTimeout(() => {
       setText('')
       props.onTextChanged('')
     }, 100)
 
-  }
+  }, [props])
+
+  React.useEffect(() => {
+    const sendButton = document.getElementById('send-button');
+    sendButton.addEventListener('click', handleSend)
+  }, [handleSend])
 
   React.useEffect(() => {
     setFilesAttached(filesAttached)

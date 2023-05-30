@@ -31,10 +31,6 @@ const AdminDialog = observer((props) => {
     props.onClose();
   }
 
-  const openConfirm = () => {
-    setOpenLockDialog(true)
-  }
-
   const cancelLock = () => {
     setOpenLockDialog(false)
   }

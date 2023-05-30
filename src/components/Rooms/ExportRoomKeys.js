@@ -37,7 +37,7 @@ const ExportRoomKeys = observer((props) => {
       setData(JSON.stringify(metadata, null, 2))
     }
     parseData()
-  }, [])
+  }, [sbContext])
 
 
 

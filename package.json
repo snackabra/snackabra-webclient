@@ -19,7 +19,8 @@
   "eslintConfig": {
     "extends": "react-app",
     "rules": {
-      "no-global-this": "off"
+      "no-unused-vars": "error",
+      "no-useless-escape": "off"
     }
   },
   "browserslist": {

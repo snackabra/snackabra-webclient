@@ -91,97 +91,30 @@ export async function _restrictPhoto(maxSize, _c, _b1, scale, canvas) {
   // console.log(_old_c);
   console.log(`... stepping back up to W ${_old_c.width} x H ${_old_c.height} and will then try scale ${_ratio.toFixed(4)}`);
   const t4 = new Date().getTime();
-  do {
-    _final_c = scaleCanvas(_old_c, Math.sqrt(_ratio) * 0.95, _final_c); // always overshoot
+  const processIteration = async (_old_c, _ratio, _final_c, _b1, maxSize, imageType, qualityArgument, t4) => {
+    _final_c = scaleCanvas(_old_c, Math.sqrt(_ratio) * 0.95, _final_c);
     _b1 = await new Promise((resolve) => {
       _final_c.toBlob(resolve, imageType, qualityArgument);
       console.log(`(generating blob of requested type ${imageType})`);
     });
-    // workingDots();
+
     console.log(`... fine-tuning to W ${_final_c.width} x H ${_final_c.height} (size ${_b1.size})`);
-    _ratio *= (maxSize / _b1.size);
+    _ratio *= maxSize / _b1.size;
     const t5 = new Date().getTime();
     console.log(`... resulting _ratio is ${_ratio} ... total time here ${t5 - t4} milliseconds`);
-    console.log(` ... we're within ${(Math.abs(_b1.size - maxSize) / maxSize)} of cap (${maxSize})`);
-  } while (((_b1.size > maxSize) || ((Math.abs(_b1.size - maxSize) / maxSize) > 0.10)) && (--_maxIteration > 0));  // we're pretty tolerant here
-  releaseCanvas(_final_c)
+    console.log(`... we're within ${(Math.abs(_b1.size - maxSize) / maxSize)} of cap (${maxSize})`);
+    return [_final_c, _b1];
+  };
+
+  do {
+    [_final_c, _b1] = await processIteration(_old_c, _ratio, _final_c, _b1, maxSize, imageType, qualityArgument, t4);
+    _maxIteration--;
+  } while ((_b1.size > maxSize || (Math.abs(_b1.size - maxSize) / maxSize) > 0.10) && _maxIteration > 0);
+
+  releaseCanvas(_final_c);
 
   return _b1;
 }
-
-// export async function _restrictPhoto(maxSize, _c, _b1) {
-//   const t2 = new Date().getTime();
-//   const imageType = "image/jpeg";
-//   const qualityArgument = 0.92;
-//   let _size = _b1.size;
-//   if (_size <= maxSize) {
-//     console.log(`Starting size ${_size} is fine (below target size ${maxSize}`);
-//     return _b1;
-//   }
-//   console.log(`Starting size ${_size} too large (max is ${maxSize}) bytes.`)
-//   console.log(`Reduce size by scaling canvas - start size is W ${_c.width} x H ${_c.height}`)
-//   // compression wasn't enough, so let's resize until we're getting close
-
-//   let _old_size;
-//   let _old_c;
-//   if (false) {
-//     // experiments: we first cut it with quality argument (normalize)
-//     _b1 = await new Promise((resolve) => {
-//       _c.toBlob(resolve, imageType, qualityArgument);
-//     });
-//     console.log(`setting quality changed size from ${_size} to ${_b1.size}`);
-//     await createImageBitmap(_b1).then(bm => {_c.getContext('2d').drawImage(bm,0,0)});
-//     _size = _b1.size;
-//     // now we do a *single* big adjustment
-//     _c = scaleCanvas(_c, Math.sqrt(maxSize / _size));
-//     _old_c = _c
-//     _b1 = await new Promise((resolve) => {
-//       _c.toBlob(resolve, imageType, qualityArgument);
-//     });
-//     _size = _b1.size;
-//     _old_size = _size;
-//     const t3 = new Date().getTime();
-//     console.log(`... reduced to W ${_c.width} x H ${_c.height} (to size ${_size}) ... total time ${t3 - t2} milliseconds`);
-//   } else {
-//     while (_size > maxSize) {
-//       _old_c = _c;
-//       _c = scaleCanvas(_c, .5);
-//       _b1 = await new Promise((resolve) => {
-// 	_c.toBlob(resolve, imageType, qualityArgument);
-//       });
-//       _old_size = _size;
-//       _size = _b1.size;
-//       // workingDots();
-//       const t3 = new Date().getTime();
-//       console.log(`... reduced to W ${_c.width} x H ${_c.height} (to size ${_size}) ... total time ${t3 - t2} milliseconds`);
-//     }
-//   }
-
-//   // we assume that within this width interval, storage is roughly prop to area,
-//   // with a little tuning downwards
-//   let _ratio = (maxSize / _old_size) * 0.95; // overshoot a bit
-//   let _maxIteration = 12;  // to be safe
-//   console.log("_old_c is:")
-//   console.log(_old_c);
-//   console.log(`... stepping back up to W ${_old_c.width} x H ${_old_c.height} and will then try scale ${_ratio.toFixed(4)}`);
-//   let _final_c;
-//   const t4 = new Date().getTime();
-//   do {
-//     _final_c = scaleCanvas(_old_c, Math.sqrt(_ratio) * 0.95); // always overshoot
-//     _b1 = await new Promise((resolve) => {
-//       _final_c.toBlob(resolve, imageType, qualityArgument);
-//       console.log(`(generating blob of requested type ${imageType})`);
-//     });
-//     // workingDots();
-//     console.log(`... fine-tuning to W ${_final_c.width} x H ${_final_c.height} (size ${_b1.size})`);
-//     _ratio *= (maxSize / _b1.size);
-//     const t5 = new Date().getTime();
-//     console.log(`... resulting _ratio is ${_ratio} ... total time here ${t5 - t4} milliseconds`);
-//     console.log(` ... we're within ${(Math.abs(_b1.size - maxSize) / maxSize)} of cap (${maxSize})`);
-//   } while (((_b1.size > maxSize) || ((Math.abs(_b1.size - maxSize) / maxSize) > 0.10)) && (--_maxIteration > 0));  // we're pretty tolerant here
-
-//   return _b1;
-// }
 
 function releaseCanvas(canvas) {
   canvas.width = 1;

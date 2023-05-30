@@ -35,8 +35,6 @@ const JoinDialog = (props) => {
     if (roomId.match(/^http|^https/)) {
       const uriParts = roomId.split('/')
       const pathname = uriParts[uriParts.length - 1]
-      const domain = roomId.match(/([\w\d]+\..+|localhost:3000)\//)
-      const origin = window.location.origin.match(/([\w\d]+\..+|localhost:3000)/)
       if (pathname.length === 64) {
         navigate("/" + pathname);
         setRoomId("");

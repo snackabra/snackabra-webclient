@@ -60,6 +60,9 @@ export default function ImageViewer(props) {
             setImage(props.img)
             setClosing(false)
         }
+
+    // Ignored this is not an exhaustive dependency list
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.img])
 
     React.useEffect(() => {
@@ -84,7 +87,7 @@ export default function ImageViewer(props) {
     useGesture(
         {
             onDrag: (state) => {
-                const { down, pinching, dragging, offset: [x, y], last, velocity: [vy], movement: [mx], cancel } = state
+                const { pinching, offset: [x, y], last, velocity: [vy], cancel } = state
                 // if the user drags up passed a threshold, then we cancel
                 // the drag so that the sheet resets to its open position
                 // console.log(state)

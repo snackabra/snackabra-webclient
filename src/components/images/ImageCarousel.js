@@ -6,7 +6,6 @@ import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
 import SwipeableViews from 'react-swipeable-views';
-import { useTheme } from '@mui/material/styles';
 import ImageViewer from './ImageViewer';
 import Slide from '@mui/material/Slide';
 import Paper from '@mui/material/Paper';
@@ -18,20 +17,19 @@ const EnhancedSwipeableViews = bindKeyboard(autoPlay(virtualize(SwipeableViews))
 export default function ImageCarousel(props) {
     let mouseMoveTimeout;
     const { img, images, sbContext, controlMessages } = props
-    const [imageList, setImageList] = React.useState(images);
+    let imageList = images;
     const [autoplay, setAutoplay] = React.useState(false);
     const [showControls, setShowControls] = React.useState(false);
-    const theme = useTheme();
     const [value, setValue] = React.useState(null);
     const [swipeInhibiter, inhibitSwipe] = React.useState(0);
 
     const containerRef = React.useRef(null);
 
-    const handleChangeIndex = (index) => {
+    const handleChangeIndex = React.useCallback((index) => {
         console.log(index)
         if (index < 0) index = imageList.length - 1
         setValue(index);
-    };
+    }, [imageList.length])
 
     React.useEffect(() => {
         const _images = images
@@ -42,7 +40,7 @@ export default function ImageCarousel(props) {
             }
         }
 
-    }, [images])
+    }, [handleChangeIndex, images, img._id])
 
     const slideRenderer = ({ key, index }) => {
         return (<ImageViewer

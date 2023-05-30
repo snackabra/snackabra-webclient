@@ -42,7 +42,7 @@ const RenderImage = (props) => {
             setDownloaded(false)
           }, 2000)
           throw new Error(`Could not open image (${data.error})`)
-          // props.notify('Could not open image (' + data.error + ')', 'error');
+
         } else {
           try {
             var regex = new RegExp(/data:([\w/\-\.]+);(\w+),(.*)/, '');

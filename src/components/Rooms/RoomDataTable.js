@@ -85,9 +85,6 @@ export default function CustomPaginationActionsTable(props) {
     const [rowsPerPage, setRowsPerPage] = React.useState(5);
     const [rows, setRows] = React.useState(items);
     const [emptyRows, setEmptyRows] = React.useState(0);
-    const [downloading, setDownloading] = React.useState({});
-    const [completed, setCompleted] = React.useState({});
-    const [errored, setErrored] = React.useState({});
 
     React.useEffect(() => {
         setRows(items)
@@ -104,28 +101,6 @@ export default function CustomPaginationActionsTable(props) {
         setPage(0);
     };
 
-    const downloadSuccesful = (id) => {
-        const dling = downloading;
-        const cmpl = completed;
-        dling[id] = false;
-        cmpl[id] = true;
-        console.log(cmpl, dling)
-        setCompleted(cmpl)
-        // setDownloading(dling)
-    }
-    const downloadStarted = (id) => {
-        const dling = downloading;
-        dling[id] = true;
-        setDownloading(dling)
-    }
-
-    const onErrored = (id) => {
-        const er = errored;
-        er[id] = true;
-        setErrored(er)
-    }
-
-    // console.log(rows)
     return (
         <TableContainer component={Paper} elevation={0}>
             <Table sx={{ minWidth: 500 }} aria-label="custom pagination table">
@@ -134,7 +109,6 @@ export default function CustomPaginationActionsTable(props) {
                         ? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                         : rows
                     ).map((row) => {
-                        console.log(completed, row._id)
                         return (
                             <TableRow key={row._id + row.type}>
                                 <TableCell component="th" scope="row">

@@ -48,6 +48,8 @@ Once done, you can simply:
 
 It should be accessible on ``localhost:3000``.
 
+Note: yarn start will consume the non-minimized version of snackabara-jslib to help with debugging, but it will still minified in a production build.
+
 To create an optimized production build:
 
 ::

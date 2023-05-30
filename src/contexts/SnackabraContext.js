@@ -18,15 +18,6 @@ export class SnackabraProvider extends React.Component {
     })
   }
 
-  loadChannelList = () => {
-
-    sbContext.ready.then(() => {
-      this.setState({ sbContext: sbContext, ready: true }, () => {
-        console.log("SB Store is ready")
-      })
-    })
-  }
-
   render() {
     return (<>
       {
@@ -34,7 +25,7 @@ export class SnackabraProvider extends React.Component {
           <SnackabraContext.Provider value={this.state.sbContext}>
             {this.props.children}
           </SnackabraContext.Provider>
-          : ''
+          : null
       }
     </>)
 

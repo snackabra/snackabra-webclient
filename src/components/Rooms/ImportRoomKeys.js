@@ -51,7 +51,7 @@ const ImportRoomKeys = observer((props) => {
       setExisting(metadata)
     })
 
-  }, [])
+  }, [sbContext])
 
   let fileReader;
 

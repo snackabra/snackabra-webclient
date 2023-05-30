@@ -36,13 +36,13 @@ const rejectStyle = {
 }
 
 const DropZone = observer((props) => {
-  const { onDrop, children, dzRef, notify, overlayOpen } = props;
+  const { children, dzRef, notify, overlayOpen } = props;
   const [success, setSuccess] = React.useState(false)
   const [previewOpen, setPreviewOpen] = React.useState(false)
   const sbContext = React.useContext(SnackabraContext);
 
   let maxFiles = isMobile ? 15 : 30
-  const getSbImage = (file, sbContext) => {
+  const getSbImage = useCallback((file, sbContext) => {
     return new Promise((resolve) => {
       const sbImage = new SBImage(file, sbContext.SB);
       sbImage.img.then((i) => {
@@ -51,15 +51,13 @@ const DropZone = observer((props) => {
         resolve(sbImage)
         queueMicrotask(() => {
           const SBImageCanvas = document.createElement('canvas');
-          sbImage.loadToCanvas(SBImageCanvas).then((c) => {
-            // SBImageCanvas.remove()
-          });
+          sbImage.loadToCanvas(SBImageCanvas)
         });
       })
     })
-  }
+  }, [props])
 
-  const selectFiles = async (acceptedFiles) => {
+  const selectFiles = useCallback(async (acceptedFiles) => {
     props.showLoading(true)
     try {
       const files = []
@@ -74,7 +72,7 @@ const DropZone = observer((props) => {
     } catch (e) {
       console.log(e)
     }
-  }
+  },[getSbImage, props, sbContext])
 
   React.useEffect(() => {
     console.log(overlayOpen)
