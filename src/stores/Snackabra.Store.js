@@ -34,7 +34,7 @@ class SnackabraStore {
   roomCapacity = 20;
   keys = {};
   userKey = {};
-  sharedKeyProp = false;
+  // PSM sharedKeyProp = false;
   //might be more of a local state thing
   loadingMore = false;
   lockEncryptionKey = false;
@@ -75,7 +75,7 @@ class SnackabraStore {
       lockKey: computed,
       lastMessageTime: computed,
       lastSeenMessage: computed,
-      sharedKey: computed,
+      // PSM sharedKey: computed,
       channelList: observable,
       lastSeenMessageId: observable,
       lockEncryptionKey: observable,
@@ -340,13 +340,13 @@ class SnackabraStore {
     }
   }
 
-  set sharedKey(key) {
-    this.rooms[this.activeroom].sharedKey = key;
-  }
+  // set sharedKey(key) {
+  //   this.rooms[this.activeroom].sharedKey = key;
+  // }
 
-  get sharedKey() {
-    return toJS(this.rooms[this.activeroom].sharedKey);
-  }
+  // get sharedKey() {
+  //   return toJS(this.rooms[this.activeroom].sharedKey);
+  // }
 
   async replyEncryptionKey(recipientPubkey) {
     return this.Crypto.deriveKey(this.socket.keys.privateKey, await this.Crypto.importKey("jwk", JSON.parse(recipientPubkey), "ECDH", true, []), "AES", false, ["encrypt", "decrypt"])
@@ -493,7 +493,7 @@ class SnackabraStore {
                 id: handle.channelId,
                 key: handle.key,
                 userName: 'Me',
-                sharedKey: false,
+                // PSM sharedKey: false,
                 lastSeenMessage: 0,
                 contacts: {},
                 messages: []
@@ -671,7 +671,7 @@ class SnackabraStore {
               key: typeof key !== 'undefined' ? key : c.exportable_privateKey,
               userName: username !== '' && typeof username !== 'undefined' ? username : '',
               lastSeenMessage: 0,
-              sharedKey: this.socket.owner ? false : await this.Crypto.deriveKey(this.socket.keys.privateKey, this.socket.keys.ownerKey, "AES", false, ["encrypt", "decrypt"]),
+              // PSM sharedKey: this.socket.owner ? false : await this.Crypto.deriveKey(this.socket.keys.privateKey, this.socket.keys.ownerKey, "AES", false, ["encrypt", "decrypt"]),
               contacts: contacts ? contacts : {},
               messages: []
             };
@@ -679,7 +679,7 @@ class SnackabraStore {
             this.setRoom(channelId, roomData).then(async () => {
               this.key = typeof key !== 'undefined' ? key : c.exportable_privateKey;
               this.socket.userName = roomData.userName;
-              this.sharedKey = this.socket.owner ? false : await this.Crypto.deriveKey(this.socket.keys.privateKey, this.socket.keys.ownerKey, "AES", false, ["encrypt", "decrypt"])
+              // PSM this.sharedKey = this.socket.owner ? false : await this.Crypto.deriveKey(this.socket.keys.privateKey, this.socket.keys.ownerKey, "AES", false, ["encrypt", "decrypt"])
               this.save();
             })
           }
