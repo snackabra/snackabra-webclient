@@ -3,7 +3,7 @@ import { AppBar, Avatar, Box, Grid, Hidden, IconButton, InputAdornment, TextFiel
 import AccountCircleRoundedIcon from '@mui/icons-material/AccountCircleRounded';
 import WhisperUserDialog from "./Modals/WhisperUserDialog";
 import { observer } from "mobx-react"
-import { SnackabraContext } from "mobx-snackabra-store";
+import SnackabraContext from "../contexts/SnackabraContext";
 import { Menu, Close } from '@mui/icons-material';
 import NavBarActionContext from "../contexts/NavBarActionContext";
 import RoomMenu from "../components/Rooms/RoomMenu";

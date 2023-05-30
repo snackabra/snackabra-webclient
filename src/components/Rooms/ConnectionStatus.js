@@ -4,7 +4,7 @@ import Tooltip from '@mui/material/Tooltip';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import IconButton from '@mui/material/IconButton';
 import { observer } from 'mobx-react';
-import { SnackabraContext } from 'mobx-snackabra-store';
+import SnackabraContext from "../../contexts/SnackabraContext";
 
 const ConnectionStatus = observer((props) => {
     const sbContext = React.useContext(SnackabraContext)

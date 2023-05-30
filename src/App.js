@@ -13,7 +13,7 @@ import { NotificationProvider } from "./contexts/NotificationContext";
 import { NavBarActionProvider } from "./contexts/NavBarActionContext";
 import { SharedRoomStateProvider } from "./contexts/SharedRoomState";
 import { LogProvider } from "./contexts/LogContext";
-import { SnackabraProvider } from "mobx-snackabra-store";
+import { SnackabraProvider } from "./contexts/SnackabraContext";
 import NotificationBar from "./components/NotificationBar";
 
 

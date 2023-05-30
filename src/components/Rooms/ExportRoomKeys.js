@@ -5,7 +5,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import ContentCopy from '@mui/icons-material/ContentCopy';
 import { useState } from "react"
 import { observer } from "mobx-react"
-import { SnackabraContext } from "mobx-snackabra-store";
+import SnackabraContext from "../../contexts/SnackabraContext";
 import NotificationContext from "../../contexts/NotificationContext";
 
 const ExportRoomKeys = observer((props) => {

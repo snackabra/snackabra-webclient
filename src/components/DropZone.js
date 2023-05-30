@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from 'react'
 import { SBImage } from "../utils/ImageProcessor";
-import { SnackabraContext } from "mobx-snackabra-store";
+import SnackabraContext from "../contexts/SnackabraContext";
 import Dropzone from 'react-dropzone'
 import { Grid } from "@mui/material";
 import { observer } from "mobx-react"

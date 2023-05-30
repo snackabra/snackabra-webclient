@@ -14,7 +14,7 @@ import NotificationContext from "../../contexts/NotificationContext";
 import ConnectionStatus from "./ConnectionStatus"
 import SharedRoomStateContext from "../../contexts/SharedRoomState";
 import { observer } from "mobx-react"
-import { SnackabraContext } from "mobx-snackabra-store";
+import SnackabraContext from "../../contexts/SnackabraContext";
 
 const ITEM_HEIGHT = 48;
 

@@ -10,12 +10,12 @@ class IndexedKV {
     onReady: null
   }
 
-  constructor(options, indexedDB) {
+  constructor(options) {
     this.options = Object.assign(this.options, options)
-    if (!indexedDB && !window?.indexedDB) {
+    if (!window.indexedDB) {
       console.log("Your browser doesn't support a stable version of IndexedDB.");
     } else {
-      this.indexedDB = indexedDB ? indexedDB : window?.indexedDB;
+      this.indexedDB = window.indexedDB;
     }
 
     const openReq = this.indexedDB.open(this.options.db);

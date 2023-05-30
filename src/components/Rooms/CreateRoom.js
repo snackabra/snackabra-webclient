@@ -14,7 +14,7 @@ import FormControl from '@mui/material/FormControl';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import IconButton from '@mui/material/IconButton';
 import { observer } from "mobx-react"
-import { SnackabraContext } from "mobx-snackabra-store";
+import SnackabraContext from "../../contexts/SnackabraContext";
 import { useNavigate } from "react-router-dom";
 
 const CreateRoom = observer((props) => {

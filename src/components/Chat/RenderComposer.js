@@ -1,7 +1,7 @@
 import * as React from 'react';
 import TextField from '@mui/material/TextField';
 import { SBImage } from "../../utils/ImageProcessor";
-import { SnackabraContext } from "mobx-snackabra-store";
+import SnackabraContext from "../../contexts/SnackabraContext";
 import { observer } from "mobx-react"
 import { isDataURL } from '../../utils/misc';
 

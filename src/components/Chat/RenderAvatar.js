@@ -3,7 +3,7 @@ import { StyleSheet, View, } from 'react-native';
 import { getColorFromId } from "../../utils/misc"
 import { isSameUser, isSameDay, GiftedAvatar } from 'react-native-gifted-chat';
 import { observer } from "mobx-react"
-import { SnackabraContext } from "mobx-snackabra-store";
+import SnackabraContext from "../../contexts/SnackabraContext";
 const styles = {
   left: StyleSheet.create({
     container: {

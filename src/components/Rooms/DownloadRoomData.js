@@ -2,7 +2,7 @@ import * as React from "react"
 import Grid from '@mui/material/Grid';
 import RoomDataTable from "./RoomDataTable"
 import { observer } from "mobx-react"
-import { SnackabraContext } from "mobx-snackabra-store";
+import SnackabraContext from "../../contexts/SnackabraContext";
 import NotificationContext from "../../contexts/NotificationContext";
 
 const DownloadRoomData = observer(() => {

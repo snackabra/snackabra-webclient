@@ -26,7 +26,7 @@ import DataOperationsDialog from "../components/Modals/DataOperationsDialog";
 import RoomMenu from "../components/Rooms/RoomMenu"
 import NavBarActionContext from "../contexts/NavBarActionContext";
 import { observer } from "mobx-react"
-import { SnackabraContext } from "mobx-snackabra-store";
+import SnackabraContext from "../contexts/SnackabraContext";
 import { isMobile } from 'react-device-detect';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Dimensions } from "react-native";

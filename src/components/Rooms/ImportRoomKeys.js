@@ -5,7 +5,7 @@ import { StyledButton } from "../../styles/Buttons";
 import { useState, useContext } from "react"
 import NotificationContext from "../../contexts/NotificationContext";
 import { observer } from "mobx-react"
-import { SnackabraContext } from "mobx-snackabra-store";
+import SnackabraContext from "../../contexts/SnackabraContext";
 
 const ImportRoomKeys = observer((props) => {
   const sbContext = React.useContext(SnackabraContext);
