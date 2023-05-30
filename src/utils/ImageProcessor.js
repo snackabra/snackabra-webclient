@@ -91,30 +91,25 @@ export async function _restrictPhoto(maxSize, _c, _b1, scale, canvas) {
   // console.log(_old_c);
   console.log(`... stepping back up to W ${_old_c.width} x H ${_old_c.height} and will then try scale ${_ratio.toFixed(4)}`);
   const t4 = new Date().getTime();
-  const processIteration = async (_old_c, _ratio, _final_c, _b1, maxSize, imageType, qualityArgument, t4) => {
-    _final_c = scaleCanvas(_old_c, Math.sqrt(_ratio) * 0.95, _final_c);
+  do {
+    _final_c = scaleCanvas(_old_c, Math.sqrt(_ratio) * 0.95, _final_c); // always overshoot
+    // eslint-disable-next-line no-loop-func
     _b1 = await new Promise((resolve) => {
       _final_c.toBlob(resolve, imageType, qualityArgument);
       console.log(`(generating blob of requested type ${imageType})`);
     });
-
+    // workingDots();
     console.log(`... fine-tuning to W ${_final_c.width} x H ${_final_c.height} (size ${_b1.size})`);
-    _ratio *= maxSize / _b1.size;
+    _ratio *= (maxSize / _b1.size);
     const t5 = new Date().getTime();
     console.log(`... resulting _ratio is ${_ratio} ... total time here ${t5 - t4} milliseconds`);
-    console.log(`... we're within ${(Math.abs(_b1.size - maxSize) / maxSize)} of cap (${maxSize})`);
-    return [_final_c, _b1];
-  };
-
-  do {
-    [_final_c, _b1] = await processIteration(_old_c, _ratio, _final_c, _b1, maxSize, imageType, qualityArgument, t4);
-    _maxIteration--;
-  } while ((_b1.size > maxSize || (Math.abs(_b1.size - maxSize) / maxSize) > 0.10) && _maxIteration > 0);
-
-  releaseCanvas(_final_c);
+    console.log(` ... we're within ${(Math.abs(_b1.size - maxSize) / maxSize)} of cap (${maxSize})`);
+  } while (((_b1.size > maxSize) || ((Math.abs(_b1.size - maxSize) / maxSize) > 0.10)) && (--_maxIteration > 0));  // we're pretty tolerant here
+  releaseCanvas(_final_c)
 
   return _b1;
 }
+
 
 function releaseCanvas(canvas) {
   canvas.width = 1;
