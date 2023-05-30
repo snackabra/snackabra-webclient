@@ -244,7 +244,7 @@ const ResponsiveDrawer = observer((props) => {
           value={value}
           onChange={handleChange}
           indicatorColor='#ff5c42'
-          textColor="#000"
+          textColor='primary'
           variant="scrollable"
           orientation="vertical"
           aria-label="room tabs"

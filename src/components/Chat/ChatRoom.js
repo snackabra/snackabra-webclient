@@ -1,7 +1,6 @@
 /* Copyright (c) 2021 Magnusson Institute, All Rights Reserved */
 
 import * as React from 'react';
-import GiftedChatCustom from './GiftedChatCustom';
 import RenderBubble from "./RenderBubble";
 import RenderAvatar from "./RenderAvatar";
 import RenderAttachmentIcon from "./RenderAttachmentIcon";
@@ -27,10 +26,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { isMobile } from 'react-device-detect';
 import { Navigate } from "react-router-dom";
 import SharedRoomStateContext from "../../contexts/SharedRoomState";
+import { GiftedChat } from "react-native-gifted-chat";
 
 const q = new Queue()
 const _r = new Queue()
-let SB = require('snackabra')
+let SB = require(process.env.NODE_ENV === 'development' ? 'snackabra/dist/snackabra' : 'snackabra')
 if ((!SB) && (globalThis) && (globalThis.SB)) SB = globalThis.SB
 console.log("SB Version: ", SB.version)
 
@@ -599,7 +599,7 @@ class ChatRoom extends React.PureComponent {
             this.setState({ openFirstVisit: false })
             this.connect(username)
           }} roomId={this.state.roomId} />
-          <GiftedChatCustom
+          <GiftedChat
             isKeyboardInternallyHandled={false}
             wrapInSafeArea={false}
             className={'sb_chat_container'}
