@@ -467,6 +467,7 @@ class SnackabraStore {
       });
     });
   };
+
   createRoom = secret => {
     return new Promise((resolve, reject) => {
       // create a new channel (room), returns (owner) key and channel name:
@@ -481,7 +482,7 @@ class SnackabraStore {
             }, handle.key,
             // if we omit then we're connecting anonymously (and not as owner)
             handle.channelId // since we're owner this is optional
-          ).then(c => c.ready).then(c => {
+          ).then(c => { // removed then(c => c.ready).
             console.warn('connected!');
             if (c) {
               this.socket = c;
@@ -550,9 +551,8 @@ class SnackabraStore {
     const channelId = roomData.roomId;
     const key = JSON.parse(roomData.ownerKey);
     try {
-      this.SB.connect(console.log, key, channelId).then(c => c.ready).then(c => {
+      this.SB.connect(console.log, key, channelId).then(c => { // removed then(c => c.ready).
         if (c) {
-
           this.socket = c;
           this.activeroom = channelId;
           const roomData = this.rooms[channelId] ? this.rooms[channelId] : {
@@ -583,7 +583,7 @@ class SnackabraStore {
     return this.socket ? this.socket.getCapacity : 20;
   }
   setRoomCapacity = capacity => {
-    this.socket.adminData.capacity = capacity;
+    // this.socket.adminData.capacity = capacity;  // don't assume you're allowed to
     return this.socket.api.updateCapacity(capacity);
   };
   get motd() {
@@ -597,6 +597,7 @@ class SnackabraStore {
   };
 
   // This isnt in the the jslib atm
+  // PSM: it is now but needs testing
   lockRoom = () => {
     return new Promise((resolve, reject) => {
       try {
