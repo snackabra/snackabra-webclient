@@ -255,7 +255,7 @@ const ResponsiveDrawer = observer((props) => {
             const bgColor = room === roomId ? '#ff5c42' : 'inherit';
             const color = room === roomId ? '#fff' : 'inherit';
             return (
-              <Tab disableRipple disableTouchRipple key={index} {...a11yProps(index)} sx={{ backgroundColor: bgColor, color: color, textAlign: "left" }} label={
+              <Tab component={'div'} disableRipple disableTouchRipple key={index} {...a11yProps(index)} sx={{ backgroundColor: bgColor, color: color, textAlign: "left" }} label={
                 <Grid container
                   direction="row"
                   justifyContent={'flex-start'}
