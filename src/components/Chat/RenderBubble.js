@@ -19,7 +19,7 @@ const RenderBubble = (props) => {
       setIsAdmin(props.socket.admin)
     }
     init();
-  }, [currentMessage.user._id, props.socket.admin, props.socket.api, props.socket.exportable_owner_pubKey, props.socket.exportable_pubKey])
+  }, [currentMessage.user._id, props.socket.admin, props.socket.api, /* props.socket.exportable_owner_pubKey, */ props.socket.exportable_pubKey])
 
   const updateProps = React.useCallback(({ both, left, right }) => {
     both = both || {}

@@ -81,12 +81,12 @@ export async function _restrictPhoto(maxSize, _c, _b1, scale) {
   console.warn("scale is:")
   console.warn(scale);
   console.log(`... stepping back up to W ${_old_c.width} x H ${_old_c.height} and will then try scale ${_ratio.toFixed(4)}`);
-  let _final_c;
+  // let _final_c; // we make it const in the loop, that makes it safe
   const t4 = new Date().getTime();
   while (_b1.size >= maxSize) {
     // TODO: lint reports this as unsafe reference to _final_c
-    _final_c = scaleCanvas(_old_c, Math.sqrt(_ratio) * scale); // always overshoot
-    console.log(_final_c)
+    const _final_c = scaleCanvas(_old_c, Math.sqrt(_ratio) * scale); // always overshoot
+    console.log(_final_c) 
     _b1 = await new Promise((resolve) => {
       _final_c.toBlob(resolve, imageType, qualityArgument);
       console.log(`(generating blob of requested type ${imageType})`);

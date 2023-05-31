@@ -7,8 +7,6 @@ let SB = require(process.env.NODE_ENV === 'development' ? 'snackabra/dist/snacka
 console.log("mobx-snackabra-store loading SB Version: ")
 console.log(SB.version)
 
-
-
 let cacheDb;
 configure({
   useProxies: "never"
@@ -352,10 +350,11 @@ class SnackabraStore {
     return this.Crypto.deriveKey(this.socket.keys.privateKey, await this.Crypto.importKey("jwk", JSON.parse(recipientPubkey), "ECDH", true, []), "AES", false, ["encrypt", "decrypt"])
   }
 
-
-  SBMessage = message => {
+  newMessage = (message) => {
+  // SBMessage = message => {
     return new SB.SBMessage(this.socket, message);
   };
+  
   receiveMessage = async (m, messageCallback) => {
     const user_pubKey = m.user._id;
     m.user._id = JSON.stringify(m.user._id);
@@ -580,7 +579,8 @@ class SnackabraStore {
     }
   };
   get capacity() {
-    return this.socket ? this.socket.adminData.capacity : 20;
+    // return this.socket ? this.socket.adminData.capacity : 20;
+    return this.socket ? this.socket.getCapacity : 20;
   }
   setRoomCapacity = capacity => {
     this.socket.adminData.capacity = capacity;
@@ -643,26 +643,36 @@ class SnackabraStore {
     name,
     contacts
   }, overwrite) => {
+    console.log("==== Calling 'connect' for ", roomId, " =====")
+    console.log("key:"); console.log(key);
+    console.log("secret:"); console.log(secret);
     return new Promise(async (resolve, reject) => {
-      this.SB = null;
+      // this.SB = null;
+      if (!this.SB) {
+        console.log("==== Creating new SB instance =====")
+        this.SB = new SB.Snackabra(this.config);
+      }
       try {
         let channel, channelId;
-        this.SB = new SB.Snackabra(this.config);
+        // this.SB = new SB.Snackabra(this.config);
         if (secret) {
+          console.log("==== Creating new channel (secret is set) =====")
           channel = await this.SB.create(this.config, secret);
         }
         key = key ? key : channel?.key;
         channelId = roomId ? roomId : channel?.channelId;
-        this.SB.connect(m => {
-          this.receiveMessage(m, messageCallback);
-        },
+        this.SB.connect(
           // must have a message handler:
+          m => { this.receiveMessage(m, messageCallback); },
+          // if we omit then we're connecting anonymously (and not as owner):
           key ? key : null,
-          // if we omit then we're connecting anonymously (and not as owner)
-          channelId // since we're owner this is optional
-        ).then(c => c.ready).then(async (c) => {
+          channelId // if we are owner then this is optional
+        ).then(async (c) => { // removed  /* then(c => c.ready). */
+          console.log("==== connected to channel:"); console.log(c);
           if (c) {
             this.socket = c;
+            console.log("==== connected to channel:")
+            console.log(c)
             this.activeroom = channelId;
             const channel = await this.getChannel(channelId);
             const roomData = channel && !overwrite ? channel : {

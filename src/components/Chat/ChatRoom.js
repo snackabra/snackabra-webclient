@@ -31,8 +31,8 @@ import { GiftedChat } from "react-native-gifted-chat";
 const q = new Queue()
 const _r = new Queue()
 let SB = require(process.env.NODE_ENV === 'development' ? 'snackabra/dist/snackabra' : 'snackabra')
-
 console.log("SB Version: ", SB.version)
+
 
 @observer
 class ChatRoom extends React.PureComponent {
@@ -335,7 +335,6 @@ class ChatRoom extends React.PureComponent {
     this.setState({ openChangeName: true, changeUserNameProps: context })
   }
 
-
   handleReply = (user) => {
     try {
       if (this.sbContext.owner) {
@@ -358,10 +357,7 @@ class ChatRoom extends React.PureComponent {
     const filesArray = [];
     const _files = this.state.files;
     this.setState({ files: [] }, () => {
-
-
       _files.forEach((file, i) => {
-
         const message = {
           createdAt: new Date(),
           text: "",
@@ -373,42 +369,78 @@ class ChatRoom extends React.PureComponent {
         filesArray.push(file)
       })
 
+      // from snackabra interfaces:
+
+      // interface ImageMetaData {
+      //   imageId?: string,
+      //   previewId?: string,
+      //   imageKey?: string,
+      //   previewKey?: string,
+      //   // nonce and salt not needed, but if it's there, we do extra checks
+      //   previewNonce?: string,
+      //   previewSalt?: string
+      // }
+
+      // interface SBMessageContents {
+      //   sender_pubKey?: JsonWebKey,
+      //   sender_username?: string,
+      //   encrypted: boolean,
+      //   isVerfied: boolean,
+      //   contents: string,
+      //   sign: string,
+      //   image: string,
+      //   image_sign?: string,
+      //   imageMetadata_sign?: string,
+      //   imageMetaData?: ImageMetaData,
+      // }
+
       for (let x in filesArray) {
         const sbImage = filesArray[x]
         sbImage.thumbnailReady.then(async () => {
           const storePromises = await sbImage.getStorePromises(this.sbContext.activeroom)
-          let sbm = new SB.SBMessage(this.sbContext.socket)
-          // populate
-          sbm.contents.image = _files[x].thumbnail
-          console.log(sbImage.objectMetadata)
           const imageMetaData = {
             imageId: sbImage.objectMetadata.full.id,
             imageKey: sbImage.objectMetadata.full.key,
             previewId: sbImage.objectMetadata.preview.id,
             previewKey: sbImage.objectMetadata.preview.key,
           }
-          sbm.contents.imageMetaData = imageMetaData;
+          const _contents = {
+            image: _files[x].thumbnail,
+            imageMetaData: imageMetaData,
+          }
+          let sbm = this.sbContext.newMessage(_contents)
           q.enqueue(sbm)
           Promise.all([storePromises.previewStorePromise]).then((previewVerification) => {
-            console.log()
             console.log('Preview image uploaded')
             previewVerification[0].verification.then((verification) => {
               // now the preview (up to 2MiB) has been safely stored
-              let controlMessage = new SB.SBMessage(this.sbContext.socket);
+              // let controlMessage = new SB.SBMessage(this.sbContext.socket);
               // controlMessage.imageMetaData = imageMetaData;
-              controlMessage.contents.control = true;
-              controlMessage.contents.verificationToken = verification;
-              controlMessage.contents.id = imageMetaData.previewId;
+              const controlMessageContents = {
+                control: true,
+                verificationToken: verification,
+                id: imageMetaData.previewId
+              }
+              let controlMessage = this.sbContext.newMessage(controlMessageContents)
+              // controlMessage.contents.control = true;
+              // controlMessage.contents.verificationToken = verification;
+              // controlMessage.contents.id = imageMetaData.previewId;
               q.enqueue(controlMessage)
               queueMicrotask(() => {
                 storePromises.fullStorePromise.then((verificationPromise) => {
                   console.log(verificationPromise)
                   verificationPromise.verification.then((_f_verification) => {
                     console.log('Full image uploaded')
-                    let _f_controlMessage = new SB.SBMessage(this.sbContext.socket);
-                    _f_controlMessage.contents.control = true;
-                    _f_controlMessage.contents.verificationToken = _f_verification;
-                    _f_controlMessage.contents.id = imageMetaData.imageId;
+                    // let _f_controlMessage = new SB.SBMessage(this.sbContext.socket);
+                    let _f_controlMessageContents = {
+                      control: true,
+                      verificationToken: _f_verification,
+                      id: imageMetaData.imageId
+                    }
+                    let _f_controlMessage = this.sbContext.newMessage(_f_controlMessageContents)
+                    // _f_controlMessage.contents.control = true;
+                    // _f_controlMessage.contents.verificationToken = _f_verification;
+                    // _f_controlMessage.contents.id = imageMetaData.imageId;
                     q.enqueue(_f_controlMessage)
                   });
                 });
@@ -434,11 +466,15 @@ class ChatRoom extends React.PureComponent {
     } else {
       giftedMessage[0]._id = 'sending_' + giftedMessage[0]._id;
       const msg_id = giftedMessage[0]._id;
-
+      console.log("==== here is the context:")
+      console.log(this.sbContext)
+      console.log("==== here is the channel:")
+      console.log(this.sbContext.socket)
       giftedMessage[0].user = { _id: JSON.stringify(this.sbContext.socket.exportable_pubKey), name: this.sbContext.username }
       this.setState({ messages: [...this.state.messages, giftedMessage[0]] })
       this.sending[msg_id] = msg_id
-      let sbm = new SB.SBMessage(this.sbContext.socket, giftedMessage[0].text)
+      // let sbm = new SB.SBMessage(this.sbContext.socket, giftedMessage[0].text)
+      let sbm = this.sbContext.newMessage(giftedMessage[0].text)
       sbm.send();
 
     }
@@ -651,7 +687,8 @@ class ChatRoom extends React.PureComponent {
                 loading={this.state.loading} />
             }}
             renderBubble={(props) => {
-              return <RenderBubble {...props} keys={{ ...this.props.sbContext.socket.keys, ...this.props.sbContext.userKey }}
+              // PSM TODO: what does this need channel keys for?
+              return <RenderBubble {...props} keys={{ /* ...this.props.sbContext.socket.keys, */ ...this.props.sbContext.userKey }}
                 socket={this.props.sbContext.socket}
                 SB={this.SB} />
             }}
