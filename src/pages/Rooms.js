@@ -173,7 +173,7 @@ const ResponsiveDrawer = observer((props) => {
   }
 
   const handleChange = (event, newValue) => {
-    sbContext.socket.close()
+    // sbContext.socket.close()  // PSM: why?
     setValue(newValue);
     NavAppBarContext.setMenuOpen(false)
   };

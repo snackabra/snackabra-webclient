@@ -4,8 +4,8 @@ import IndexedKV from "../utils/IndexedKV";
 console.log("=========== mobx-snackabra-store loading ===========")
 let SB = require(process.env.NODE_ENV === 'development' ? 'snackabra/dist/snackabra' : 'snackabra')
 
-console.log("mobx-snackabra-store loading SB Version: ")
-console.log(SB.version)
+// console.log("mobx-snackabra-store loading SB Version: ")
+// console.log(SB.version)
 
 let cacheDb;
 configure({
@@ -476,6 +476,7 @@ class SnackabraStore {
           console.log(`you can (probably) connect here: localhost:3000/rooms/${handle.channelId}`);
           // connect to the websocket with our handle info:
           this.SB.connect(
+            // PSM: UGH should not connect here, that shouldn't be needed
             // must have a message handler:
             m => {
               this.receiveMessage(m, console.log);
@@ -483,11 +484,12 @@ class SnackabraStore {
             // if we omit then we're connecting anonymously (and not as owner)
             handle.channelId // since we're owner this is optional
           ).then(c => { // removed then(c => c.ready).
-            console.warn('connected!');
+            console.warn('connected (through CREATRE)');
             if (c) {
               this.socket = c;
               this.activeroom = handle.channelId;
               this.socket.userName = 'Me';
+              this.roomCapacity = c.getCapacity() // PSM: api call here for actual capacity
               this.rooms[handle.channelId] = {
                 name: 'Room ' + Math.floor(Object.keys(this.channels).length + 1),
                 id: handle.channelId,
@@ -555,6 +557,7 @@ class SnackabraStore {
         if (c) {
           this.socket = c;
           this.activeroom = channelId;
+          this.roomCapacity = c.getCapacity() // PSM: api call here for actual capacity
           const roomData = this.rooms[channelId] ? this.rooms[channelId] : {
             name: 'Room ' + Math.floor(Object.keys(this.rooms).length + 1),
             id: channelId,
@@ -580,7 +583,7 @@ class SnackabraStore {
   };
   get capacity() {
     // return this.socket ? this.socket.adminData.capacity : 20;
-    return this.socket ? this.socket.getCapacity : 20;
+    return this.roomCapacity
   }
   setRoomCapacity = capacity => {
     // this.socket.adminData.capacity = capacity;  // don't assume you're allowed to
@@ -676,6 +679,7 @@ class SnackabraStore {
             console.log(c)
             this.activeroom = channelId;
             const channel = await this.getChannel(channelId);
+            this.roomCapacity = c.getCapacity() // PSM: api call here for actual capacity
             const roomData = channel && !overwrite ? channel : {
               name: overwrite && name ? name : 'Room ' + Math.floor(Object.keys(this.channels).length + 1),
               id: channelId,
