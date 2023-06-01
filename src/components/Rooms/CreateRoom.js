@@ -57,7 +57,7 @@ const CreateRoom = observer((props) => {
   const createRoom = async () => {
     setCreating(true)
     sbContext.createRoom(secret).then((channel) => {
-      sbContext.socket.close()
+      // sbContext.socket.close()  // PSM:  why? this is just reaching into the channel
       setRoomId(channel)
       setOpenFirstVisit(true)
     }).catch((e) => {

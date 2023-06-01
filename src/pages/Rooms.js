@@ -132,9 +132,10 @@ const ResponsiveDrawer = observer((props) => {
         messageCallback: console.log
       }
       console.log(options)
-      sbContext.connect(options).then(() => {
-        sbContext.socket.close()
-      })
+      // PSM: wait this connects and then closes? why?
+      // sbContext.connect(options).then(() => {
+      //   sbContext.socket.close()
+      // })
       _c.push({ _id: room_id, name: `Room ${_c.length + 1}` })
     }
 
