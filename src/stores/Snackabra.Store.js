@@ -426,7 +426,9 @@ class SnackabraStore {
   };
   getOldMessages = length => {
     return new Promise(resolve => {
-      this.socket.api.getOldMessages(length).then(async (r_messages) => {
+      this.socket.getOldMessages(length).then(async (r_messages) => {
+        console.log("==== got these old messages:")
+        console.log(r_messages)
         for (let x in r_messages) {
           let m = r_messages[x]
           // For whispers
