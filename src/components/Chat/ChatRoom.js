@@ -285,7 +285,7 @@ class ChatRoom extends React.PureComponent {
           }
           return acc;
         }, []);
-        this.setState({ messages: [...messages, msg] })
+        this.setState({ messages: [...messages, msg] }) // merges old messages with new (PSM learning)
       } else {
         this.setState({ controlMessages: [...this.state.controlMessages, msg] })
       }

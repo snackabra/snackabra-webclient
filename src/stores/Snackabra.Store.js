@@ -661,10 +661,10 @@ class SnackabraStore {
       try {
         let channel, channelId;
         // this.SB = new SB.Snackabra(this.config);
-        if (secret) {
-          console.log("==== Creating new channel (secret is set) =====")
-          channel = await this.SB.create(this.config, secret);
-        }
+        // if (secret) {
+        //   console.log("==== Creating new channel (secret is set) =====")
+        //   channel = await this.SB.create(this.config, secret);
+        // }
         key = key ? key : channel?.key;
         channelId = roomId ? roomId : channel?.channelId;
         this.SB.connect(

@@ -29,6 +29,7 @@ const sbConfig = {
   storage_server: process.env.REACT_APP_SHARD_SERVER
 }
 
+// provider hierarchy
 const App = () => {
   return (
     <SafeAreaProvider>
