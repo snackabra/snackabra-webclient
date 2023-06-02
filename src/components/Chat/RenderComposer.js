@@ -39,12 +39,8 @@ const RenderComposer = observer((props) => {
   }, [text, validateText])
 
   const handleSend = React.useCallback(() => {
-    setTimeout(() => {
-      setText('')
-      props.onTextChanged('')
-    }, 100)
-
-  }, [props])
+    setText('')
+  }, [])
 
   React.useEffect(() => {
     const sendButton = document.getElementById('send-button');
