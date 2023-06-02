@@ -479,7 +479,6 @@ class ChatRoom extends React.PureComponent {
       // let sbm = new SB.SBMessage(this.sbContext.socket, giftedMessage[0].text)
       let sbm = this.sbContext.newMessage(giftedMessage[0].text)
       sbm.send();
-
     }
   }
 
