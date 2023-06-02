@@ -275,6 +275,8 @@ class ChatRoom extends React.PureComponent {
 
   recieveMessages = (msg) => {
     if (msg) {
+      console.log("==== here is the message: (ChatRoom.js)")
+      console.warn(msg)
       if (!msg.control) {
         const messages = this.state.messages.reduce((acc, curr) => {
           const msg_id = curr._id.toString()
@@ -289,7 +291,8 @@ class ChatRoom extends React.PureComponent {
       } else {
         this.setState({ controlMessages: [...this.state.controlMessages, msg] })
       }
-
+    } else {
+      console.warn("this.recieveMessages() called with empty message")
     }
   }
 
