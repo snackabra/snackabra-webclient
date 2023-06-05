@@ -26,7 +26,8 @@ i18n.activate('en')
 const sbConfig = {
   channel_server: process.env.REACT_APP_CHANNEL_SERVER,
   channel_ws: process.env.REACT_APP_CHANNEL_SERVER_WS,
-  storage_server: process.env.REACT_APP_SHARD_SERVER
+  storage_server: process.env.REACT_APP_STORAGE_SERVER,
+  shard_server: process.env.REACT_APP_SHARD_SERVER
 }
 
 // provider hierarchy

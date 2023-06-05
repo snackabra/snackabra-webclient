@@ -440,7 +440,12 @@ export class SBImage {
   processThumbnail = () => {
     const t0 = new Date().getTime();
     return new Promise((resolve) => {
-      restrictPhoto(this, 64, 'thumbnail').then(async (photo) => {
+      // new channel server is more ornery about this. our thumbnail limit
+      // is potentially 64 KiB, but this needs to wait for jslib 1.4.0 which
+      // will redesign some key low level aspects of messages. currently we
+      // want some space, so let's say 62 KiB, but then that needs to 
+      // tolerate b64 encoding along the way, ergo 62 * 3 / 4 = 46.5
+      restrictPhoto(this, 46 /* 64 */, 'thumbnail').then(async (photo) => {
         const t1 = new Date().getTime();
         console.warn(`#### thumbnail processing total ${t1 - t0} milliseconds (blocking)`);
         this.thumbnail = await getFileData(photo, 'url');

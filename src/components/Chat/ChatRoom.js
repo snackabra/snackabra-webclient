@@ -397,6 +397,9 @@ class ChatRoom extends React.PureComponent {
       //   imageMetaData?: ImageMetaData,
       // }
 
+      // TODO ... big PSM TODO item: this needs to be in a mix of SBFile and SBImage helpers;
+      // otherwise test code or SDK users will have to extract code from webclient. should
+      // also reference how BAMF does this, presumably copy-pasted code from here currently?
       for (let x in filesArray) {
         const sbImage = filesArray[x]
         sbImage.thumbnailReady.then(async () => {
@@ -416,38 +419,63 @@ class ChatRoom extends React.PureComponent {
           Promise.all([storePromises.previewStorePromise]).then((previewVerification) => {
             console.log('Preview image uploaded')
             previewVerification[0].verification.then((verification) => {
+
               // now the preview (up to 2MiB) has been safely stored
-              // let controlMessage = new SB.SBMessage(this.sbContext.socket);
+              let controlMessage = new SB.SBMessage(this.sbContext.socket);
               // controlMessage.imageMetaData = imageMetaData;
-              const controlMessageContents = {
-                control: true,
-                verificationToken: verification,
-                id: imageMetaData.previewId
-              }
-              let controlMessage = this.sbContext.newMessage(controlMessageContents)
-              // controlMessage.contents.control = true;
-              // controlMessage.contents.verificationToken = verification;
-              // controlMessage.contents.id = imageMetaData.previewId;
+              controlMessage.contents.control = true;
+              controlMessage.contents.verificationToken = verification;
+              controlMessage.contents.id = imageMetaData.previewId;
               q.enqueue(controlMessage)
               queueMicrotask(() => {
                 storePromises.fullStorePromise.then((verificationPromise) => {
                   console.log(verificationPromise)
                   verificationPromise.verification.then((_f_verification) => {
                     console.log('Full image uploaded')
-                    // let _f_controlMessage = new SB.SBMessage(this.sbContext.socket);
-                    let _f_controlMessageContents = {
-                      control: true,
-                      verificationToken: _f_verification,
-                      id: imageMetaData.imageId
-                    }
-                    let _f_controlMessage = this.sbContext.newMessage(_f_controlMessageContents)
-                    // _f_controlMessage.contents.control = true;
-                    // _f_controlMessage.contents.verificationToken = _f_verification;
-                    // _f_controlMessage.contents.id = imageMetaData.imageId;
+                    let _f_controlMessage = new SB.SBMessage(this.sbContext.socket);
+                    _f_controlMessage.contents.control = true;
+                    _f_controlMessage.contents.verificationToken = _f_verification;
+                    _f_controlMessage.contents.id = imageMetaData.imageId;
                     q.enqueue(_f_controlMessage)
                   });
                 });
               })
+
+              // PSM:
+              // the below code is roughly the direction post next jslib refator (1.4)
+              // // now the preview (up to 2MiB) has been safely stored
+              // // let controlMessage = new SB.SBMessage(this.sbContext.socket);
+              // // controlMessage.imageMetaData = imageMetaData;
+              // const controlMessageContents = {
+              //   control: true,
+              //   verificationToken: verification,
+              //   id: imageMetaData.previewId
+              // }
+              // let controlMessage = this.sbContext.newMessage(controlMessageContents)
+              // // controlMessage.contents.control = true;
+              // // controlMessage.contents.verificationToken = verification;
+              // // controlMessage.contents.id = imageMetaData.previewId;
+              // q.enqueue(controlMessage)
+              // queueMicrotask(() => {
+              //   storePromises.fullStorePromise.then((verificationPromise) => {
+              //     console.log(verificationPromise)
+              //     verificationPromise.verification.then((_f_verification) => {
+              //       console.log('Full image uploaded')
+              //       // let _f_controlMessage = new SB.SBMessage(this.sbContext.socket);
+              //       let _f_controlMessageContents = {
+              //         control: true,
+              //         verificationToken: _f_verification,
+              //         id: imageMetaData.imageId
+              //       }
+              //       let _f_controlMessage = this.sbContext.newMessage(_f_controlMessageContents)
+              //       // _f_controlMessage.contents.control = true;
+              //       // _f_controlMessage.contents.verificationToken = _f_verification;
+              //       // _f_controlMessage.contents.id = imageMetaData.imageId;
+              //       q.enqueue(_f_controlMessage)
+              //     });
+              //   });
+              // })
+
             })
           }).finally(() => {
             if (Number(x) === filesArray.length - 1) {
