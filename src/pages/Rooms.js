@@ -78,7 +78,7 @@ const ResponsiveDrawer = observer((props) => {
   const [swipeInhibiter, inhibitSwipe] = React.useState(0);
 
   React.useEffect(() => {
-    if (room_id !== roomId) {
+    if (room_id && room_id !== roomId) {
       setRoomId(room_id)
     }
 
@@ -403,6 +403,8 @@ const ResponsiveDrawer = observer((props) => {
           disabled={!!swipeInhibiter}
         >
           {channelList.map((item, index) => {
+            console.log(room_id)
+            if(room_id){
             return (<TabPanel
               key={`${index}-tab-panel`}
               value={value}
@@ -420,6 +422,9 @@ const ResponsiveDrawer = observer((props) => {
                 openAdminDialog={openAdminDialog}
                 onCloseAdminDialog={onCloseAdminDialog} />
             </TabPanel>)
+            }else{
+              return (<div key={`${index}-tab-panel`}></div>)
+            }
           })}
         </SwipeableViews>
       </Box>

@@ -66,19 +66,19 @@ class ChatRoom extends React.PureComponent {
 
 
   componentDidMount() {
+    let resizeTimeout = null
     const handleResize = (e) => {
       const { height } = Dimensions.get('window')
-      this.setState({ height: height })
+      if(resizeTimeout) clearTimeout(resizeTimeout)
+
+      // resizeTimeout =  setTimeout(() => {
+        this.setState({ height: height })
+      // }, 400)
     }
     window.saveUsername = this.saveUsername
     window.addEventListener('resize', handleResize)
     window.addEventListener('orientationchange', handleResize)
-    window.addEventListener('touchmove', (e) => {
-      setTimeout(() => {
-        handleResize(e)
-      }, 400)
-
-    });
+    window.addEventListener('touchmove', handleResize);
     handleResize();
 
     // reconnect when window comes into focus and the state of the socket is not opened
@@ -225,6 +225,7 @@ class ChatRoom extends React.PureComponent {
 
   connect = async (username) => {
     const room = await this.sbContext.getChannel(this.props.roomId)
+    // console.warn('room', room)
     const options = {
       roomId: this.props.roomId,
       username: username ? username : 'Unnamed',

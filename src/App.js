@@ -12,7 +12,7 @@ import { ThemeProvider } from "@mui/material";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import { NavBarActionProvider } from "./contexts/NavBarActionContext";
 import { SharedRoomStateProvider } from "./contexts/SharedRoomState";
-import { LogProvider } from "./contexts/LogContext";
+// import { LogProvider } from "./contexts/LogContext";
 import { SnackabraProvider } from "./contexts/SnackabraContext";
 import NotificationBar from "./components/NotificationBar";
 
@@ -40,9 +40,9 @@ const App = () => {
             <NotificationProvider>
               <SharedRoomStateProvider>
                 <NavBarActionProvider>
-                  <LogProvider>
+                  {/* <LogProvider> */}
                     <AppRoutes />
-                  </LogProvider>
+                  {/* </LogProvider> */}
                   <NotificationBar />
                 </NavBarActionProvider>
               </SharedRoomStateProvider>

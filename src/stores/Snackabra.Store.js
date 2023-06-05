@@ -491,7 +491,12 @@ class SnackabraStore {
               this.socket = c;
               this.activeroom = handle.channelId;
               this.socket.userName = 'Me';
-              this.roomCapacity = c.getCapacity() // PSM: api call here for actual capacity
+              try{
+                this.roomCapacity = c.getCapacity() // PSM: api call here for actual capacity
+              }catch(e){
+                console.warn(e)
+              }
+
               this.rooms[handle.channelId] = {
                 name: 'Room ' + Math.floor(Object.keys(this.channels).length + 1),
                 id: handle.channelId,
@@ -559,7 +564,11 @@ class SnackabraStore {
         if (c) {
           this.socket = c;
           this.activeroom = channelId;
-          this.roomCapacity = c.getCapacity() // PSM: api call here for actual capacity
+                        try{
+                this.roomCapacity = c.getCapacity() // PSM: api call here for actual capacity
+              }catch(e){
+                console.warn(e)
+              }
           const roomData = this.rooms[channelId] ? this.rooms[channelId] : {
             name: 'Room ' + Math.floor(Object.keys(this.rooms).length + 1),
             id: channelId,
@@ -681,7 +690,11 @@ class SnackabraStore {
             console.log(c)
             this.activeroom = channelId;
             const channel = await this.getChannel(channelId);
-            this.roomCapacity = c.getCapacity() // PSM: api call here for actual capacity
+            try{
+              this.roomCapacity = c.getCapacity() // PSM: api call here for actual capacity
+            }catch(e){
+              console.warn(e)
+            }
             const roomData = channel && !overwrite ? channel : {
               name: overwrite && name ? name : 'Room ' + Math.floor(Object.keys(this.channels).length + 1),
               id: channelId,
