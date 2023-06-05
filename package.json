@@ -60,7 +60,7 @@
     "react-router-dom": "^6.3.0",
     "react-scripts": "^5.0.1",
     "react-swipeable-views": "^0.14.0",
-    "snackabra": "^1.0.0",
+    "snackabra": "^1.1.11",
     "styled-components": "^5.3.5",
     "ts-node": "^10.9.1",
     "workbox-core": "^6.5.3",
