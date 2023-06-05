@@ -30,7 +30,7 @@ import { GiftedChat } from "react-native-gifted-chat";
 
 const q = new Queue()
 const _r = new Queue()
-let SB = require(process.env.NODE_ENV === 'development' ? 'snackabra/dist/snackabra' : 'snackabra')
+let SB = require(process.env.NODE_ENV === 'development' ? 'snackabra/dist/src/snackabra' : 'snackabra')
 console.log("SB Version: ", SB.version)
 
 

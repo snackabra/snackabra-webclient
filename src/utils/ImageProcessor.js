@@ -15,7 +15,7 @@ import ImageWorker from './ImageWorker.js';
 import ArrayBufferWorker from './ArrayBufferWorker.js';
 
 // import { _appendBuffer } from "snackabra";
-let SB = require(process.env.NODE_ENV === 'development' ? 'snackabra/dist/snackabra' : 'snackabra')
+let SB = require(process.env.NODE_ENV === 'development' ? 'snackabra/dist/src/snackabra' : 'snackabra')
 
 export async function getFileData(file, outputType) {
   try {

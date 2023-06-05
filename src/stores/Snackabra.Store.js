@@ -2,7 +2,7 @@ import { makeObservable, observable, action, computed, onBecomeUnobserved, confi
 import IndexedKV from "../utils/IndexedKV";
 
 console.log("=========== mobx-snackabra-store loading ===========")
-let SB = require(process.env.NODE_ENV === 'development' ? 'snackabra/dist/snackabra' : 'snackabra')
+let SB = require(process.env.NODE_ENV === 'development' ? 'snackabra/dist/src/snackabra' : 'snackabra')
 
 // console.log("mobx-snackabra-store loading SB Version: ")
 // console.log(SB.version)
