@@ -88,12 +88,17 @@ class ChatRoom extends React.PureComponent {
       }
       this.setState({ visibility: document.visibilityState })
     })
-    this.sbContext.getChannel(this.props.roomId).then((data) => {
+    this.sbContext.getChannel(this.props.roomId)
+    .then((data) => {
       if (!data?.key) {
         this.setState({ openFirstVisit: true })
       } else {
         this.connect();
       }
+    })
+    .catch((e) => {
+      console.warn("Trying to connect to this channel and failing:", this.props.roomId)
+      // TODO: should we do some sort of tear-down / cleanup here?
     })
     this.processQueue()
     this.processSQueue()
