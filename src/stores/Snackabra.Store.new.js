@@ -1,4 +1,4 @@
-import { makeObservable, observable, action, computed, onBecomeUnobserved, configure, toJS } from "mobx";
+import { makeAutoObservable, configure, toJS } from "mobx";
 import IndexedKV from "../utils/IndexedKV";
 
 console.log("=========== mobx-snackabra-store loading ===========")
@@ -8,99 +8,37 @@ let SB = require(process.env.NODE_ENV === 'development' ? 'snackabra/dist/snacka
 // console.log(SB.version)
 
 let cacheDb;
+let Crypto = new SB.SBCrypto();
+
 configure({
-  useProxies: "never"
+  useProxies: "always",
+  enforceActions: "observed",
+  computedRequiresReaction: false,
+  reactionRequiresObservable: false,
+  observableRequiresReaction: false,
+  disableErrorBoundaries: false
 });
+
 class SnackabraStore {
-  sbConfig = {
-    channel_server: 'https://r.384co.workers.dev',
-    channel_ws: 'wss://r.384co.workers.dev',
-    storage_server: 'https://s.384co.workers.dev'
-  };
+  config = {};
+  channels = {};
+  SB = {};
   ready = new Promise((resolve) => {
     this.readyResolver = resolve
   })
-  channel;
-  storage_server;
-  rooms = {};
-  locked = false;
-  isVerifiedGuest = false;
-  roomMetadata = {};
-  userName = 'Me';
-  ownerRotation;
-  ownerKey;
-  roomCapacity = 20;
-  keys = {};
-  userKey = {};
-  // PSM sharedKeyProp = false;
-  //might be more of a local state thing
-  loadingMore = false;
-  lockEncryptionKey = false;
-  lastMessageTimeStamp = 0;
-  lastSeenMessageId;
-  moreMessages = false;
-  replyTo;
-  activeRoom;
-  channelList = {};
-  joinRequests = {};
-  SB = {};
-  Crypto = {};
+
   constructor(sbConfig) {
-    this.config = sbConfig ? sbConfig : toJS(this.sbConfig);
-    // moved to init():
-    // this.SB = new SB.Snackabra(this.config);
-    // this.Crypto = new SB.SBCrypto();
-    // this.storage = this.SB.storage;
     if (!sbConfig) {
-      console.info('Using default servers in Snackabra.store', this.sbConfig);
+      throw new Error("SnackabraStore requires a config object")
     }
-    makeObservable(this, {
-      createRoom: action,
-      setRoom: action,
-      importRoom: action,
-      replyEncryptionKey: action,
-      updateChannelName: action,
-      user: computed,
-      channels: computed,
-      username: computed,
-      socket: computed,
-      admin: computed,
-      roomName: computed,
-      motd: computed,
-      activeroom: computed,
-      messages: computed,
-      contacts: computed,
-      lockKey: computed,
-      lastMessageTime: computed,
-      lastSeenMessage: computed,
-      // PSM sharedKey: computed,
-      channelList: observable,
-      lastSeenMessageId: observable,
-      lockEncryptionKey: observable,
-      loadingMore: observable,
-      sbConfig: observable,
-      roomMetadata: observable,
-      userName: observable,
-      rooms: observable,
-      locked: observable,
-      isVerifiedGuest: observable,
-      ownerRotation: observable,
-      roomCapacity: observable,
-      replyTo: observable,
-      activeRoom: observable,
-      keys: observable,
-      userKey: observable,
-      ownerKey: observable,
-      joinRequests: observable,
-      channel: observable,
-      storage: computed
-    });
-    onBecomeUnobserved(this, "rooms", this.suspend);
+    this.config = sbConfig
+    this.SB = new SB.Snackabra(this.config);
+
+    makeAutoObservable(this)
+    // onBecomeUnobserved(this, "rooms", this.suspend);
     this.init()
   }
-  resume = () => {
-    // This will be used later to load the state of the room from a local store
-  };
+
   suspend = () => {
     // This will be used later to offload the state of the room to a local store
     this.save();
@@ -122,72 +60,48 @@ class SnackabraStore {
 
   }
 
-  init = () => {
-    return new Promise((resolve, reject) => {
+  init = async () => {
       try {
-
-        const start = async () => {
-          // give interpreter a breather
-          await new Promise(resolve => setTimeout(resolve, 0));
-
-          this.SB = new SB.Snackabra(this.config);
-          this.Crypto = new SB.SBCrypto();
-          this.storage = this.SB.storage;
-
-          const sb_data = JSON.parse(await cacheDb.getItem('sb_data'));
-          const migrated = await cacheDb.getItem('sb_data_migrated');
-          const channels = await cacheDb.getItem('sb_data_channels');
-          if (migrated?.version === 2) {
-            if (channels) {
-              this.channels = channels
-            }
-            resolve('success');
-          }
-          let channelList = []
-          if (sb_data && migrated?.version !== 2) {
-            Object.keys(sb_data.rooms).forEach((roomId) => {
-              for (let x in sb_data.rooms[roomId]) {
-                if (!this.rooms[roomId]) {
-                  this.rooms[roomId] = {}
-                }
-                channelList.push({ _id: roomId, name: sb_data.rooms[roomId].name })
-                this.rooms[roomId][x] = sb_data.rooms[roomId][x];
-              }
-              cacheDb.setItem('sb_data_' + roomId, toJS(this.rooms[roomId])).then(() => {
-                delete this.rooms[roomId];
-              })
-            })
-          }
-          cacheDb.setItem('sb_data_migrated', {
-            timestamp: Date.now(),
-            version: 2
-          }).then(() => {
-            this.readyResolver()
-            resolve('success');
-          })
-
-        };
         cacheDb = new IndexedKV({
           db: 'sb_data',
           table: 'cache'
         });
-        cacheDb.ready.then(() => {
-          start()
+
+        const sb_data = JSON.parse(await cacheDb.getItem('sb_data'));
+        const migrated = await cacheDb.getItem('sb_data_migrated');
+        const channels = await cacheDb.getItem('sb_data_channels');
+        if (migrated?.version === 2) {
+          if (channels) {
+            this.channels = channels
+          }
+        }
+        let channelList = []
+        if (sb_data && migrated?.version !== 2) {
+          Object.keys(sb_data.rooms).forEach((roomId) => {
+            for (let x in sb_data.rooms[roomId]) {
+              if (!this.rooms[roomId]) {
+                this.rooms[roomId] = {}
+              }
+              channelList.push({ _id: roomId, name: sb_data.rooms[roomId].name })
+              this.rooms[roomId][x] = sb_data.rooms[roomId][x];
+            }
+            cacheDb.setItem('sb_data_' + roomId, toJS(this.rooms[roomId])).then(() => {
+              delete this.rooms[roomId];
+            })
+          })
+        }
+        cacheDb.setItem('sb_data_migrated', {
+          timestamp: Date.now(),
+          version: 2
+        }).then(() => {
+          this.readyResolver()
         })
+
+
       } catch (e) {
         console.error(e);
-        reject('failed to initialize Snackabra.Store');
       }
-    });
   };
-
-  open = (callback) => {
-    cacheDb = new IndexedKV(window, {
-      db: 'sb_data',
-      table: 'cache',
-      onReady: callback
-    });
-  }
 
   save = () => {
     if (this.rooms[this.activeroom]?.id) {
@@ -201,87 +115,13 @@ class SnackabraStore {
   };
 
   get status() {
-    if(this.channel) {
-    return toJS(this.socket.status);
-    }else{
+    if (this.channel) {
+      return toJS(this.socket.status);
+    } else {
       return 'CLOSED'
     }
   }
 
-  get channels() {
-    return toJS(this.channelList)
-  }
-
-  set channels(channelList) {
-    this.channelList = channelList
-  }
-
-  get config() {
-    return toJS(this.sbConfig);
-  }
-
-  set lastSeenMessage(messageId) {
-    this.rooms[this.activeRoom].lastSeenMessageId = messageId;
-  }
-  get lastSeenMessage() {
-    return toJS(this.rooms[this.activeRoom].lastSeenMessageId);
-  }
-
-  set lastMessageTime(timestamp) {
-    this.rooms[this.activeRoom].lastMessageTime = timestamp;
-  }
-  get lastMessageTime() {
-    return toJS(this.rooms[this.activeRoom].lastMessageTime);
-  }
-
-  set lockKey(lockKey) {
-    this.rooms[this.activeRoom].lockEncryptionKey = lockKey;
-  }
-  get lockKey() {
-    return toJS(this.rooms[this.activeRoom].lockEncryptionKey);
-  }
-
-  set config(config) {
-    this.sbConfig = config;
-  }
-  set storage(storage) {
-    this.storage_server = storage;
-  }
-  get storage() {
-    return this.storage_server ? toJS(this.storage_server) : undefined;
-  }
-  get socket() {
-    return this.channel ? toJS(this.channel) : undefined;
-  }
-  set socket(channel) {
-    this.channel = channel;
-  }
-  get retrieveImage() {
-    return this.storage;
-  }
-  get owner() {
-    return this.socket ? this.socket.owner : false;
-  }
-  get admin() {
-    return this.socket ? this.socket.admin : false;
-  }
-  set activeroom(channelId) {
-    this.activeRoom = channelId;
-  }
-  get activeroom() {
-    return this.activeRoom;
-  }
-  get username() {
-    return this.userName;
-  }
-  get roomName() {
-    return this.rooms[this.activeRoom]?.name ? this.rooms[this.activeRoom].name : 'Room ' + Math.floor(Object.keys(this.channels).length + 1);
-  }
-  set roomName(name) {
-    this.rooms[this.activeRoom].name = name;
-    this.channels[this.activeRoom].name = name
-    this.save();
-  }
 
   updateChannelName = ({ name, channelId }) => {
     return new Promise((resolve, reject) => {
@@ -355,7 +195,7 @@ class SnackabraStore {
   // }
 
   async replyEncryptionKey(recipientPubkey) {
-    return this.Crypto.deriveKey(this.socket.keys.privateKey, await this.Crypto.importKey("jwk", JSON.parse(recipientPubkey), "ECDH", true, []), "AES", false, ["encrypt", "decrypt"])
+    return Crypto.deriveKey(this.socket.keys.privateKey, await Crypto.importKey("jwk", JSON.parse(recipientPubkey), "ECDH", true, []), "AES", false, ["encrypt", "decrypt"])
   }
 
   newMessage = (message) => {
@@ -379,23 +219,23 @@ class SnackabraStore {
       m.text = "(whispered)"
       try {
         if (m.whisper && this.socket.owner && !m.reply_to) {
-          const shared_key = await this.Crypto.deriveKey(this.socket.keys.privateKey, await this.Crypto.importKey("jwk", m.sender_pubKey, "ECDH", true, []), "AES", false, ["encrypt", "decrypt"]);
-          m.contents = await this.Crypto.unwrap(shared_key, m.whisper, 'string')
+          const shared_key = await Crypto.deriveKey(this.socket.keys.privateKey, await Crypto.importKey("jwk", m.sender_pubKey, "ECDH", true, []), "AES", false, ["encrypt", "decrypt"]);
+          m.contents = await Crypto.unwrap(shared_key, m.whisper, 'string')
           m.text = m.contents
         }
-        if (m.whisper && this.Crypto.compareKeys(m.sender_pubKey, this.socket.exportable_pubKey) && !m.reply_to) {
-          const shared_key = await this.Crypto.deriveKey(this.socket.keys.privateKey, await this.Crypto.importKey("jwk", this.socket.exportable_owner_pubKey, "ECDH", true, []), "AES", false, ["encrypt", "decrypt"]);
-          m.contents = await this.Crypto.unwrap(shared_key, m.whisper, 'string')
+        if (m.whisper && Crypto.compareKeys(m.sender_pubKey, this.socket.exportable_pubKey) && !m.reply_to) {
+          const shared_key = await Crypto.deriveKey(this.socket.keys.privateKey, await Crypto.importKey("jwk", this.socket.exportable_owner_pubKey, "ECDH", true, []), "AES", false, ["encrypt", "decrypt"]);
+          m.contents = await Crypto.unwrap(shared_key, m.whisper, 'string')
           m.text = m.contents
         }
         if (m.reply_to && this.socket.owner) {
-          const shared_key = await this.Crypto.deriveKey(this.socket.keys.privateKey, await this.Crypto.importKey("jwk", m.reply_to, "ECDH", true, []), "AES", false, ["encrypt", "decrypt"]);
-          m.contents = await this.Crypto.unwrap(shared_key, m.whisper, 'string')
+          const shared_key = await Crypto.deriveKey(this.socket.keys.privateKey, await Crypto.importKey("jwk", m.reply_to, "ECDH", true, []), "AES", false, ["encrypt", "decrypt"]);
+          m.contents = await Crypto.unwrap(shared_key, m.whisper, 'string')
           m.text = m.contents
         }
-        if (m.reply_to && this.Crypto.compareKeys(m.reply_to, this.socket.exportable_pubKey)) {
-          const shared_key = await this.Crypto.deriveKey(this.socket.keys.privateKey, await this.Crypto.importKey("jwk", this.socket.exportable_owner_pubKey, "ECDH", true, []), "AES", false, ["encrypt", "decrypt"]);
-          m.contents = await this.Crypto.unwrap(shared_key, m.whisper, 'string')
+        if (m.reply_to && Crypto.compareKeys(m.reply_to, this.socket.exportable_pubKey)) {
+          const shared_key = await Crypto.deriveKey(this.socket.keys.privateKey, await Crypto.importKey("jwk", this.socket.exportable_owner_pubKey, "ECDH", true, []), "AES", false, ["encrypt", "decrypt"]);
+          m.contents = await Crypto.unwrap(shared_key, m.whisper, 'string')
           m.text = m.contents
         }
 
@@ -410,7 +250,7 @@ class SnackabraStore {
     this.save();
     messageCallback(m);
   };
-  #mergeMessages = (existing, received) => {
+  mergeMessages = (existing, received) => {
     let merged = [];
     for (let i = 0; i < existing.length + received.length; i++) {
       if (received.find(itmInner => itmInner._id === existing[i]?._id)) {
@@ -432,51 +272,7 @@ class SnackabraStore {
     }
     return merged.sort((a, b) => a._id > b._id ? 1 : -1);
   };
-  getOldMessages = length => {
-    return new Promise(resolve => {
-      this.socket.getOldMessages(length).then(async (r_messages) => {
-        console.log("==== got these old messages:")
-        console.log(r_messages)
-        for (let x in r_messages) {
-          let m = r_messages[x]
-          // For whispers
-          if (m.whispered === true) {
-            m.text = "(whispered)"
-            try {
-              if (m.whisper && this.socket.owner && !m.reply_to) {
-                const shared_key = await this.Crypto.deriveKey(this.socket.keys.privateKey, await this.Crypto.importKey("jwk", m.sender_pubKey, "ECDH", true, []), "AES", false, ["encrypt", "decrypt"]);
-                m.contents = await this.Crypto.unwrap(shared_key, m.whisper, 'string')
-                m.text = m.contents
-              }
-              if (m.whisper && this.Crypto.compareKeys(m.sender_pubKey, this.socket.exportable_pubKey) && !m.reply_to) {
-                const shared_key = await this.Crypto.deriveKey(this.socket.keys.privateKey, await this.Crypto.importKey("jwk", this.socket.exportable_owner_pubKey, "ECDH", true, []), "AES", false, ["encrypt", "decrypt"]);
-                m.contents = await this.Crypto.unwrap(shared_key, m.whisper, 'string')
-                m.text = m.contents
-              }
-              if (m.reply_to && this.socket.owner) {
-                const shared_key = await this.Crypto.deriveKey(this.socket.keys.privateKey, await this.Crypto.importKey("jwk", m.reply_to, "ECDH", true, []), "AES", false, ["encrypt", "decrypt"]);
-                m.contents = await this.Crypto.unwrap(shared_key, m.whisper, 'string')
-                m.text = m.contents
-              }
-              if (m.reply_to && this.Crypto.compareKeys(m.reply_to, this.socket.exportable_pubKey)) {
-                const shared_key = await this.Crypto.deriveKey(this.socket.keys.privateKey, await this.Crypto.importKey("jwk", this.socket.exportable_owner_pubKey, "ECDH", true, []), "AES", false, ["encrypt", "decrypt"]);
-                m.contents = await this.Crypto.unwrap(shared_key, m.whisper, 'string')
-                m.text = m.contents
-              }
 
-            } catch (e) {
-              console.warn(e)
-            }
-
-          }
-          r_messages[x] = m
-        }
-        this.rooms[this.activeRoom].messages = this.#mergeMessages(toJS(this.rooms[this.activeRoom].messages), r_messages);
-        this.save();
-        resolve(r_messages);
-      });
-    });
-  };
 
   createRoom = secret => {
     return new Promise((resolve, reject) => {
@@ -702,7 +498,7 @@ class SnackabraStore {
         key: typeof key !== 'undefined' ? key : c.exportable_privateKey,
         userName: username !== '' && typeof username !== 'undefined' ? username : '',
         lastSeenMessage: 0,
-        // PSM sharedKey: this.socket.owner ? false : await this.Crypto.deriveKey(this.socket.keys.privateKey, this.socket.keys.ownerKey, "AES", false, ["encrypt", "decrypt"]),
+        // PSM sharedKey: this.socket.owner ? false : await Crypto.deriveKey(this.socket.keys.privateKey, this.socket.keys.ownerKey, "AES", false, ["encrypt", "decrypt"]),
         contacts: contacts ? contacts : {},
         messages: []
       };
@@ -710,11 +506,11 @@ class SnackabraStore {
       this.setRoom(channelId, roomData).then(async () => {
         this.key = typeof key !== 'undefined' ? key : c.exportable_privateKey;
         this.socket.userName = roomData.userName;
-        // PSM this.sharedKey = this.socket.owner ? false : await this.Crypto.deriveKey(this.socket.keys.privateKey, this.socket.keys.ownerKey, "AES", false, ["encrypt", "decrypt"])
+        // PSM this.sharedKey = this.socket.owner ? false : await Crypto.deriveKey(this.socket.keys.privateKey, this.socket.keys.ownerKey, "AES", false, ["encrypt", "decrypt"])
         this.save();
       })
       return c
-    }else{
+    } else {
       return false
     }
   };
@@ -749,6 +545,66 @@ class SnackabraStore {
 
     })
   };
+}
+
+class ChannelStore {
+  id = null;
+  name = null;
+  messages = [];
+  key = null;
+  lastSeenMessage = 0;
+  admin = false;
+
+  constructor(){
+    makeAutoObservable(this)
+  }
+
+  getOldMessages = (length) => {
+    return new Promise(resolve => {
+      this.socket.getOldMessages(length).then(async (r_messages) => {
+        console.log("==== got these old messages:")
+        console.log(r_messages)
+        for (let x in r_messages) {
+          let m = r_messages[x]
+          // For whispers
+          if (m.whispered === true) {
+            m.text = "(whispered)"
+            try {
+              if (m.whisper && this.socket.owner && !m.reply_to) {
+                const shared_key = await Crypto.deriveKey(this.socket.keys.privateKey, await Crypto.importKey("jwk", m.sender_pubKey, "ECDH", true, []), "AES", false, ["encrypt", "decrypt"]);
+                m.contents = await Crypto.unwrap(shared_key, m.whisper, 'string')
+                m.text = m.contents
+              }
+              if (m.whisper && Crypto.compareKeys(m.sender_pubKey, this.socket.exportable_pubKey) && !m.reply_to) {
+                const shared_key = await Crypto.deriveKey(this.socket.keys.privateKey, await Crypto.importKey("jwk", this.socket.exportable_owner_pubKey, "ECDH", true, []), "AES", false, ["encrypt", "decrypt"]);
+                m.contents = await Crypto.unwrap(shared_key, m.whisper, 'string')
+                m.text = m.contents
+              }
+              if (m.reply_to && this.socket.owner) {
+                const shared_key = await Crypto.deriveKey(this.socket.keys.privateKey, await Crypto.importKey("jwk", m.reply_to, "ECDH", true, []), "AES", false, ["encrypt", "decrypt"]);
+                m.contents = await Crypto.unwrap(shared_key, m.whisper, 'string')
+                m.text = m.contents
+              }
+              if (m.reply_to && Crypto.compareKeys(m.reply_to, this.socket.exportable_pubKey)) {
+                const shared_key = await Crypto.deriveKey(this.socket.keys.privateKey, await Crypto.importKey("jwk", this.socket.exportable_owner_pubKey, "ECDH", true, []), "AES", false, ["encrypt", "decrypt"]);
+                m.contents = await Crypto.unwrap(shared_key, m.whisper, 'string')
+                m.text = m.contents
+              }
+
+            } catch (e) {
+              console.warn(e)
+            }
+
+          }
+          r_messages[x] = m
+        }
+        this.rooms[this.activeRoom].messages = this.mergeMessages(toJS(this.rooms[this.activeRoom].messages), r_messages);
+        this.save();
+        resolve(r_messages);
+      });
+    });
+  };
+
 }
 
 export default SnackabraStore;

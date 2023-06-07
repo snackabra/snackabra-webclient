@@ -25,14 +25,12 @@ window.onpopstate = function (e) {
 
 const localKV = new IndexedKV({ db: 'sb_files', table: 'files' })
 
-localKV.ready.then(() => {
-  root.render(<App />);
-})
-
+root.render(<App />);
 
 Object.defineProperty(document, 'cacheDb', {
   value: localKV
 });
+
 if (process.env.NODE_ENV === 'production') {
 
   console.log(process.env.NODE_ENV + ' registering service worker')

@@ -8,36 +8,33 @@ import SnackabraContext from "../../contexts/SnackabraContext";
 
 const ConnectionStatus = observer((props) => {
     const sbContext = React.useContext(SnackabraContext)
-    const socketStatus = sbContext.socket?.status
     const [status, setStatus] = React.useState('error')
-    const [state, setState] = React.useState('error')
     React.useEffect(() => {
-            setState(socketStatus)
-            switch (socketStatus) {
-                case 'CONNECTING':
-                    setStatus('warning')
-                    break;
-                case 'OPEN':
-                    setStatus('success')
-                    break;
-                case 'CLOSING':
-                    setStatus('warning')
-                    break;
-                default:
-                    setStatus('error')
-                    break;
-            }
-   
-    }, [socketStatus])
+        switch (sbContext.status) {
+            case 'CONNECTING':
+                setStatus('warning')
+                break;
+            case 'OPEN':
+                setStatus('success')
+                break;
+            case 'CLOSING':
+                setStatus('warning')
+                break;
+            default:
+                setStatus('error')
+                break;
+        }
 
-    const reload = () =>{
+    }, [sbContext.status])
+
+    const reload = () => {
         window.location.reload();
     }
 
     return (
         <>
             {status !== 'error' ?
-                <Tooltip title={`Connection Status (${state})`}>
+                <Tooltip title={`Connection Status (${sbContext.status})`}>
                     <Badge
                         sx={{ pl: 2 }}
                         badgeContent=""
@@ -46,7 +43,7 @@ const ConnectionStatus = observer((props) => {
                     />
                 </Tooltip>
                 :
-                <Tooltip title={`Connection Status (${state})`}>
+                <Tooltip title={`Connection Status (${sbContext.status})`}>
                     <IconButton onClick={reload} aria-label="reload" color="secondary" >
                         <RefreshIcon color="error" />
                     </IconButton>

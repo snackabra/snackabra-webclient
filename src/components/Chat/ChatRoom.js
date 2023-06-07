@@ -30,7 +30,7 @@ import { GiftedChat } from "react-native-gifted-chat";
 
 const q = new Queue()
 const _r = new Queue()
-let SB = require(process.env.NODE_ENV === 'development' ? 'snackabra/dist/src/snackabra' : 'snackabra')
+let SB = require(process.env.NODE_ENV === 'development' ? 'snackabra/dist/snackabra' : 'snackabra')
 console.log("SB Version: ", SB.version)
 
 
@@ -68,12 +68,13 @@ class ChatRoom extends React.PureComponent {
   componentDidMount() {
     let resizeTimeout = null
     const handleResize = (e) => {
-      const { height } = Dimensions.get('window')
-      if(resizeTimeout) clearTimeout(resizeTimeout)
 
-      // resizeTimeout =  setTimeout(() => {
+      if (resizeTimeout) clearTimeout(resizeTimeout)
+
+      resizeTimeout = setTimeout(() => {
+        const { height } = Dimensions.get('window')
         this.setState({ height: height })
-      // }, 400)
+      }, 250)
     }
     window.saveUsername = this.saveUsername
     window.addEventListener('resize', handleResize)
@@ -89,17 +90,18 @@ class ChatRoom extends React.PureComponent {
       this.setState({ visibility: document.visibilityState })
     })
     this.sbContext.getChannel(this.props.roomId)
-    .then((data) => {
-      if (!data?.key) {
-        this.setState({ openFirstVisit: true })
-      } else {
-        this.connect();
-      }
-    })
-    .catch((e) => {
-      console.warn("Trying to connect to this channel and failing:", this.props.roomId)
-      // TODO: should we do some sort of tear-down / cleanup here?
-    })
+      .then((data) => {
+        if (!data?.key) {
+          this.setState({ openFirstVisit: true })
+        } else {
+          this.connect();
+        }
+      })
+      .catch((e) => {
+        console.error(e)
+        console.warn("Trying to connect to this channel and failing:", this.props.roomId)
+        // TODO: should we do some sort of tear-down / cleanup here?
+      })
     this.processQueue()
     this.processSQueue()
     this.subscribeToNotifications()
@@ -233,7 +235,9 @@ class ChatRoom extends React.PureComponent {
       secret: null,
       messageCallback: this.recieveMessages
     }
-    this.sbContext.connect(options).then(() => {
+    try {
+      await this.sbContext.connect(options)
+      // this.sbContext.connect(options).then(() => {
       this.setState({ user: this.sbContext.user })
       this.sbContext.getOldMessages(0).then((r) => {
         let controlMessages = [];
@@ -267,16 +271,19 @@ class ChatRoom extends React.PureComponent {
         }, 1000)
 
       })
+    } catch (e) {
+      console.log(e)
+    }
 
-    }).catch((e) => {
-      if (e.match(/^No such channel on this server/)) {
-        this.notify(e + ` Channel ID: ${this.props.roomId}}`, 'error')
+    // }).catch((e) => {
+    //   if (e.match(/^No such channel on this server/)) {
+    //     this.notify(e + ` Channel ID: ${this.props.roomId}}`, 'error')
 
-        setTimeout(() => {
-          this.setState({ to: "/" })
-        }, 5000)
-      }
-    })
+    //     setTimeout(() => {
+    //       this.setState({ to: "/" })
+    //     }, 5000)
+    //   }
+    // })
   }
 
   recieveMessages = (msg) => {
