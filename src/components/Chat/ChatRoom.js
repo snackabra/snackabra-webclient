@@ -49,14 +49,14 @@ class ChatRoom extends React.PureComponent {
     anchorEl: null,
     img: '',
     imgLoaded: false,
-    messages: this.sbContext.rooms[this.props.roomId]?.messages ? toJS(this.sbContext.rooms[this.props.roomId].messages) : [],
+    messages: this.sbContext.channels[this.props.roomId]?.messages ? toJS(this.sbContext.channels[this.props.roomId].messages) : [],
     controlMessages: [],
     roomId: this.props.roomId || 'offline',
     files: [],
     images: [],
     loading: false,
     uploading: false,
-    user: this.sbContext.rooms[this.props.roomId]?.userName && this.sbContext.rooms[this.props.roomId]?.key ? { _id: JSON.stringify(this.sbContext.rooms[this.props.roomId]?.key), name: this.sbContext.rooms[this.props.roomId]?.userName } : {},
+    user: this.sbContext.channels[this.props.roomId]?.userName && this.sbContext.channels[this.props.roomId]?.key ? { _id: JSON.stringify(this.sbContext.channels[this.props.roomId]?.key), name: this.sbContext.channels[this.props.roomId]?.userName } : {},
     height: 0,
     visibility: 'visible',
     replyTo: null,
@@ -89,7 +89,7 @@ class ChatRoom extends React.PureComponent {
       }
       this.setState({ visibility: document.visibilityState })
     })
-    this.sbContext.getChannel(this.props.roomId)
+    this.sbContext.getChannelCache(this.props.roomId)
       .then((data) => {
         if (!data?.key) {
           this.setState({ openFirstVisit: true })
@@ -138,14 +138,14 @@ class ChatRoom extends React.PureComponent {
       anchorEl: null,
       img: '',
       imgLoaded: false,
-      messages: this.sbContext.rooms[this.props.roomId]?.messages ? toJS(this.sbContext.rooms[this.props.roomId].messages) : [],
+      messages: this.sbContext.channels[this.props.roomId]?.messages ? toJS(this.sbContext.channels[this.props.roomId].messages) : [],
       controlMessages: [],
       roomId: this.props.roomId || 'offline',
       files: [],
       images: [],
       loading: false,
       uploading: false,
-      user: this.sbContext.rooms[this.props.roomId]?.userName && this.sbContext.rooms[this.props.roomId]?.key ? { _id: JSON.stringify(this.sbContext.rooms[this.props.roomId]?.key), name: this.sbContext.rooms[this.props.roomId]?.userName } : {},
+      user: this.sbContext.channels[this.props.roomId]?.userName && this.sbContext.channels[this.props.roomId]?.key ? { _id: JSON.stringify(this.sbContext.channels[this.props.roomId]?.key), name: this.sbContext.channels[this.props.roomId]?.userName } : {},
       height: 0,
       visibility: 'visible',
       replyTo: null,
@@ -226,7 +226,7 @@ class ChatRoom extends React.PureComponent {
   }
 
   connect = async (username) => {
-    const room = await this.sbContext.getChannel(this.props.roomId)
+    const room = await this.sbContext.getChannelCache(this.props.roomId)
     // console.warn('room', room)
     const options = {
       roomId: this.props.roomId,
@@ -236,7 +236,7 @@ class ChatRoom extends React.PureComponent {
       messageCallback: this.recieveMessages
     }
     try {
-      await this.sbContext.connect(options)
+      await this.sbContext.connect(this.props.roomId, this.recieveMessages, options.key)
       // this.sbContext.connect(options).then(() => {
       this.setState({ user: this.sbContext.user })
       this.sbContext.getOldMessages(0).then((r) => {

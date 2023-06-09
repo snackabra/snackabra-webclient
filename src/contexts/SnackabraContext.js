@@ -1,5 +1,5 @@
 import * as React from "react"
-import SnackabraStore from "../stores/Snackabra.Store"
+import SnackabraStore from "../stores/Snackabra.Store.new"
 
 // React context for the SB object
 const SnackabraContext = React.createContext(undefined);
