@@ -153,12 +153,7 @@ const RoomMenu = observer((props) => {
           </MenuItem>
         </MenuList>
       </Menu>
-      {props.selected ?
-        <ConnectionStatus />
-        : ''
-
-      }
-
+      <ConnectionStatus roomId={props.roomId} />
     </div>
   );
 })

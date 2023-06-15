@@ -6,7 +6,12 @@ const SharedRoomStateContext = React.createContext(undefined);
 
 export class SharedRoomStateProvider  extends React.Component{
   state = {
-    openImageGallery: false
+    openImageGallery: false,
+    activeRoom: null
+  }
+
+  setActiveRoom = (roomId) => {
+    this.setState({ activeRoom: roomId })
   }
 
   setOpenImageGallery = (state) => {

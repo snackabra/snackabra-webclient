@@ -10,7 +10,9 @@ const ConnectionStatus = observer((props) => {
     const sbContext = React.useContext(SnackabraContext)
     const [status, setStatus] = React.useState('error')
     React.useEffect(() => {
-        switch (sbContext.status) {
+        console.warn('sbContext.status', sbContext.channels[props.roomId])
+
+        switch (sbContext.channels[props.roomId].status) {
             case 'CONNECTING':
                 setStatus('warning')
                 break;
@@ -25,12 +27,12 @@ const ConnectionStatus = observer((props) => {
                 break;
         }
 
-    }, [sbContext.status])
+    }, [props.roomId, sbContext.channels])
 
     const reload = () => {
         window.location.reload();
     }
-
+    console.log(sbContext.channels[props.roomId].status)
     return (
         <>
             {status !== 'error' ?

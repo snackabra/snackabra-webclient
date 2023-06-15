@@ -1,5 +1,45 @@
-import { makeObservable, onBecomeUnobserved, configure, toJS, observable, computed, action } from "mobx";
+import { makeAutoObservable, onBecomeUnobserved, configure, toJS, observable, computed, action, autorun } from "mobx";
 import IndexedKV from "../utils/IndexedKV";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+  var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+  else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+const Ready = (...args) => {
+  let target = args[0];
+  let descriptor = args[2];
+  const originalMethod = descriptor;
+  if (!descriptor?.get && !descriptor?.set) {
+    descriptor.value = async function () {
+      const obj = target.constructor.name;
+      const prop = `${obj}ReadyFlag`;
+      if (prop in this) {
+        await this[prop];
+      }
+      return originalMethod.value.apply(this, arguments);
+    };
+  } else {
+    descriptor.get = async function () {
+      const obj = target.constructor.name;
+      const prop = `${obj}ReadyFlag`;
+      if (prop in this) {
+        await this[prop];
+      }
+      return originalMethod.get.apply(this, arguments);
+    };
+    descriptor.set = async function () {
+      const obj = target.constructor.name;
+      const prop = `${obj}ReadyFlag`;
+      if (prop in this) {
+        await this[prop];
+      }
+      return originalMethod.set.apply(this, arguments);
+    };
+  }
+
+};
 
 
 console.log("=========== mobx-snackabra-store loading ===========")
@@ -25,8 +65,13 @@ configure({
 });
 
 class SnackabraStore {
+  readyResolver;
+  SnackabraStoreReadyFlag = new Promise((resolve) => {
+    this.readyResolver = resolve;
+  });
   config = {};
-  channels = {};
+  channelList = {};
+  _contacts = {};
   SB = {};
   ready = new Promise((resolve) => {
     this.readyResolver = resolve
@@ -41,7 +86,6 @@ class SnackabraStore {
 
     this[save] = async () => {
       try {
-        console.log(toJS(this.channels))
         let channels = {}
         for (let x in this.channels) {
           channels[x] = { _id: this.channels[x]._id }
@@ -59,14 +103,16 @@ class SnackabraStore {
 
       switch (v) {
         case 1:
-          Object.keys(sb_data.rooms).forEach((roomId) => {
-            for (let x in sb_data.rooms[roomId]) {
-              this.rooms[roomId][x] = sb_data.rooms[roomId][x];
-            }
-            cacheDb.setItem('sb_data_' + roomId, toJS(this.rooms[roomId])).then(() => {
-              delete this.rooms[roomId];
+          if (sb_data) {
+            Object.keys(sb_data.rooms).forEach((roomId) => {
+              for (let x in sb_data.rooms[roomId]) {
+                this.channels[roomId][x] = sb_data.rooms[roomId][x];
+              }
+              cacheDb.setItem('sb_data_' + roomId, toJS(this.rooms[roomId])).then(() => {
+                delete this.channels[roomId];
+              })
             })
-          })
+          }
           this[migrate](2)
           return;
         case 2:
@@ -82,10 +128,12 @@ class SnackabraStore {
               const channel = await cacheDb.getItem('sb_data_' + channels[x]._id)
               if (channel) {
                 contacts = Object.assign(contacts, channel.contacts)
+                this.channels[x] = new ChannelStore(this.SB, this.config, channels[x]._id)
+                let alias = channels[x].name || channels[x].alias
+                this.channels[x].alias = alias
               }
             }
           }
-          this.channels = channels
           this.contacts = contacts;
           break;
         default:
@@ -100,11 +148,7 @@ class SnackabraStore {
       })
     }
 
-    makeObservable(this, {
-      contacts: computed,
-      channels: observable,
-      getAllChannels: action,
-    });
+    makeAutoObservable(this);
 
     onBecomeUnobserved(this, "channels", this[save]);
     cacheDb = new IndexedKV({
@@ -114,35 +158,39 @@ class SnackabraStore {
     cacheDb.getItem('sb_data_migrated').then((migrated) => {
       this[migrate](migrated?.version || 1)
     })
+    autorun(() => {
+      if (Object.keys(this._contacts).length > 0) {
+        cacheDb.setItem('sb_data_contacts', toJS(this._contacts))
+      }
+    })
   }
 
-  getChannelCache = async (channelId) => {
-    return await cacheDb.getItem('sb_data_' + channelId)
+  getContact = (key) => {
+    return this._contacts[key.x + ' ' + key.y]
   }
+
+  createContact = (key, alias) => {
+    this._contacts[key.x + ' ' + key.y] = alias
+    this[save]()
+  }
+
 
   getAllChannels() {
     return toJS(this.channels)
   }
+  get channels() {
+    return this.channelList
+  }
+
+  set channels(channels) {
+    this.channelList = channels
+  }
 
   set contacts(contacts) {
-    cacheDb.setItem('sb_data_contacts', contacts)
+    this._contacts = Object.assign(this._contacts, contacts)
   }
   get contacts() {
-    return cacheDb.getItem('sb_data_contacts')
-  }
-
-  connect = async (channelId, messageCallback, key = null) => {
-    try {
-      const channel = new ChannelStore(this.SB, this.config);
-      await channel.connect(channelId, messageCallback, key);
-      console.log(channel)
-      this.channels[channel._id] = channel;
-      this[save]();
-      return true;
-    } catch (e) {
-      console.error(e)
-      return false;
-    }
+    return this._contacts
   }
 
   create = async (secret) => {
@@ -151,7 +199,7 @@ class SnackabraStore {
       await channel.create(secret);
       this.channels[channel._id] = channel;
       this[save]();
-      return true;
+      return this.channels[channel._id];
     } catch (e) {
       console.error(e)
       return false;
@@ -195,28 +243,33 @@ class SnackabraStore {
 
 class ChannelStore {
   _id = null;
+  readyResolver;
+  ChannelStoreReadyFlag = new Promise((resolve) => {
+    this.readyResolver = resolve;
+  });
+  _alias = null;
+  _status = 'CLOSED'
   messages = [];
-  key = null;
+  _key = null;
   lastSeenMessage = 0;
   socket = null;
   SB;
   config;
 
-  constructor(SB, config) {
+  constructor(SB, config, channelId = null) {
     this.SB = SB;
     this.config = config;
-
 
     this[save] = async () => {
       try {
         if (this._id !== null) {
           const save = {
             _id: this._id,
+            alias: toJS(this._alias),
             messages: toJS(this.messages),
             key: toJS(this.key),
             lastSeenMessage: toJS(this.lastSeenMessage)
           }
-          console.warn('saving channel state', save)
           await cacheDb.setItem('sb_data_' + this._id, save)
         }
       } catch (e) {
@@ -225,7 +278,7 @@ class ChannelStore {
 
     }
 
-    this[mergeMessages] = (existing, received) => {
+    this[mergeMessages] = async (existing, received) => {
       let merged = [];
       for (let i = 0; i < existing.length + received.length; i++) {
         if (received.find(itmInner => itmInner._id === existing[i]?._id)) {
@@ -235,11 +288,10 @@ class ChannelStore {
           });
         } else {
           if (received[i]) {
+            const contacts = await this.getContacts(received[i].user._id)
             const user_pubKey = received[i].user._id;
-            if (this.contacts[user_pubKey.x + ' ' + user_pubKey.y] === undefined) {
-              const contacts = this.contacts;
+            if (contacts[user_pubKey.x + ' ' + user_pubKey.y] === undefined) {
               contacts[user_pubKey.x + ' ' + user_pubKey.y] = received[i].user.name
-              this.contacts = contacts
             }
             merged.push(received[i]);
           }
@@ -252,7 +304,7 @@ class ChannelStore {
       m.createdAt = new Date(parseInt(m.timestampPrefix, 2));
       this.lastMessageTime = m.timestampPrefix;
       this.lastSeenMessage = m._id
-      this.messages = this[mergeMessages](toJS(this.messages), [m]);
+      this.messages = await this[mergeMessages](toJS(this.messages), [m]);
       if (typeof messageCallback === 'function') {
         messageCallback(m);
       }
@@ -260,27 +312,58 @@ class ChannelStore {
 
     this[getChannel] = (channel) => {
       return new Promise((resolve) => {
-        cacheDb.getItem('sb_data_' + channel).then((data) => {
+        cacheDb.getItem('sb_data_' + channel).then(async (data) => {
+          this._id = data._id;
+          this.alias = data.alias;
+          this.messages = await this[mergeMessages](toJS(this.messages), data.messages);;
+          this.key = data.key;
+          this.lastSeenMessage = data.lastSeenMessage;
           resolve(data)
         })
       })
     }
 
-    makeObservable(this, {
-      messages: observable,
-      capacity: computed,
-      lastSeenMessage: observable,
-      key: observable,
-      motd: computed,
-      status: computed,
-      getMessages: action,
-    });
+    makeAutoObservable(this);
 
     onBecomeUnobserved(this, "messages", this[save]);
 
+    autorun(() => {
+      if(this.socket?.status && this.socket?.status !== this.status){
+        console.warn('socket status', this.socket.status)
+        this.status = this.socket.status
+      }
+
+    })
+
+    if (channelId) {
+      this._id = channelId;
+      this[getChannel](this._id);
+    }
   }
 
-  getOldMessages = (length) => {
+  set key(key) {
+    this._key = key;
+    this[save]();
+  }
+
+  get key() {
+    return this._key;
+  }
+
+  set alias(alias) {
+    this._alias = alias;
+    this[save]();
+  }
+
+  get alias() {
+    return this._alias;
+  }
+
+  async getContacts() {
+    return await cacheDb.getItem('sb_data_contacts')
+  }
+
+  getOldMessages(length) {
     return new Promise(resolve => {
       this.socket.getOldMessages(length).then(async (r_messages) => {
         console.log("==== got these old messages:")
@@ -295,11 +378,11 @@ class ChannelStore {
     });
   };
 
-  replyEncryptionKey = async (recipientPubkey) => {
+  async replyEncryptionKey(recipientPubkey) {
     return Crypto.deriveKey(this.socket.keys.privateKey, await Crypto.importKey("jwk", JSON.parse(recipientPubkey), "ECDH", true, []), "AES", false, ["encrypt", "decrypt"])
   }
 
-  newMessage = (message) => {
+  newMessage(message) {
     return new SB.SBMessage(this.socket, message);
   };
 
@@ -317,16 +400,16 @@ class ChannelStore {
   }
 
   get status() {
-    if (this.socket) {
-      return toJS(this.socket.status);
-    } else {
-      return 'CLOSED'
-    }
+    return this._status;
+  }
+
+  set status(status) {
+    this._status = status;
   }
 
   // This isnt in the the jslib atm
   // PSM: it is now but needs testing
-  lock = () => {
+  lock() {
     return new Promise((resolve, reject) => {
       try {
         this.socket.api.lock().then((locked) => {
@@ -338,7 +421,7 @@ class ChannelStore {
     })
   };
 
-  downloadData = async () => {
+  async downloadData() {
     try {
       let data = await this.socket.api.downloadData()
       data.storage.target = window.location.host
@@ -350,12 +433,13 @@ class ChannelStore {
   };
 
   // MTG: this will be changed inthe future to work with budding
-  create = async (secret) => {
+  async create(secret) {
     try {
-      const c = this.SB.create(this.config, secret);
+      const c = await this.SB.create(this.config, secret);
+      console.log("==== created channel:"); console.log(c);
       this._id = c.channelId
-      this.key = c.exportable_privateKey
-      return true;
+      this.key = c.key
+      return this;
     } catch (e) {
       console.error(e)
       return false;
@@ -363,29 +447,24 @@ class ChannelStore {
 
   };
 
-  connect = (
-    channelId,
-    messageCallback,
-    key,
-  ) => {
+  connect(channelId = this._id, messageCallback = console.log, key = this.key) {
     return new Promise(async (resolve, reject) => {
       try {
+        console.log("==== connecting to channel:" + channelId)
+        console.log("==== with key:" + key)
         const c = await this.SB.connect(
           m => { this.receiveMessage(m, messageCallback); },
-          key ? key : null,
+          key,
           channelId
         );
         console.log("==== connected to channel:"); console.log(c);
         if (c) {
           console.log("==== connected to channel:")
           console.log(c)
-          const channel = await this[getChannel](channelId);
-          if (channel) {
-            this.messages = channel.messages;
-          }
           this._id = channelId
           this.key = typeof key !== 'undefined' ? key : c.exportable_privateKey
           this.socket = c;
+          this.readyResolver();
           this[save]();
           resolve(true);
         } else {
@@ -398,13 +477,14 @@ class ChannelStore {
     })
   };
 
-  getMessages = () => {
+  getMessages() {
     return toJS(this.messages);
   }
 
-  getChannelForCache = () => {
+  getChannelCache() {
     return {
       _id: this._id,
+      alias: toJS(this._alias),
       messages: toJS(this.messages),
       key: toJS(this.key),
       lastSeenMessage: toJS(this.lastSeenMessage)
@@ -412,5 +492,41 @@ class ChannelStore {
   }
 
 }
+
+
+__decorate([
+  Ready
+], ChannelStore.prototype, "getContacts", null);
+__decorate([
+  Ready
+], ChannelStore.prototype, "getOldMessages", null);
+__decorate([
+  Ready
+], ChannelStore.prototype, "replyEncryptionKey", null);
+__decorate([
+  Ready
+], ChannelStore.prototype, "newMessage", null);
+__decorate([
+  Ready
+], ChannelStore.prototype, "capacity", null);
+__decorate([
+  Ready
+], ChannelStore.prototype, "motd", null);
+
+__decorate([
+  Ready
+], ChannelStore.prototype, "lock", null);
+__decorate([
+  Ready
+], ChannelStore.prototype, "downloadData", null);
+// __decorate([
+//   Ready
+// ], ChannelStore.prototype, "create", null);
+// __decorate([
+//   Ready
+// ], ChannelStore.prototype, "connect", null);
+__decorate([
+  Ready
+], ChannelStore.prototype, "getMessages", null);
 
 export default SnackabraStore;

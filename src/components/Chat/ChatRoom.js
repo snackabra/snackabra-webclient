@@ -89,19 +89,13 @@ class ChatRoom extends React.PureComponent {
       }
       this.setState({ visibility: document.visibilityState })
     })
-    this.sbContext.getChannelCache(this.props.roomId)
-      .then((data) => {
-        if (!data?.key) {
-          this.setState({ openFirstVisit: true })
-        } else {
-          this.connect();
-        }
-      })
-      .catch((e) => {
-        console.error(e)
-        console.warn("Trying to connect to this channel and failing:", this.props.roomId)
-        // TODO: should we do some sort of tear-down / cleanup here?
-      })
+
+    if (!this.channel.key) {
+      this.setState({ openFirstVisit: true })
+    } else {
+      this.connect();
+    }
+
     this.processQueue()
     this.processSQueue()
     this.subscribeToNotifications()
@@ -152,6 +146,10 @@ class ChatRoom extends React.PureComponent {
       dzRef: null,
       to: null
     })
+  }
+
+  get channel () {
+    return this.sbContext.channels[this.props.roomId]
   }
 
   subscribeToNotifications = () => {
@@ -225,20 +223,12 @@ class ChatRoom extends React.PureComponent {
     }, 25)
   }
 
-  connect = async (username) => {
-    const room = await this.sbContext.getChannelCache(this.props.roomId)
-    // console.warn('room', room)
-    const options = {
-      roomId: this.props.roomId,
-      username: username ? username : 'Unnamed',
-      key: room?.key ? room?.key : null,
-      secret: null,
-      messageCallback: this.recieveMessages
-    }
+  connect = async () => {
+
     try {
-      await this.sbContext.connect(this.props.roomId, this.recieveMessages, options.key)
-      // this.sbContext.connect(options).then(() => {
-      this.setState({ user: this.sbContext.user })
+      await this.channel.connect()
+
+      this.setState({ user: this.sbContext.getContact(this.channel.key) })
       this.sbContext.getOldMessages(0).then((r) => {
         let controlMessages = [];
         let messages = [];

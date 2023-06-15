@@ -6,10 +6,12 @@ import { observer } from "mobx-react"
 import SnackabraContext from "../contexts/SnackabraContext";
 import { Menu, Close } from '@mui/icons-material';
 import NavBarActionContext from "../contexts/NavBarActionContext";
+import SharedRoomStateContext from "../contexts/SharedRoomState";
 import RoomMenu from "../components/Rooms/RoomMenu";
 
 const NavAppBar = observer(() => {
   const NavAppBarContext = React.useContext(NavBarActionContext)
+  const roomState = React.useContext(SharedRoomStateContext)
   const sbContext = React.useContext(SnackabraContext);
   const [openWhisper, setOpenWhisper] = React.useState(false);
   const [editingRoomId, setEditingRoomId] = React.useState(false);
@@ -32,16 +34,14 @@ const NavAppBar = observer(() => {
 
   const submitName = (e) => {
     if (e.keyCode === 13) {
-      sbContext.updateChannelName({ name: updatedName, channelId: editingRoomId }).then(() => {
-        setEditingRoomId(false)
-      })
+      sbContext.channels[editingRoomId].alias = updatedName
+      setEditingRoomId(false)
     }
   }
 
   const updateName = (e) => {
     setUpdatedName(e.target.value)
   }
-
   return (
     <Box sx={{ flexGrow: 1 }}>
       <WhisperUserDialog open={openWhisper} onClose={closeWhisper} />
@@ -59,7 +59,7 @@ const NavAppBar = observer(() => {
           </Grid>
           <Hidden smUp>
             <Grid xs={5} item>
-              {sbContext.activeRoom && sbContext.channels[sbContext.activeRoom]?
+              {roomState.activeRoom && sbContext.channels[roomState.activeRoom] ?
                 <Grid
                   container
                   direction="row"
@@ -69,11 +69,11 @@ const NavAppBar = observer(() => {
                     <TextField
                       id={'nav_' + editingRoomId}
                       value={updatedName}
-                      style={{marginTop: 6}}
+                      style={{ marginTop: 6 }}
                       onKeyDown={submitName}
                       inputProps={{ style: { color: "#fff" } }}
                       onFocus={() => {
-                        setUpdatedName(sbContext.channels[sbContext.activeRoom].name)
+                        setUpdatedName(sbContext.channels[roomState.activeRoom].alias)
                       }}
                       onChange={updateName}
                       variant="standard"
@@ -91,20 +91,20 @@ const NavAppBar = observer(() => {
                             </IconButton>
                           </InputAdornment>
                       }}
-                      autoFocus /> : <Typography noWrap>{sbContext.channels[sbContext.activeRoom].name}</Typography>
+                      autoFocus /> : <Typography noWrap>{sbContext.channels[roomState.activeRoom].alias}</Typography>
 
                   }
-                  {!editingRoomId && 
+                  {!editingRoomId &&
                     <RoomMenu
                       socket={sbContext.socket}
                       sbContext={sbContext}
-                      selected={sbContext.activeRoom}
-                      roomId={sbContext.activeRoom}
+                      selected={roomState.activeRoom}
+                      roomId={roomState.activeRoom}
                       editRoom={() => {
-                        editRoom(sbContext.activeRoom)
+                        editRoom(roomState.activeRoom)
                       }}
                     />
-                    }
+                  }
                 </Grid>
                 : ''}
 
@@ -120,7 +120,7 @@ const NavAppBar = observer(() => {
               <Grid item>
                 <Typography variant='body2'>v{process.env.REACT_APP_CLIENT_VERSION}</Typography>
               </Grid>
-              {!sbContext.admin && sbContext.socket?.status === "OPEN" ?
+              {roomState.activeRoom && sbContext.channels[roomState.activeRoom].status === "OPEN" ?
                 <Avatar onClick={() => { setOpenWhisper(true) }} sx={{ width: 48, height: 48, bgcolor: 'transparent' }}>
                   <IconButton color="inherit" component="span">
                     <AccountCircleRoundedIcon />

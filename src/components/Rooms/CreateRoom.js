@@ -56,9 +56,9 @@ const CreateRoom = observer((props) => {
 
   const createRoom = async () => {
     setCreating(true)
-    sbContext.createRoom(secret).then((channel) => {
+    sbContext.create(secret).then((channel) => {
       // sbContext.socket.close()  // PSM:  why? this is just reaching into the channel
-      setRoomId(channel)
+      setRoomId(channel._id)
       setOpenFirstVisit(true)
     }).catch((e) => {
       console.error(e)
@@ -70,11 +70,10 @@ const CreateRoom = observer((props) => {
 
   const saveUsername = (newUsername) => {
     return new Promise((resolve) => {
-      const _id = sbContext.user._id;
-      sbContext.username = newUsername;
+
+      const key = sbContext.channels[roomId].key;
       const contacts = {}
-      const user_pubKey = JSON.parse(_id);
-      contacts[user_pubKey.x + ' ' + user_pubKey.y] = newUsername === '' ? 'Unnamed' : newUsername;
+      contacts[key.x + ' ' + key.y] = newUsername === '' ? 'Unnamed' : newUsername;
       sbContext.contacts = contacts;
       resolve(true)
 

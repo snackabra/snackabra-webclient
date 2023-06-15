@@ -36,6 +36,8 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import SwipeableViews from 'react-swipeable-views';
 
+import SharedRoomStateContext from "../contexts/SharedRoomState";
+
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
 
@@ -58,6 +60,7 @@ function TabPanel(props) {
 
 const drawerWidth = 240;
 const ResponsiveDrawer = observer((props) => {
+  const roomState = React.useContext(SharedRoomStateContext)
   const NavAppBarContext = React.useContext(NavBarActionContext)
   const sbContext = React.useContext(SnackabraContext);
   const Notifications = React.useContext(NotificationContext)
@@ -86,7 +89,6 @@ const ResponsiveDrawer = observer((props) => {
 
   React.useEffect(() => {
     const listenForMessages = (event) => {
-      console.log(event);
       if (event.data && event.data.type === "focus") {
         const to = event.data.channel_id
         const index = channelList.findIndex((x) => x._id === to)
@@ -116,6 +118,7 @@ const ResponsiveDrawer = observer((props) => {
 
     let _c = []
     let i = 0
+    console.log(sbContext.channels)
     for (let x in sbContext.channels) {
       _c.push(sbContext.channels[x])
       if (room_id === sbContext.channels[x]._id) {
@@ -155,9 +158,10 @@ const ResponsiveDrawer = observer((props) => {
 
   const submitName = (e) => {
     if (e.keyCode === 13) {
-      sbContext.updateChannelName({ name: updatedName, channelId: editingRoomId }).then(() => {
-        setEditingRoomId(false)
-      })
+      console.log(updatedName)
+      console.log(sbContext.channels[editingRoomId])
+      sbContext.channels[editingRoomId].alias = updatedName
+      setEditingRoomId(false)
     }
   }
 
@@ -188,6 +192,7 @@ const ResponsiveDrawer = observer((props) => {
   const onCloseAdminDialog = () => {
     setOpenAdminDialog(false)
   }
+
 
   const drawer = (
     <div>
@@ -250,11 +255,12 @@ const ResponsiveDrawer = observer((props) => {
           orientation="vertical"
           aria-label="room tabs"
         >
-          {channelList.map((item, index) => {
-            const room = item._id
-            const roomName = item.name
+          {Object.keys(sbContext.channels).map((_d, index) => {
+            const room = sbContext.channels[_d]._id
+            const roomName = sbContext.channels[_d].alias || 'Unnamed'
             const bgColor = room === roomId ? '#ff5c42' : 'inherit';
             const color = room === roomId ? '#fff' : 'inherit';
+            console.log(room, roomName, bgColor, color)
             return (
               <Tab component={'div'} disableRipple disableTouchRipple key={index} {...a11yProps(index)} sx={{ backgroundColor: bgColor, color: color, textAlign: "left" }} label={
                 <Grid container
@@ -403,7 +409,6 @@ const ResponsiveDrawer = observer((props) => {
           disabled={!!swipeInhibiter}
         >
           {channelList.map((item, index) => {
-            console.log(room_id)
             if(room_id){
             return (<TabPanel
               key={`${index}-tab-panel`}
