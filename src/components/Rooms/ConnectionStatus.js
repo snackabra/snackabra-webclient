@@ -8,11 +8,12 @@ import SnackabraContext from "../../contexts/SnackabraContext";
 
 const ConnectionStatus = observer((props) => {
     const sbContext = React.useContext(SnackabraContext)
+    const socketStatus = sbContext.channels[props.roomId].status;
     const [status, setStatus] = React.useState('error')
     React.useEffect(() => {
-        console.warn('sbContext.status', sbContext.channels[props.roomId])
+        // console.warn('sbContext.status', socketStatus)
 
-        switch (sbContext.channels[props.roomId].status) {
+        switch (socketStatus) {
             case 'CONNECTING':
                 setStatus('warning')
                 break;
@@ -27,16 +28,16 @@ const ConnectionStatus = observer((props) => {
                 break;
         }
 
-    }, [props.roomId, sbContext.channels])
+    }, [props.roomId, socketStatus])
 
     const reload = () => {
         window.location.reload();
     }
-    console.log(sbContext.channels[props.roomId].status)
+
     return (
         <>
             {status !== 'error' ?
-                <Tooltip title={`Connection Status (${sbContext.status})`}>
+                <Tooltip title={`Connection Status (${socketStatus})`}>
                     <Badge
                         sx={{ pl: 2 }}
                         badgeContent=""

@@ -43,7 +43,7 @@ const CreateRoom = observer((props) => {
     Notifications.setOpen(true)
     setCreating(false)
     NavAppBarContext.setMenuOpen(false)
-    navigate("/" + roomId);
+    // navigate("/" + roomId);
 
   }
 
@@ -58,7 +58,7 @@ const CreateRoom = observer((props) => {
     setCreating(true)
     sbContext.create(secret).then((channel) => {
       // sbContext.socket.close()  // PSM:  why? this is just reaching into the channel
-      setRoomId(channel._id)
+      setRoomId(channel.id)
       setOpenFirstVisit(true)
     }).catch((e) => {
       console.error(e)
@@ -69,16 +69,8 @@ const CreateRoom = observer((props) => {
   }
 
   const saveUsername = (newUsername) => {
-    return new Promise((resolve) => {
-
-      const key = sbContext.channels[roomId].key;
-      const contacts = {}
-      contacts[key.x + ' ' + key.y] = newUsername === '' ? 'Unnamed' : newUsername;
-      sbContext.contacts = contacts;
-      resolve(true)
-
-    })
-
+    const key = sbContext.channels[roomId].key;
+    sbContext.createContact(newUsername || 'Unamed', key)
   }
 
   const handleMouseDownPassword = (event) => {
@@ -142,11 +134,9 @@ const CreateRoom = observer((props) => {
 
       </Grid>
       <FirstVisitDialog open={openFirstVisit} sbContext={sbContext} onClose={(username) => {
-        saveUsername(username).then(() => {
-          setOpenFirstVisit(false)
-          success(roomId);
-        })
-
+        saveUsername(username)
+        setOpenFirstVisit(false)
+        success(roomId);
       }} roomId={roomId} />
     </Grid>
   )

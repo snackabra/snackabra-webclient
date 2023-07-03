@@ -49,14 +49,14 @@ class ChatRoom extends React.PureComponent {
     anchorEl: null,
     img: '',
     imgLoaded: false,
-    messages: this.sbContext.channels[this.props.roomId]?.messages ? toJS(this.sbContext.channels[this.props.roomId].messages) : [],
+    messages: this.channel?.messages ? toJS(this.channel.messages) : [],
     controlMessages: [],
     roomId: this.props.roomId || 'offline',
     files: [],
     images: [],
     loading: false,
     uploading: false,
-    user: this.sbContext.channels[this.props.roomId]?.userName && this.sbContext.channels[this.props.roomId]?.key ? { _id: JSON.stringify(this.sbContext.channels[this.props.roomId]?.key), name: this.sbContext.channels[this.props.roomId]?.userName } : {},
+    user: {},
     height: 0,
     visibility: 'visible',
     replyTo: null,
@@ -89,35 +89,32 @@ class ChatRoom extends React.PureComponent {
       }
       this.setState({ visibility: document.visibilityState })
     })
+    if (!this.channel) {
+      const room = this.sbContext.join(this.props.roomId);
+      if (!room) {
+        throw new Error('Could not join room')
+      }
 
-    if (!this.channel.key) {
-      this.setState({ openFirstVisit: true })
-    } else {
-      this.connect();
     }
-
-    this.processQueue()
-    this.processSQueue()
-    this.subscribeToNotifications()
+    this.init()
   }
 
   componentDidUpdate(prevProps) {
+    // // Typical usage (don't forget to compare props):
+    // if (this.props.openAdminDialog !== prevProps.openAdminDialog) {
+    //   this.setOpenAdminDialog(this.props.openAdminDialog);
+    // }
+    // if (prevProps.roomId !== this.props.roomId) {
+    //   this.sbContext.getChannel(this.props.roomId).then((data) => {
+    //     if (!data?.key) {
+    //       this.setState({ openFirstVisit: true })
+    //     } else {
 
-    // Typical usage (don't forget to compare props):
-    if (this.props.openAdminDialog !== prevProps.openAdminDialog) {
-      this.setOpenAdminDialog(this.props.openAdminDialog);
-    }
-    if (prevProps.roomId !== this.props.roomId) {
-      this.sbContext.getChannel(this.props.roomId).then((data) => {
-        if (!data?.key) {
-          this.setState({ openFirstVisit: true })
-        } else {
+    //       this.connect();
 
-          this.connect();
-
-        }
-      })
-    }
+    //     }
+    //   })
+    // }
   }
 
   componentWillUnmount() {
@@ -132,14 +129,14 @@ class ChatRoom extends React.PureComponent {
       anchorEl: null,
       img: '',
       imgLoaded: false,
-      messages: this.sbContext.channels[this.props.roomId]?.messages ? toJS(this.sbContext.channels[this.props.roomId].messages) : [],
+      messages: this.channel?.messages ? toJS(this.channel.messages) : [],
       controlMessages: [],
       roomId: this.props.roomId || 'offline',
       files: [],
       images: [],
       loading: false,
       uploading: false,
-      user: this.sbContext.channels[this.props.roomId]?.userName && this.sbContext.channels[this.props.roomId]?.key ? { _id: JSON.stringify(this.sbContext.channels[this.props.roomId]?.key), name: this.sbContext.channels[this.props.roomId]?.userName } : {},
+      user: {},
       height: 0,
       visibility: 'visible',
       replyTo: null,
@@ -148,14 +145,28 @@ class ChatRoom extends React.PureComponent {
     })
   }
 
-  get channel () {
+  init = () => {
+    const keys = this.channel.key
+    const contact = this.sbContext.getContact(keys)
+
+    if (!contact) {
+      this.setState({ openFirstVisit: true })
+    } else {
+      this.connect();
+    }
+
+    this.processQueue()
+    this.processSQueue()
+    this.subscribeToNotifications()
+  }
+
+  get channel() {
     return this.sbContext.channels[this.props.roomId]
   }
 
   subscribeToNotifications = () => {
     setTimeout(async () => {
 
-      console.log(window.sw_registration)
       try {
 
 
@@ -223,20 +234,24 @@ class ChatRoom extends React.PureComponent {
     }, 25)
   }
 
-  connect = async () => {
 
+
+  connect = async (username) => {
     try {
-      await this.channel.connect()
-
+      console.log(this.channel)
+      await this.channel.connect(this.recieveMessages)
+      console.log(username, this.channel.key)
+      if (username) this.sbContext.createContact(username, this.channel.key)
       this.setState({ user: this.sbContext.getContact(this.channel.key) })
-      this.sbContext.getOldMessages(0).then((r) => {
+      this.channel.getOldMessages(0).then((r) => {
         let controlMessages = [];
         let messages = [];
         r.forEach((m, i) => {
+          console.log(m)
           if (!m.control) {
             const user_pubKey = m.user._id;
-            m.user._id = JSON.stringify(m.user._id);
-            m.user.name = this.sbContext.contacts[user_pubKey.x + ' ' + user_pubKey.y] !== undefined ? this.sbContext.contacts[user_pubKey.x + ' ' + user_pubKey.y] : m.user.name;
+            m.user._id = `${m.user._id.x} ${m.user._id.y}`;
+            m.user.name = this.sbContext.getContact(m.user._id) !== undefined ? this.sbContext.contacts[user_pubKey.x + ' ' + user_pubKey.y] : m.user.name;
             m.sender_username = m.user.name;
             m.createdAt = new Date(parseInt(m.timestampPrefix, 2));
             messages.push(m)
@@ -246,14 +261,14 @@ class ChatRoom extends React.PureComponent {
 
         })
         this.setState({ controlMessages: controlMessages })
-        if (this.sbContext.motd !== '') {
-          this.sendSystemInfo('MOTD: ' + this.props.sbContext.motd, (systemMessage) => {
-            this.sbContext.messages = messages
+        if (this.channel.motd !== '') {
+          this.sendSystemInfo('MOTD: ' + this.props.channel.motd, (systemMessage) => {
+            this.channel.messages = messages
             this.setState({ messages: [...messages, systemMessage] })
           })
         } else {
-          this.sbContext.messages = messages
-          this.setState({ messages: this.sbContext.messages })
+          this.channel.messages = messages
+          this.setState({ messages: this.channel.messages })
         }
         setTimeout(() => {
 
@@ -262,7 +277,7 @@ class ChatRoom extends React.PureComponent {
 
       })
     } catch (e) {
-      console.log(e)
+      console.error(e)
     }
 
     // }).catch((e) => {
@@ -417,7 +432,7 @@ class ChatRoom extends React.PureComponent {
             image: _files[x].thumbnail,
             imageMetaData: imageMetaData,
           }
-          let sbm = this.sbContext.newMessage(_contents)
+          let sbm = this.channel.newMessage(_contents)
           q.enqueue(sbm)
           Promise.all([storePromises.previewStorePromise]).then((previewVerification) => {
             console.log('Preview image uploaded')
@@ -504,11 +519,11 @@ class ChatRoom extends React.PureComponent {
       console.log(this.sbContext)
       console.log("==== here is the channel:")
       console.log(this.sbContext.socket)
-      giftedMessage[0].user = { _id: JSON.stringify(this.sbContext.socket.exportable_pubKey), name: this.sbContext.username }
+      giftedMessage[0].user = this.state.user
       this.setState({ messages: [...this.state.messages, giftedMessage[0]] })
       this.sending[msg_id] = msg_id
       // let sbm = new SB.SBMessage(this.sbContext.socket, giftedMessage[0].text)
-      let sbm = this.sbContext.newMessage(giftedMessage[0].text)
+      let sbm = this.channel.newMessage(giftedMessage[0].text)
       sbm.send();
     }
   }
@@ -620,7 +635,7 @@ class ChatRoom extends React.PureComponent {
     // let inverted = false;
     let messages = this.state.messages
 
-
+    console.log(this.state.user)
     return (
 
       <SafeAreaView id={'sb_chat_area'} style={{
@@ -681,8 +696,8 @@ class ChatRoom extends React.PureComponent {
             user={this.state.user}
             inverted={false}
             alwaysShowSend={true}
-            loadEarlier={this.props.sbContext.moreMessages}
-            isLoadingEarlier={this.props.sbContext.loadingMore}
+            loadEarlier={this.sbContext.moreMessages}
+            isLoadingEarlier={this.sbContext.loadingMore}
             onLoadEarlier={this.getOldMessages}
             renderMessage={RenderMessage}
             renderActions={(props) => {
@@ -721,8 +736,8 @@ class ChatRoom extends React.PureComponent {
             }}
             renderBubble={(props) => {
               // PSM TODO: what does this need channel keys for?
-              return <RenderBubble {...props} keys={{ /* ...this.props.sbContext.socket.keys, */ ...this.props.sbContext.userKey }}
-                socket={this.props.sbContext.socket}
+              return <RenderBubble {...props} keys={{ /* ...this.sbContext.socket.keys, */ ...this.channel.key }}
+                socket={this.channel.socket}
                 SB={this.SB} />
             }}
             renderSend={(props) => {

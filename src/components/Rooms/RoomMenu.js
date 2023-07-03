@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useParams } from "react-router-dom";
 import IconButton from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
@@ -19,6 +20,7 @@ import SnackabraContext from "../../contexts/SnackabraContext";
 const ITEM_HEIGHT = 48;
 
 const RoomMenu = observer((props) => {
+  let { room_id } = useParams();
   const sbContext = React.useContext(SnackabraContext);
   const notify = React.useContext(NotificationContext);
   const roomState = React.useContext(SharedRoomStateContext);
@@ -153,7 +155,7 @@ const RoomMenu = observer((props) => {
           </MenuItem>
         </MenuList>
       </Menu>
-      <ConnectionStatus roomId={props.roomId} />
+      {room_id === props.roomId && <ConnectionStatus roomId={props.roomId} />}
     </div>
   );
 })

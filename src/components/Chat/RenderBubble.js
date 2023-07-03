@@ -6,8 +6,8 @@ import { getColorFromId } from "../../utils/misc"
 const RenderBubble = (props) => {
   const { currentMessage, previousMessage } = props
   const [isVerifiedGuest, setVerifiedGuest] = React.useState(false)
-  const [isAdmin, setIsAdmin] = React.useState(false)
   const [newProps, setNewProps] = React.useState({})
+  const isAdmin = props.socket.admin
 
   React.useEffect(() => {
     const init = async () => {
@@ -15,7 +15,6 @@ const RenderBubble = (props) => {
       // const verified = await props.socket.api.postPubKey(current_user_key)
       setVerifiedGuest(true);
       // console.log(JSON.stringify(props.socket), current_user_key)
-      setIsAdmin(props.socket.admin)
     }
     init();
   }, [currentMessage.user._id, props.socket.admin, props.socket.api, /* PSM: props.socket.exportable_owner_pubKey, */ props.socket.exportable_pubKey])
@@ -89,7 +88,7 @@ const RenderBubble = (props) => {
     }
   }, [isVerifiedGuest, isAdmin, currentMessage, updateProps])
 
-
+  console.log(props.currentMessage.user)
   return (
     <Grid style={{ maxWidth: "55%" }}>
       {(isSameUser(currentMessage, previousMessage) && isSameDay(currentMessage, previousMessage))

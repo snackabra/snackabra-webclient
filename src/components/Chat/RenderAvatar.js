@@ -35,14 +35,12 @@ const styles = {
   }),
 };
 const RenderAvatar = observer((props) => {
-  const sbContext = React.useContext(SnackabraContext);
   const { renderAvatarOnTop, showAvatarForEveryMessage, containerStyle, position, currentMessage, renderAvatar, previousMessage, nextMessage, imageStyle, } = props;
   const messageToCompare = renderAvatarOnTop ? previousMessage : nextMessage;
   const computedStyle = renderAvatarOnTop ? 'onTop' : 'onBottom';
-  const _id = props.currentMessage.user._id !== "system" ? JSON.parse(props.currentMessage.user._id) : { x: "system", y: "system" }
   const user = {
-    name: sbContext.contacts[_id.x + ' ' + _id.y],
-    _id: props.currentMessage.user._id
+    name: props.currentMessage.user._id !== "system" ? props.currentMessage.user.name : 'system',
+    _id: props.currentMessage.user._id !== "system" ? props.currentMessage.user._id : { x: "system", y: "system" }
   }
   if (renderAvatar === null) {
     return null;

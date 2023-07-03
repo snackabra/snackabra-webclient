@@ -36,7 +36,6 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import SwipeableViews from 'react-swipeable-views';
 
-import SharedRoomStateContext from "../contexts/SharedRoomState";
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -60,7 +59,6 @@ function TabPanel(props) {
 
 const drawerWidth = 240;
 const ResponsiveDrawer = observer((props) => {
-  const roomState = React.useContext(SharedRoomStateContext)
   const NavAppBarContext = React.useContext(NavBarActionContext)
   const sbContext = React.useContext(SnackabraContext);
   const Notifications = React.useContext(NotificationContext)
@@ -77,7 +75,6 @@ const ResponsiveDrawer = observer((props) => {
   const [openJoinDialog, setOpenJoinDialog] = React.useState(false);
   const [editingRoomId, setEditingRoomId] = React.useState(false);
   const [updatedName, setUpdatedName] = React.useState(false);
-  const [channelList, setChannelList] = React.useState([]);
   const [swipeInhibiter, inhibitSwipe] = React.useState(0);
 
   React.useEffect(() => {
@@ -91,7 +88,7 @@ const ResponsiveDrawer = observer((props) => {
     const listenForMessages = (event) => {
       if (event.data && event.data.type === "focus") {
         const to = event.data.channel_id
-        const index = channelList.findIndex((x) => x._id === to)
+        const index = Object.keys(sbContext.channels).findIndex((x) => x.id === to)
         navigate('/' + to)
         setRoomId(to)
         setValue(index);
@@ -112,37 +109,17 @@ const ResponsiveDrawer = observer((props) => {
     return () => {
       navigator.serviceWorker.removeEventListener("message", listenForMessages);
     }
-  }, [channelList, navigate, roomId])
+  }, [sbContext.channels, navigate, roomId])
 
   React.useEffect(() => {
 
-    let _c = []
     let i = 0
-    console.log(sbContext.channels)
     for (let x in sbContext.channels) {
-      _c.push(sbContext.channels[x])
       if (room_id === sbContext.channels[x]._id) {
         setValue(i)
       }
       i++
     }
-    if (!sbContext.channels[room_id] && room_id) {
-      const options = {
-        roomId: room_id,
-        username: 'Unnamed',
-        key: null,
-        secret: null,
-        messageCallback: console.log
-      }
-      console.log(options)
-      // PSM: wait this connects and then closes? why?
-      // sbContext.connect(options).then(() => {
-      //   sbContext.socket.close()
-      // })
-      _c.push({ _id: room_id, name: `Room ${_c.length + 1}` })
-    }
-
-    setChannelList(_c)
   }, [room_id, sbContext, sbContext.channels])
 
   const handleDrawerToggle = () => {
@@ -183,7 +160,7 @@ const ResponsiveDrawer = observer((props) => {
   };
 
   const handleChangeIndex = (index) => {
-    const to = channelList[index]._id;
+    const to = sbContext.channels[index].id;
     navigate('/' + to)
     setRoomId(to)
     setValue(index);
@@ -256,11 +233,10 @@ const ResponsiveDrawer = observer((props) => {
           aria-label="room tabs"
         >
           {Object.keys(sbContext.channels).map((_d, index) => {
-            const room = sbContext.channels[_d]._id
+            const room = _d
             const roomName = sbContext.channels[_d].alias || 'Unnamed'
             const bgColor = room === roomId ? '#ff5c42' : 'inherit';
             const color = room === roomId ? '#fff' : 'inherit';
-            console.log(room, roomName, bgColor, color)
             return (
               <Tab component={'div'} disableRipple disableTouchRipple key={index} {...a11yProps(index)} sx={{ backgroundColor: bgColor, color: color, textAlign: "left" }} label={
                 <Grid container
@@ -408,29 +384,33 @@ const ResponsiveDrawer = observer((props) => {
           style={{ padding: 0 }}
           disabled={!!swipeInhibiter}
         >
-          {channelList.map((item, index) => {
-            if(room_id){
-            return (<TabPanel
-              key={`${index}-tab-panel`}
+          {/* {Object.keys(sbContext.channels).map((item, index) => {
+            console.warn('room', item)
+            if(room_id){ */}
+          {/* return ( */}
+          {room_id ?
+            <TabPanel
+              key={`${value}-tab-panel`}
               value={value}
-              index={index}
+              index={value}
               component={'div'}
               dir={theme.direction}
               className="RoomSwipable">
               <ChatRoom inhibitSwipe={(weighted) => {
                 inhibitSwipe(weighted)
               }}
-                active={value === index}
-                roomId={item._id}
+                roomId={room_id}
                 sbContext={sbContext}
                 Notifications={Notifications}
                 openAdminDialog={openAdminDialog}
                 onCloseAdminDialog={onCloseAdminDialog} />
-            </TabPanel>)
-            }else{
+            </TabPanel>
+            : <div key={`${value}-tab-panel`}></div>
+            }
+          {/* }else{
               return (<div key={`${index}-tab-panel`}></div>)
             }
-          })}
+          })} */}
         </SwipeableViews>
       </Box>
     </SafeAreaView >
