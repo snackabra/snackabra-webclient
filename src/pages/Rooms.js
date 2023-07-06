@@ -299,6 +299,7 @@ const ResponsiveDrawer = observer((props) => {
 
   const container = window !== undefined ? () => window().document.body : undefined;
   const { height } = Dimensions.get('window')
+
   return (
     <SafeAreaView sx={{ display: 'flex', p: 0 }}>
       <CssBaseline />
@@ -384,33 +385,27 @@ const ResponsiveDrawer = observer((props) => {
           style={{ padding: 0 }}
           disabled={!!swipeInhibiter}
         >
-          {/* {Object.keys(sbContext.channels).map((item, index) => {
-            console.warn('room', item)
-            if(room_id){ */}
-          {/* return ( */}
-          {room_id ?
-            <TabPanel
-              key={`${value}-tab-panel`}
-              value={value}
-              index={value}
-              component={'div'}
-              dir={theme.direction}
-              className="RoomSwipable">
-              <ChatRoom inhibitSwipe={(weighted) => {
-                inhibitSwipe(weighted)
-              }}
-                roomId={room_id}
-                sbContext={sbContext}
-                Notifications={Notifications}
-                openAdminDialog={openAdminDialog}
-                onCloseAdminDialog={onCloseAdminDialog} />
-            </TabPanel>
-            : <div key={`${value}-tab-panel`}></div>
-            }
-          {/* }else{
-              return (<div key={`${index}-tab-panel`}></div>)
-            }
-          })} */}
+          {Object.keys(sbContext.channels).map((item, index) => {
+            console.log(item)
+            return (
+              <TabPanel
+                key={`${item}-tab-panel`}
+                value={value}
+                index={value}
+                component={'div'}
+                dir={theme.direction}
+                className="RoomSwipable">
+                <ChatRoom inhibitSwipe={(weighted) => {
+                  inhibitSwipe(weighted)
+                }}
+                  roomId={item}
+                  sbContext={sbContext}
+                  Notifications={Notifications}
+                  openAdminDialog={openAdminDialog}
+                  onCloseAdminDialog={onCloseAdminDialog} />
+              </TabPanel>
+            )
+          })}
         </SwipeableViews>
       </Box>
     </SafeAreaView >

@@ -27,6 +27,7 @@ import { isMobile } from 'react-device-detect';
 import { Navigate } from "react-router-dom";
 import SharedRoomStateContext from "../../contexts/SharedRoomState";
 import { GiftedChat } from "react-native-gifted-chat";
+import { alertTitleClasses } from '@mui/material';
 
 const q = new Queue()
 const _r = new Queue()
@@ -238,20 +239,21 @@ class ChatRoom extends React.PureComponent {
 
   connect = async (username) => {
     try {
+      console.log('connecting')
       console.log(this.channel)
       await this.channel.connect(this.recieveMessages)
-      console.log(username, this.channel.key)
       if (username) this.sbContext.createContact(username, this.channel.key)
       this.setState({ user: this.sbContext.getContact(this.channel.key) })
       this.channel.getOldMessages(0).then((r) => {
         let controlMessages = [];
         let messages = [];
+        console.log(r)
         r.forEach((m, i) => {
           console.log(m)
           if (!m.control) {
-            const user_pubKey = m.user._id;
-            m.user._id = `${m.user._id.x} ${m.user._id.y}`;
-            m.user.name = this.sbContext.getContact(m.user._id) !== undefined ? this.sbContext.contacts[user_pubKey.x + ' ' + user_pubKey.y] : m.user.name;
+            const userId = `${m.user._id.x} ${m.user._id.y}`;
+            m.user._id = userId;
+            m.user.name = this.sbContext.getContact(m.user._id) !== undefined ? this.sbContext.contacts[userId] : m.user.name;
             m.sender_username = m.user.name;
             m.createdAt = new Date(parseInt(m.timestampPrefix, 2));
             messages.push(m)
@@ -279,22 +281,11 @@ class ChatRoom extends React.PureComponent {
     } catch (e) {
       console.error(e)
     }
-
-    // }).catch((e) => {
-    //   if (e.match(/^No such channel on this server/)) {
-    //     this.notify(e + ` Channel ID: ${this.props.roomId}}`, 'error')
-
-    //     setTimeout(() => {
-    //       this.setState({ to: "/" })
-    //     }, 5000)
-    //   }
-    // })
   }
 
   recieveMessages = (msg) => {
     if (msg) {
       console.log("==== here is the message: (ChatRoom.js)")
-      console.warn(msg)
       if (!msg.control) {
         const messages = this.state.messages.reduce((acc, curr) => {
           const msg_id = curr._id.toString()
@@ -305,6 +296,11 @@ class ChatRoom extends React.PureComponent {
           }
           return acc;
         }, []);
+        const userId = `${msg.user._id.x} ${msg.user._id.y}`;
+        msg.user._id = userId;
+        msg.user.name = this.sbContext.getContact(msg.user._id) !== undefined ? this.sbContext.contacts[userId] : msg.user.name;
+        msg.sender_username = msg.user.name;
+        msg.createdAt = new Date(parseInt(msg.timestampPrefix, 2));
         this.setState({ messages: [...messages, msg] }) // merges old messages with new (PSM learning)
       } else {
         this.setState({ controlMessages: [...this.state.controlMessages, msg] })
@@ -383,7 +379,7 @@ class ChatRoom extends React.PureComponent {
           createdAt: new Date(),
           text: "",
           image: file.url,
-          user: this.sbContext.user,
+          user: this.sbContext.getContact(this.channel.key),
           _id: 'sending_' + giftedMessage[0]._id + Date.now()
         }
         _r.enqueue(message)
@@ -506,8 +502,9 @@ class ChatRoom extends React.PureComponent {
     })
   }
 
-  sendMessages = async (giftedMessage) => {
-    await new Promise(resolve => setTimeout(resolve, 0)); // JS breathing room
+  sendMessages = (giftedMessage) => {
+    console.log(giftedMessage)
+    // await new Promise(resolve => setTimeout(resolve, 0)); // JS breathing room
     if (giftedMessage[0].text === "") {
       if (this.state.files.length > 0) {
         this.sendFiles(giftedMessage)
@@ -684,6 +681,7 @@ class ChatRoom extends React.PureComponent {
             this.connect(username)
           }} roomId={this.state.roomId} />
           <GiftedChat
+            id={`sb_chat_${this.state.roomId}`}
             isKeyboardInternallyHandled={false}
             wrapInSafeArea={false}
             className={'sb_chat_container'}
@@ -692,7 +690,7 @@ class ChatRoom extends React.PureComponent {
             }}
             messages={messages}
             onSend={this.sendMessages}
-            // timeFormat='L LT'
+
             user={this.state.user}
             inverted={false}
             alwaysShowSend={true}
@@ -703,12 +701,12 @@ class ChatRoom extends React.PureComponent {
             renderActions={(props) => {
               return <RenderAttachmentIcon
                 {...props}
+                roomId={this.state.roomId}
                 dzRef={this.state.dzRef}
                 openAttachMenu={this.openAttachMenu}
                 showLoading={this.showLoading} />
             }}
-            //renderUsernameOnMessage={true}
-            // infiniteScroll={true}   // This is not supported for web yet
+
             renderAvatar={RenderAvatar}
             renderMessageImage={(props) => {
               return <RenderImage
@@ -728,7 +726,9 @@ class ChatRoom extends React.PureComponent {
               return this.handleReply(context)
             }}
             renderChatFooter={() => {
-              return <RenderChatFooter removeInputFiles={this.removeInputFiles}
+              return <RenderChatFooter
+                roomId={this.state.roomId}
+                removeInputFiles={this.removeInputFiles}
                 files={this.state.files}
                 setFiles={this.setFiles}
                 uploading={this.state.uploading}
@@ -741,10 +741,13 @@ class ChatRoom extends React.PureComponent {
                 SB={this.SB} />
             }}
             renderSend={(props) => {
-              return <RenderSend {...props} inputError={this.state.inputError} />
+              return <RenderSend {...props}
+              roomId={this.state.roomId}
+              inputError={this.state.inputError} />
             }}
             renderComposer={(props) => {
               return <RenderComposer {...props}
+                roomId={this.state.roomId}
                 inputErrored={this.inputErrored}
                 onFocus={() => {
                   this.setState({ typing: true })
@@ -759,7 +762,7 @@ class ChatRoom extends React.PureComponent {
             onLongPress={() => false}
             keyboardShouldPersistTaps='always'
             renderTime={RenderTime}
-            parsePatterns={(linkStyle) => [
+            parsePatterns={() => [
               { type: 'phone', style: {}, onPress: undefined }
             ]}
           />

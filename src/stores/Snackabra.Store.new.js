@@ -136,7 +136,7 @@ class SnackabraStore {
   }
 
   getContact = (key) => {
-    return {_id: key.x + ' ' + key.y , name: this.contacts[key?.x + ' ' + key?.y]}
+    return { _id: key.x + ' ' + key.y, name: this.contacts[key?.x + ' ' + key?.y] }
   }
 
   createContact = (alias, key) => {
@@ -231,8 +231,10 @@ class ChannelStore {
   _key;
   _socket;
   _messages = [];
+  _ready = false;
   readyResolver;
   ChannelStoreReadyFlag = new Promise((resolve) => {
+    this._ready = true;
     this.readyResolver = resolve;
   });
   lastSeenMessage = 0;
@@ -272,11 +274,11 @@ class ChannelStore {
           });
         } else {
           if (received[i]) {
-            const contacts = await this.getContacts(received[i].user._id)
-            const user_pubKey = received[i].user._id;
-            if (contacts[user_pubKey.x + ' ' + user_pubKey.y] === undefined) {
-              contacts[user_pubKey.x + ' ' + user_pubKey.y] = received[i].user.name
-            }
+            // const contacts = await this.getContacts(received[i].user._id)
+            // const user_pubKey = received[i].user._id;
+            // if (contacts[user_pubKey.x + ' ' + user_pubKey.y] === undefined) {
+            //   contacts[user_pubKey.x + ' ' + user_pubKey.y] = received[i].user.name
+            // }
             merged.push(received[i]);
           }
         }
@@ -329,9 +331,21 @@ class ChannelStore {
     onBecomeUnobserved(this, "messages", this[save]);
 
     autorun(() => {
-      if (this.socket?.status && this.socket?.status !== this.status) {
-        console.warn('socket status', this.socket.status)
-        this.status = this.socket.status
+      console.warn('ChannelStore autorun')
+      console.warn(this.id)
+      console.warn(this._ready)
+      if(this._ready && this.id){
+        setInterval(() => {
+          try{
+            if(this.socket?.status){
+              this.status = this.socket.status
+            }
+          }catch(e){
+            console.warn(this.id)
+            console.warn(e)
+          }
+    
+        }, 10000)
       }
 
     })
@@ -340,6 +354,7 @@ class ChannelStore {
       this.id = channelId;
       this[getChannel](this.id);
     }
+
   }
 
   get id() {
@@ -430,6 +445,8 @@ class ChannelStore {
   }
 
   newMessage = (message) => {
+    console.log("==== sending this message:")
+    console.log(message)
     return new SB.SBMessage(this._socket, message);
   };
 
@@ -508,7 +525,7 @@ class ChannelStore {
       console.log("==== connecting to channel:" + this.id)
       console.log("==== with key:" + this.key)
       const c = await this.SB.connect(
-        m => { this.receiveMessage(m, messageCallback); },
+        m => { this[receiveMessage](m, messageCallback); },
         this.key,
         this.id
       );

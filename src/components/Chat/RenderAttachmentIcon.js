@@ -4,13 +4,13 @@ import AttachmentIcon from '@mui/icons-material/Attachment';
 import { observer } from "mobx-react"
 
 const RenderAttachmentIcon = observer((props) => {
-
+  const elementId = `attach-button-${props.roomId}`
   const openDropZone = ()=>{
     props.dzRef.open()
   }
 
   return (
-    <IconButton component="label" id={'attach-menu'} aria-label="attach" size="large" onClick={openDropZone}>
+    <IconButton component="label" id={elementId} aria-label="attach" size="large" onClick={openDropZone}>
       <AttachmentIcon />
       {/* <input
         id="fileInput"

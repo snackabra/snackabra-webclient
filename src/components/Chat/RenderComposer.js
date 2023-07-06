@@ -9,6 +9,8 @@ import { isDataURL } from '../../utils/misc';
 let SB = require(process.env.NODE_ENV === 'development' ? 'snackabra/dist/snackabra' : 'snackabra')
 
 const RenderComposer = observer((props) => {
+  const sendElementId = `send-button-${props.roomId}`
+  const elementId = `composer-${props.roomId}`
   const { filesAttached, onTextChanged, inputErrored } = props
   const sbContext = React.useContext(SnackabraContext);
   const [text, setText] = React.useState('')
@@ -43,9 +45,9 @@ const RenderComposer = observer((props) => {
   }, [])
 
   React.useEffect(() => {
-    const sendButton = document.getElementById('send-button');
+    const sendButton = document.getElementById(sendElementId);
     sendButton.addEventListener('click', handleSend)
-  }, [handleSend])
+  }, [handleSend, sendElementId])
 
   React.useEffect(() => {
     setFilesAttached(filesAttached)
@@ -74,8 +76,8 @@ const RenderComposer = observer((props) => {
 
   const checkForSend = (e) => {
     if (e.keyCode === 13 && !e.ctrlKey && !e.shiftKey && !error) {
-      document.getElementById('send-button').click()
-      const input = document.getElementById('sb_render_composer_textarea');
+      document.getElementById(sendElementId).click()
+      const input = document.getElementById(elementId);
       input.value = ""
       handleSend();
     }
@@ -125,7 +127,7 @@ const RenderComposer = observer((props) => {
 
   return (
       <TextField
-        id="sb_render_composer_textarea"
+        id={elementId}
         label=""
         value={text}
         error={error}
