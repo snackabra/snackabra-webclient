@@ -135,14 +135,27 @@ class SnackabraStore {
     })
   }
 
-  getContact = (key) => {
-    return { _id: key.x + ' ' + key.y, name: this.contacts[key?.x + ' ' + key?.y] }
+  getContact = (keyOrPubIdentifier) => {
+    if(typeof keyOrPubIdentifier === 'string') {
+      return { _id: keyOrPubIdentifier, name: this.contacts[keyOrPubIdentifier] }
+    }else{
+      const key = keyOrPubIdentifier;
+      return { _id: key.x + ' ' + key.y, name: this.contacts[key?.x + ' ' + key?.y] }
+    }
+
   }
 
-  createContact = (alias, key) => {
-    if (!key || !alias) {
+  createContact = (alias, keyOrPubIdentifier) => {
+    if (!keyOrPubIdentifier || !alias) {
       throw new Error('createContact requires a key and alias')
     }
+
+    if(typeof keyOrPubIdentifier === 'string') {
+      this._contacts[keyOrPubIdentifier] = alias
+      this[save]()
+      return
+    }
+    const key = keyOrPubIdentifier;
     this._contacts[key.x + ' ' + key.y] = alias
     this[save]()
   }
@@ -176,11 +189,12 @@ class SnackabraStore {
   }
 
 
-  create = async (secret) => {
+  create = async (secret, alias) => {
     try {
       const channel = new ChannelStore(this.SB, this.config);
       await channel.create(secret);
       this.channels[channel.id] = channel;
+      this.channels[channel.id].alias = alias;
       this[save]();
       return this.channels[channel.id];
     } catch (e) {
@@ -246,7 +260,7 @@ class ChannelStore {
     this.config = config;
 
     this[save] = async () => {
-      // await this.ChannelStoreReadyFlag
+      await this.ChannelStoreReadyFlag
       try {
         if (this.id) {
           const save = {
@@ -274,11 +288,6 @@ class ChannelStore {
           });
         } else {
           if (received[i]) {
-            // const contacts = await this.getContacts(received[i].user._id)
-            // const user_pubKey = received[i].user._id;
-            // if (contacts[user_pubKey.x + ' ' + user_pubKey.y] === undefined) {
-            //   contacts[user_pubKey.x + ' ' + user_pubKey.y] = received[i].user.name
-            // }
             merged.push(received[i]);
           }
         }
@@ -329,26 +338,6 @@ class ChannelStore {
     });
 
     onBecomeUnobserved(this, "messages", this[save]);
-
-    autorun(() => {
-      console.warn('ChannelStore autorun')
-      console.warn(this.id)
-      console.warn(this._ready)
-      if(this._ready && this.id){
-        setInterval(() => {
-          try{
-            if(this.socket?.status){
-              this.status = this.socket.status
-            }
-          }catch(e){
-            console.warn(this.id)
-            console.warn(e)
-          }
-    
-        }, 10000)
-      }
-
-    })
 
     if (channelId) {
       this.id = channelId;
@@ -464,7 +453,7 @@ class ChannelStore {
   }
 
   get status() {
-    return this._socket?.status || 'CLOSED';
+    return this._status;
   }
 
   set status(status) {
@@ -556,6 +545,13 @@ class ChannelStore {
       key: toJS(this.key),
       lastSeenMessage: toJS(this.lastSeenMessage)
     }
+  }
+
+  checkSocketStatus = () => {
+    if (!this._socket) {
+      return 'CLOSED'
+    }
+    return this._socket.status
   }
 
 }

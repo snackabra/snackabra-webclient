@@ -8,12 +8,23 @@ import SnackabraContext from "../../contexts/SnackabraContext";
 
 const ConnectionStatus = observer((props) => {
     const sbContext = React.useContext(SnackabraContext)
-    const socketStatus = sbContext.channels[props.roomId].status;
+    const channel = sbContext.channels[props.roomId];
     const [status, setStatus] = React.useState('error')
-    React.useEffect(() => {
-        // console.warn('sbContext.status', socketStatus)
+    const [statusMessage, setStatusMessage] = React.useState('CLOSED')
 
-        switch (socketStatus) {
+    // MTG: we can make this better by using callbacks in jslib
+    React.useEffect(() => {
+        let iterator
+        if(iterator) {
+            clearInterval(iterator)
+        }
+        iterator = setInterval(() => {
+            setStatusMessage(channel.checkSocketStatus())
+        }, 250)
+    })
+
+    React.useEffect(() => {
+        switch (statusMessage) {
             case 'CONNECTING':
                 setStatus('warning')
                 break;
@@ -28,7 +39,7 @@ const ConnectionStatus = observer((props) => {
                 break;
         }
 
-    }, [props.roomId, socketStatus])
+    }, [statusMessage])
 
     const reload = () => {
         window.location.reload();
@@ -37,7 +48,7 @@ const ConnectionStatus = observer((props) => {
     return (
         <>
             {status !== 'error' ?
-                <Tooltip title={`Connection Status (${socketStatus})`}>
+                <Tooltip title={`Connection Status (${statusMessage})`}>
                     <Badge
                         sx={{ pl: 2 }}
                         badgeContent=""

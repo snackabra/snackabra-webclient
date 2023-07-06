@@ -24,6 +24,7 @@ const CreateRoom = observer((props) => {
   const navigate = useNavigate();
   const isFirefox = typeof InstallTrigger !== 'undefined';
   const [secret, setSecret] = useState('');
+  const [roomName, setRoomName] = useState('');
   const [roomId, setRoomId] = useState('');
   const [creating, setCreating] = useState(false);
   const [openFirstVisit, setOpenFirstVisit] = useState(false);
@@ -43,7 +44,7 @@ const CreateRoom = observer((props) => {
     Notifications.setOpen(true)
     setCreating(false)
     NavAppBarContext.setMenuOpen(false)
-    // navigate("/" + roomId);
+    navigate("/" + roomId);
 
   }
 
@@ -56,8 +57,8 @@ const CreateRoom = observer((props) => {
 
   const createRoom = async () => {
     setCreating(true)
-    sbContext.create(secret).then((channel) => {
-      // sbContext.socket.close()  // PSM:  why? this is just reaching into the channel
+    let alias = roomName || `Room ${Object.keys(sbContext.channels).length + 1}`
+    sbContext.create(secret, alias).then((channel) => {
       setRoomId(channel.id)
       setOpenFirstVisit(true)
     }).catch((e) => {
@@ -91,12 +92,31 @@ const CreateRoom = observer((props) => {
       <Grid xs={12} item>
         <FormControl fullWidth variant="outlined">
           <OutlinedInput
+            placeholder={'Room Name (optional)'}
+            id="sb-wc-server-secret"
+            type={!isFirefox ? 'text' : showPassword ? 'text' : 'password'}
+            value={roomName}
+            inputProps={{ autoFocus: true, autoComplete: "on", className: 'text-field' }}
+            onKeyUp={(e) => {
+              if (e.keyCode === 13) {
+                createRoom()
+              }
+            }}
+            onChange={(e) => {
+              setRoomName(e.target.value)
+            }}
+          />
+        </FormControl>
+      </Grid>
+      <Grid xs={12} item>
+        <FormControl fullWidth variant="outlined">
+          <OutlinedInput
             placeholder={'Server Secret'}
             id="sb-wc-server-secret"
             type={!isFirefox ? 'text' : showPassword ? 'text' : 'password'}
             value={secret}
             error={errored}
-            inputProps={{ autoFocus: true, autoComplete: "off", className: showPassword ? 'text-field' : 'password-field' }}
+            inputProps={{ autoFocus: false, autoComplete: "off", className: showPassword ? 'text-field' : 'password-field' }}
             onKeyUp={(e) => {
               if (e.keyCode === 13) {
                 createRoom()

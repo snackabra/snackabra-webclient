@@ -88,7 +88,6 @@ const RenderBubble = (props) => {
     }
   }, [isVerifiedGuest, isAdmin, currentMessage, updateProps])
 
-  console.log(props.currentMessage.user)
   return (
     <Grid style={{ maxWidth: "55%" }}>
       {(isSameUser(currentMessage, previousMessage) && isSameDay(currentMessage, previousMessage))

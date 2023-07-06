@@ -154,13 +154,13 @@ const ResponsiveDrawer = observer((props) => {
   }
 
   const handleChange = (event, newValue) => {
-    // sbContext.socket.close()  // PSM: why?
-    setValue(newValue);
+    // setValue(newValue);
     NavAppBarContext.setMenuOpen(false)
+    handleChangeIndex(newValue)
   };
 
   const handleChangeIndex = (index) => {
-    const to = sbContext.channels[index].id;
+    const to = Object.keys(sbContext.channels)[index];
     navigate('/' + to)
     setRoomId(to)
     setValue(index);
@@ -247,9 +247,9 @@ const ResponsiveDrawer = observer((props) => {
                   <Grid xs={7} item>
                     {editingRoomId !== room ?
 
-                      <Link to={`/${room}`}>
-                        <Typography className='sb-tab-link' noWrap>{roomName}</Typography>
-                      </Link> :
+
+                      <Typography sx={{ color: color }} className='sb-tab-link' noWrap>{roomName}</Typography>
+                      :
                       <TextField
                         id={editingRoomId}
                         value={updatedName}
@@ -386,7 +386,6 @@ const ResponsiveDrawer = observer((props) => {
           disabled={!!swipeInhibiter}
         >
           {Object.keys(sbContext.channels).map((item, index) => {
-            console.log(item)
             return (
               <TabPanel
                 key={`${item}-tab-panel`}

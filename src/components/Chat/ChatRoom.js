@@ -77,7 +77,6 @@ class ChatRoom extends React.PureComponent {
         this.setState({ height: height })
       }, 250)
     }
-    window.saveUsername = this.saveUsername
     window.addEventListener('resize', handleResize)
     window.addEventListener('orientationchange', handleResize)
     window.addEventListener('touchmove', handleResize);
@@ -218,7 +217,7 @@ class ChatRoom extends React.PureComponent {
 
   /**
  * Queue helps ensure each message gets a unique ID for Images
- * when sending multiple images gifted chat sees that a single message 
+ * when sending multiple images gifted chat sees that as a single message
  * we need to add on to the message id to render the chat container properly
  */
   processSQueue = () => {
@@ -576,14 +575,7 @@ class ChatRoom extends React.PureComponent {
   }
 
   saveUsername = (newUsername, _id) => {
-    if (_id === this.sbContext.user._id) {
-      console.log('its me!!!')
-      this.sbContext.username = newUsername;
-    }
-    const contacts = this.sbContext.contacts
-    const user_pubKey = JSON.parse(_id);
-    contacts[user_pubKey.x + ' ' + user_pubKey.y] = newUsername;
-    this.sbContext.contacts = contacts;
+    this.sbContext.createContact(newUsername, _id)
     const _m = Object.assign(this.state.messages)
     _m.forEach((_message, i) => {
       console.log(_message, i)
@@ -632,7 +624,6 @@ class ChatRoom extends React.PureComponent {
     // let inverted = false;
     let messages = this.state.messages
 
-    console.log(this.state.user)
     return (
 
       <SafeAreaView id={'sb_chat_area'} style={{
