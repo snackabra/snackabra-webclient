@@ -33,6 +33,8 @@ export const getColorFromId = (id) => {
   return colors[sumChars % colors.length][keys[sumChars % keys.length]];
 }
 
+// ChatGPT function for mobile compatibility when downloading files
+// Expects fileData to be btoa encoded
 export const downloadFile = (fileData, fileName, fileType) => {
   if (fileData) {
     var iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;

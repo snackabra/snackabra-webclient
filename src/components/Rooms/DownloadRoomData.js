@@ -4,6 +4,7 @@ import RoomDataTable from "./RoomDataTable"
 import { observer } from "mobx-react"
 import SnackabraContext from "../../contexts/SnackabraContext";
 import NotificationContext from "../../contexts/NotificationContext";
+import { downloadFile } from "../../utils/misc"
 
 const DownloadRoomData = observer(() => {
     const sbContext = React.useContext(SnackabraContext);
@@ -11,42 +12,35 @@ const DownloadRoomData = observer(() => {
     const [channelList, setChannelList] = React.useState([]);
 
     const getRoomData = React.useCallback(async (roomId, onSuccess, onError) => {
-        try{
-            const room = await sbContext.getChannel(roomId)
-            sbContext.downloadRoomData(roomId, room.key).then((data) => {
-                delete data.channel.SERVER_SECRET
-                downloadFile(data.channel, sbContext.rooms[roomId].name + "_data.txt");
-                onSuccess(roomId+'room')
+        try {
+            const room = sbContext.channels[roomId]
+            room.downloadData(roomId, room.key).then((data) => {
+                downloadFile(btoa(JSON.stringify(data.channel, null, 2)), room.alias + "_data.txt", 'text/plain;charset=utf-8')
+                onSuccess(roomId + 'room')
             }).catch((e) => {
                 console.error(e)
                 notify.error('Error downloading file')
-                onError(roomId+'room')
-    
             })
-        }catch(e){
+        } catch (e) {
             console.error(e)
             notify.error('Error downloading file')
-            onError(roomId+'room')
         }
 
     }, [notify, sbContext])
 
     const getRoomStorage = React.useCallback(async (roomId, onSuccess, onError) => {
-        try{
-            const room = await sbContext.getChannel(roomId)
-            sbContext.downloadRoomData(roomId, room.key).then((data) => {
-                downloadFile(data.storage, sbContext.rooms[roomId].name + "_shards.txt")
-                onSuccess(roomId+'shard')
+        try {
+            const room = sbContext.channels[roomId]
+            room.downloadData(roomId, room.key).then((data) => {
+                downloadFile(btoa(JSON.stringify(data.storage, null, 2)), room.alias + "_shards.txt", 'text/plain;charset=utf-8')
+                onSuccess(roomId + 'shard')
             }).catch((e) => {
                 console.error(e)
                 notify.error('Error downloading file')
-                onError(roomId+'shard')
-    
             })
-        }catch(e){
+        } catch (e) {
             console.error(e)
             notify.error('Error downloading file')
-            onError(roomId+'shard')
         }
 
     }, [notify, sbContext])
@@ -60,18 +54,6 @@ const DownloadRoomData = observer(() => {
         setChannelList(_c)
     }, [getRoomData, getRoomStorage, sbContext.channels])
 
-    const downloadFile = (text, file) => {
-        try {
-            let element = document.createElement('a');
-            element.setAttribute('href', 'data:text/plain;charset=utf-8, ' + encodeURIComponent(JSON.stringify(text, null, 2).trim()));
-            element.setAttribute('download', file);
-            document.body.appendChild(element);
-            element.click();
-            document.body.removeChild(element);
-        } catch (error) {
-            console.log(error);
-        }
-    }
     return (
         <Grid id="sb_room_data"
             container

@@ -16,6 +16,7 @@ import ConnectionStatus from "./ConnectionStatus"
 import SharedRoomStateContext from "../../contexts/SharedRoomState";
 import { observer } from "mobx-react"
 import SnackabraContext from "../../contexts/SnackabraContext";
+import { downloadFile } from "../../utils/misc"
 
 const ITEM_HEIGHT = 48;
 
@@ -50,48 +51,34 @@ const RoomMenu = observer((props) => {
     try {
       const room = sbContext.channels[roomId]
       room.downloadData(roomId, room.key).then((data) => {
-        console.log(data.channel)
-        downloadFile(data.channel, sbContext.rooms[roomId].name + "_data.txt");
+        downloadFile(btoa(JSON.stringify(data.channel, null, 2)), room.alias + "_data.txt", 'text/plain;charset=utf-8')
       }).catch((e) => {
         console.error(e)
-        notify.error(e.message)
+        notify.error('Error downloading file')
       })
     } catch (e) {
       console.error(e)
-      notify.error(e.message)
+      notify.error('Error downloading file')
     }
 
   }, [notify, sbContext])
 
   const getRoomStorage = React.useCallback(async (roomId) => {
-    try{
+    try {
       const room = sbContext.channels[roomId]
       room.downloadData(roomId, room.key).then((data) => {
-        downloadFile(data.storage, sbContext.rooms[roomId].name + "_shards.txt")
+        downloadFile(btoa(JSON.stringify(data.storage, null, 2)), room.alias + "_shards.txt", 'text/plain;charset=utf-8')
       }).catch((e) => {
         console.error(e)
-        notify.error(e.message)
+        notify.error('Error downloading file')
       })
-    }catch(e){
+    } catch (e) {
       console.error(e)
-      notify.error(e.message)
+      notify.error('Error downloading file')
     }
 
   }, [notify, sbContext])
-
-  const downloadFile = (text, file) => {
-    try {
-      let element = document.createElement('a');
-      element.setAttribute('href', 'data:text/plain;charset=utf-8, ' + encodeURIComponent(JSON.stringify(text, null, 2).trim()));
-      element.setAttribute('download', file);
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
+  
   return (
     <div>
       <IconButton
