@@ -13,9 +13,10 @@
 
 import ImageWorker from './ImageWorker.js';
 import ArrayBufferWorker from './ArrayBufferWorker.js';
+// console.log(window)
 
 // import { _appendBuffer } from "snackabra";
-let SB = require(process.env.NODE_ENV === 'development' ? 'snackabra/dist/snackabra' : 'snackabra')
+let SB = window.SB;
 
 export async function getFileData(file, outputType) {
   try {
@@ -426,8 +427,8 @@ export class SBImage {
   getStorePromises = (roomId) => {
     return new Promise(resolve => {
       this.processingReady.then(() => {
-        const previewStorePromise = this.SB.storage.storeObject(this.objectMetadata.preview.paddedBuffer, 'p', roomId, this.objectMetadata.preview)
-        const fullStorePromise = this.SB.storage.storeObject(this.objectMetadata.full.paddedBuffer, 'f', roomId, this.objectMetadata.full)
+        const previewStorePromise = this.SB.storage.storeObject(this.objectMetadata.preview.paddedBuffer, 'p', roomId)
+        const fullStorePromise = this.SB.storage.storeObject(this.objectMetadata.full.paddedBuffer, 'f', roomId)
         resolve({
           fullStorePromise: fullStorePromise,
           previewStorePromise: previewStorePromise
@@ -464,14 +465,14 @@ export class SBImage {
     return new Promise((resolve) => {
       Promise.all(promisesArray).then(async (results) => {
         console.log(results)
-        const p = await this.SB.storage.getObjectMetadata(await results[0].arrayBuffer(), 'p')
-        const f = await this.SB.storage.getObjectMetadata(await results[1].arrayBuffer(), 'f')
+        // const p = await this.SB.storage.getObjectMetadata(await results[0].arrayBuffer(), 'p')
+        // const f = await this.SB.storage.getObjectMetadata(await results[1].arrayBuffer(), 'f')
         const t1 = new Date().getTime();
         console.warn(`#### image processing total ${t1 - t0} milliseconds (blocking)`);
-        this.objectMetadata = {
-          preview: p,
-          full: f
-        }
+        // this.objectMetadata = {
+        //   preview: p,
+        //   full: f
+        // }
         this.processingResolve();
         resolve(this)
       }).catch(console.error)
@@ -486,12 +487,12 @@ export class SBImage {
     return new Promise((resolve) => {
       Promise.all(promisesArray).then(async (results) => {
         console.log(results)
-        const f = await this.SB.storage.getObjectMetadata(await results[1].arrayBuffer(), 'f')
+        // const f = await this.SB.storage.getObjectMetadata(await results[1].arrayBuffer(), 'f')
         const t1 = new Date().getTime();
         console.warn(`#### image processing total ${t1 - t0} milliseconds (blocking)`);
-        this.objectMetadata = {
-          full: f
-        }
+        // this.objectMetadata = {
+        //   full: f
+        // }
         this.processingResolve();
         resolve(this)
       }).catch(console.error)

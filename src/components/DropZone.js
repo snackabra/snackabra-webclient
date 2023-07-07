@@ -65,10 +65,12 @@ const DropZone = observer((props) => {
         if (typeof acceptedFiles[i] === 'object') {
           const attachment = await getSbImage(acceptedFiles[i], sbContext)
           files.push(attachment)
-
+          window.SBFileHelper.handleFileDrop(acceptedFiles[i], (r)=>{
+            console.log(r)
+          });
         }
       }
-      props.addFile(files)
+      // props.addFile(files)
     } catch (e) {
       console.log(e)
     }
@@ -89,6 +91,7 @@ const DropZone = observer((props) => {
 
 
   const onDropCallback = (acceptedFiles) => {
+    console.log(acceptedFiles)
     if(!previewOpen){
       selectFiles(acceptedFiles)
     } 

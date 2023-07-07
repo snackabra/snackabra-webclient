@@ -6,6 +6,14 @@ import App from './App';
 import { createRoot } from 'react-dom/client';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import IndexedKV from "./utils/IndexedKV";
+
+let SB = require(process.env.NODE_ENV === 'development' ? 'snackabra/dist/snackabra' : 'snackabra')
+console.log(SB)
+window.SB = {
+    Snackabra: SB.Snackabra,
+    SBCrypto: SB.SBCrypto
+}
+
 const container = document.getElementById('root');
 const root = createRoot(container);
 
