@@ -11,30 +11,44 @@ const DownloadRoomData = observer(() => {
     const [channelList, setChannelList] = React.useState([]);
 
     const getRoomData = React.useCallback(async (roomId, onSuccess, onError) => {
-        const room = await sbContext.getChannel(roomId)
-        sbContext.downloadRoomData(roomId, room.key).then((data) => {
-            delete data.channel.SERVER_SECRET
-            downloadFile(data.channel, sbContext.rooms[roomId].name + "_data.txt");
-            onSuccess(roomId+'room')
-        }).catch((e) => {
+        try{
+            const room = await sbContext.getChannel(roomId)
+            sbContext.downloadRoomData(roomId, room.key).then((data) => {
+                delete data.channel.SERVER_SECRET
+                downloadFile(data.channel, sbContext.rooms[roomId].name + "_data.txt");
+                onSuccess(roomId+'room')
+            }).catch((e) => {
+                console.error(e)
+                notify.error('Error downloading file')
+                onError(roomId+'room')
+    
+            })
+        }catch(e){
             console.error(e)
-            notify.error(e.message)
+            notify.error('Error downloading file')
             onError(roomId+'room')
+        }
 
-        })
     }, [notify, sbContext])
 
     const getRoomStorage = React.useCallback(async (roomId, onSuccess, onError) => {
-        const room = await sbContext.getChannel(roomId)
-        sbContext.downloadRoomData(roomId, room.key).then((data) => {
-            downloadFile(data.storage, sbContext.rooms[roomId].name + "_shards.txt")
-            onSuccess(roomId+'shard')
-        }).catch((e) => {
+        try{
+            const room = await sbContext.getChannel(roomId)
+            sbContext.downloadRoomData(roomId, room.key).then((data) => {
+                downloadFile(data.storage, sbContext.rooms[roomId].name + "_shards.txt")
+                onSuccess(roomId+'shard')
+            }).catch((e) => {
+                console.error(e)
+                notify.error('Error downloading file')
+                onError(roomId+'shard')
+    
+            })
+        }catch(e){
             console.error(e)
-            notify.error(e.message)
+            notify.error('Error downloading file')
             onError(roomId+'shard')
+        }
 
-        })
     }, [notify, sbContext])
 
     React.useEffect(() => {

@@ -47,27 +47,36 @@ const RoomMenu = observer((props) => {
   }
 
   const getRoomData = React.useCallback(async (roomId) => {
-    console.log(roomId)
-    const room = await sbContext.getChannel(roomId)
-    console.log(room)
-    sbContext.downloadRoomData(roomId, room.key).then((data) => {
-      delete data.channel.SERVER_SECRET
-      console.log(data.channel)
-      downloadFile(data.channel, sbContext.rooms[roomId].name + "_data.txt");
-    }).catch((e) => {
+    try {
+      const room = sbContext.channels[roomId]
+      room.downloadData(roomId, room.key).then((data) => {
+        console.log(data.channel)
+        downloadFile(data.channel, sbContext.rooms[roomId].name + "_data.txt");
+      }).catch((e) => {
+        console.error(e)
+        notify.error(e.message)
+      })
+    } catch (e) {
       console.error(e)
       notify.error(e.message)
-    })
+    }
+
   }, [notify, sbContext])
 
   const getRoomStorage = React.useCallback(async (roomId) => {
-    const room = await sbContext.getChannel(roomId)
-    sbContext.downloadRoomData(roomId, room.key).then((data) => {
-      downloadFile(data.storage, sbContext.rooms[roomId].name + "_shards.txt")
-    }).catch((e) => {
+    try{
+      const room = sbContext.channels[roomId]
+      room.downloadData(roomId, room.key).then((data) => {
+        downloadFile(data.storage, sbContext.rooms[roomId].name + "_shards.txt")
+      }).catch((e) => {
+        console.error(e)
+        notify.error(e.message)
+      })
+    }catch(e){
       console.error(e)
       notify.error(e.message)
-    })
+    }
+
   }, [notify, sbContext])
 
   const downloadFile = (text, file) => {

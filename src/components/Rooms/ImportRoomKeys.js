@@ -31,25 +31,23 @@ const ImportRoomKeys = observer((props) => {
   }, [data])
 
   React.useEffect(() => {
-    const metadata = { roomData: {}, contacts: {}, roomMetadata: {} }
-    sbContext.getAllChannels().then((rooms) => {
-      for (let x in rooms) {
-        let roomId = rooms[x].id
-        metadata.roomData[roomId] = {
-          key: rooms[roomId].key,
-          lastSeenMessage: rooms[roomId].lastSeenMessage
-        }
-        metadata.contacts = Object.assign(rooms[roomId].contacts, metadata.contacts)
-        metadata.roomMetadata[roomId] = {
-          name: rooms[roomId].name,
-          lastMessageTime: rooms[roomId].lastMessageTime,
-          unread: false
-        }
+    const metadata = { roomData: {}, contacts: sbContext.contacts, roomMetadata: {} }
+    const rooms = sbContext.channels
+    for (let x in rooms) {
+      let roomId = rooms[x].id
+      metadata.roomData[roomId] = {
+        key: rooms[roomId].key,
+        lastSeenMessage: rooms[roomId].lastSeenMessage
       }
-      metadata.pem = false;
-      console.log(metadata)
-      setExisting(metadata)
-    })
+      metadata.roomMetadata[roomId] = {
+        name: rooms[roomId].name,
+        lastMessageTime: rooms[roomId].lastMessageTime,
+        unread: false
+      }
+    }
+    metadata.pem = false;
+    console.log(metadata)
+    setExisting(metadata)
 
   }, [sbContext])
 
@@ -172,14 +170,14 @@ const ImportRoomKeys = observer((props) => {
       saving.roomData = Object.assign(saving.roomData, toMerge[x][selected[x].selected].roomData)
       saving.roomMetadata = Object.assign(saving.roomMetadata, toMerge[x][selected[x].selected].roomMetadata)
     }
-    sbContext.importKeys(saving).then(()=>{
+    sbContext.importKeys(saving).then(() => {
       Notifications.setMessage('Key file imported!');
       Notifications.setSeverity('success');
       Notifications.setOpen(true)
       if (typeof props.onDone === 'function') {
         props.onDone()
       }
-    }).catch((e)=>{
+    }).catch((e) => {
       console.error(e)
       Notifications.setMessage(e.message);
       Notifications.setSeverity('error');

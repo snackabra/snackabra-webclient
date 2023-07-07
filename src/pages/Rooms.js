@@ -154,7 +154,6 @@ const ResponsiveDrawer = observer((props) => {
   }
 
   const handleChange = (event, newValue) => {
-    // setValue(newValue);
     NavAppBarContext.setMenuOpen(false)
     handleChangeIndex(newValue)
   };

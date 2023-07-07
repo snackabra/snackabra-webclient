@@ -136,9 +136,9 @@ class SnackabraStore {
   }
 
   getContact = (keyOrPubIdentifier) => {
-    if(typeof keyOrPubIdentifier === 'string') {
+    if (typeof keyOrPubIdentifier === 'string') {
       return { _id: keyOrPubIdentifier, name: this.contacts[keyOrPubIdentifier] }
-    }else{
+    } else {
       const key = keyOrPubIdentifier;
       return { _id: key.x + ' ' + key.y, name: this.contacts[key?.x + ' ' + key?.y] }
     }
@@ -150,7 +150,7 @@ class SnackabraStore {
       throw new Error('createContact requires a key and alias')
     }
 
-    if(typeof keyOrPubIdentifier === 'string') {
+    if (typeof keyOrPubIdentifier === 'string') {
       this._contacts[keyOrPubIdentifier] = alias
       this[save]()
       return
@@ -203,25 +203,25 @@ class SnackabraStore {
     }
   }
 
-  importKeys = (roomData) => {
+  importKeys = (importedData) => {
     return new Promise((resolve, reject) => {
-      let connectPromises = [];
-      Object.keys(roomData.roomData).forEach((channelId) => {
-        connectPromises.push(this.connect(
-          channelId,
-          (m) => { console.log(m) },
-          roomData.roomData[channelId].key
-        ))
-        this.contacts = Object.assign(this.contacts, roomData.roomData[channelId].contacts)
-      })
-      Promise.all(connectPromises).then(() => {
-        console.log('done importing keys')
-      }).catch((e) => {
-        reject(e)
-      }).finally(() => {
+      try {
+        console.log('importing keys')
+        console.log(importedData)
+        Object.keys(importedData.roomData).forEach((id) => {
+          const importedChannel = importedData.roomData[id]
+          this._channels[id] = new ChannelStore(this.SB, this.config, id)
+          this._channels[id].alias = importedChannel.alias ? importedChannel.alias : importedChannel.name || `Room ${Object.keys(this._channels).length}`
+          this._channels[id].key = importedChannel.key
+        })
+        this.contacts = Object.assign(this.contacts, importedData.contacts)
         this[save]()
-        resolve()
-      })
+        resolve(true)
+      } catch (e) {
+        console.error(e)
+        reject(e)
+      }
+
     })
 
   };
@@ -308,12 +308,16 @@ class ChannelStore {
     this[getChannel] = (channel) => {
       return new Promise((resolve) => {
         cacheDb.getItem('sb_data_' + channel).then(async (data) => {
-          this.id = data.id;
-          this.alias = data.alias;
-          this.messages = await this[mergeMessages](this.messages, data.messages);;
-          this.key = data.key;
-          this.lastSeenMessage = data.lastSeenMessage;
-          resolve(data)
+          if (data) {
+            this.id = data.id;
+            this.alias = data.alias;
+            this.messages = await this[mergeMessages](this.messages, data.messages);;
+            this.key = data.key;
+            this.lastSeenMessage = data.lastSeenMessage;
+            resolve(data)
+          } else {
+            resolve(false)
+          }
         })
       })
     }
@@ -474,11 +478,13 @@ class ChannelStore {
     })
   };
 
+  // MTG: error in jslib here, needs to be fixed but waiting on commits from PSM
   downloadData = async () => {
     try {
       let data = await this._socket.api.downloadData()
+      delete data.channel.SERVER_SECRET
       data.storage.target = window.location.host
-      return true
+      return data
     } catch (e) {
       console.error(e)
       return false

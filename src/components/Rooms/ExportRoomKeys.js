@@ -16,8 +16,8 @@ const ExportRoomKeys = observer((props) => {
 
   React.useEffect(() => {
     const parseData = async () => {
-      const metadata = { roomData: {}, contacts: {}, roomMetadata: {} }
-      const rooms = await sbContext.getAllChannels()
+      const metadata = { roomData: {}, contacts: sbContext.contacts, roomMetadata: {} }
+      const rooms = await sbContext.channels
       console.log(rooms)
       for (let x in rooms) {
         let roomId = rooms[x].id
@@ -25,9 +25,9 @@ const ExportRoomKeys = observer((props) => {
           key: rooms[roomId].key,
           lastSeenMessage: rooms[roomId].lastSeenMessage
         }
-        metadata.contacts = Object.assign(metadata.contacts, rooms[roomId].contacts)
+        console.log(rooms[roomId])
         metadata.roomMetadata[roomId] = {
-          name: rooms[roomId].name,
+          alias: rooms[roomId].alias,
           lastMessageTime: rooms[roomId].lastMessageTime,
           unread: false
         }
