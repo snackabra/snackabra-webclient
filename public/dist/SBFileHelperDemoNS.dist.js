@@ -8,8 +8,8 @@
 var SBFileHelperDemo;
 (function (SBFileHelperDemo) {
     const DEBUG = true;
-    const DEBUG2 = false; // more verbose
-    const DEBUG3 = false; // etc
+    const DEBUG2 = true; // more verbose
+    const DEBUG3 = true; // etc
     const LOAD_SERVICE_WORKER = false;
     const fileHelperVersion = "0.0.12";
     console.log("==== SBFileHelperDemoNS.ts v" + fileHelperVersion + " loaded ====");
@@ -535,7 +535,7 @@ var SBFileHelperDemo;
                             })
                                 .catch((error) => {
                                 if (DEBUG2)
-                                    console.log(`couldn't read anything for ${key}`, error);
+                                    console.warn(`couldn't read anything for ${key}`, error);
                                 // value.uniqueShardId = null;
                                 resolve();
                             });

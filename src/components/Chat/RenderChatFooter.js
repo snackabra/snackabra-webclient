@@ -7,7 +7,12 @@ import { TouchableOpacity } from 'react-native';
 import ConfirmationDialog from '../Modals/ConfirmationDialog';
 import { isMobile } from 'react-device-detect';
 
+
+
 const RenderChatFooter = (props) => {
+  // eslint-disable-next-line no-undef
+const FileHelper = SBFileHelper;
+  const elementId = `preview-${props.roomId}`
   const incomingFiles = props.files
   const [files, setFiles] = React.useState([])
   const [loading, setLoading] = React.useState(props.loading)
@@ -25,27 +30,17 @@ const RenderChatFooter = (props) => {
 
 
   React.useEffect(() => {
-    const getImageUrls = () => {
-      setFiles(incomingFiles)
-      let filesPromises = [];
+    if (incomingFiles) {
+      let _files = []
 
-      for (let x in incomingFiles) {
-        let file = incomingFiles[x]
-        // setHeight(file)
-        filesPromises.push(file.processThumbnail())
+      for (const [key, value] of FileHelper.finalFileList.entries()) {
+        if (value.sbImage) {
+          console.warn('value.sbImage', value)
+          _files.push(value)
+        }
+
       }
-      // Does all image processing 15kb thumbnail, 2MB Preview and 16MB Fullsize
-      Promise.all(filesPromises).then((files) => {
-        files.forEach((file) => {
-          file.processImage()
-        })
-        // props.setFiles(files)
-      })
-    }
-    if (incomingFiles.length > 0 && incomingFiles.length !== files.length) {
-      getImageUrls()
-    } else {
-      setFiles(incomingFiles)
+      setFiles(_files)
     }
 
   }, [files.length, incomingFiles])
@@ -59,7 +54,18 @@ const RenderChatFooter = (props) => {
   }, [props.uploading])
 
 
-  const removeItem = (index) => {
+  const removeItem = (index, uniqueShardId) => {
+    for (const [key, value] of FileHelper.finalFileList.entries()) {
+      if(value.uniqueShardId === uniqueShardId){
+        console.log('value', value)
+        FileHelper.globalBufferMap.delete(value.sbImage.previewDetails.uniqueShardId)
+        FileHelper.globalBufferMap.delete(value.sbImage.thumbnailDetails.uniqueShardId)
+        FileHelper.globalBufferMap.delete(value.uniqueShardId)
+        FileHelper.finalFileList.delete(value.sbImage.previewDetails.fullName)
+        FileHelper.finalFileList.delete(value.sbImage.thumbnailDetails.fullName)
+        FileHelper.finalFileList.delete(key)
+      }
+    }
     const newFiles = Object.assign(files)
     console.log(newFiles.splice(index, 1))
     console.log(newFiles)
@@ -105,8 +111,8 @@ const RenderChatFooter = (props) => {
     setToRemove(i)
     setShowConfirm(true)
   }
-
   if (files.length > 0) {
+
     return (
       <Grid item>
         <ConfirmationDialog
@@ -122,7 +128,7 @@ const RenderChatFooter = (props) => {
           }}
           open={showConfirm} />
         <Paper
-          id='preview-container'
+          id={elementId}
           style={{
             flexGrow: '1',
             maxHeight: 200,
@@ -138,10 +144,10 @@ const RenderChatFooter = (props) => {
           </IconButton>
           <Grid className='gallery-container'>
             {files.map((file, index) => {
-              if (file.url) {
+              if (file.sbImage.thumbnail) {
                 return (
                   <Grid key={index + 'img'} style={{ position: "relative" }} onMouseEnter={() => setIsShown(index + 'img')} onMouseLeave={() => setIsShown('')}>
-                    <Fab onClick={() => { removeItem(index) }} sx={{ cursor: "pointer !important", position: 'absolute', top: 11, left: 11, opacity: isShown === index + 'img' && !isMobile ? 1 : 0 }} size="small" color="#AAA" aria-label="add">
+                    <Fab onClick={() => { removeItem(index, file.uniqueShardId) }} sx={{ cursor: "pointer !important", position: 'absolute', top: 11, left: 11, opacity: isShown === index + 'img' && !isMobile ? 1 : 0 }} size="small" color="#AAA" aria-label="add">
                       <DeleteForever />
                     </Fab>
                     <TouchableOpacity style={{
@@ -150,8 +156,8 @@ const RenderChatFooter = (props) => {
                       objectFit: "cover"
                     }} disabled={!isMobile} onPress={() => { onLongPress(index) }} accessibilityRole='image'>
                       <img className='previewImage'
-                        src={`${file.url}`}
-                        srcSet={`${file.url}`}
+                        src={`${file.sbImage.thumbnail}`}
+                        srcSet={`${file.sbImage.thumbnail}`}
                         alt='Thumbnail Preview'
                         loading="lazy"
                       />

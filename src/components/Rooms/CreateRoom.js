@@ -88,26 +88,6 @@ const CreateRoom = observer((props) => {
       direction="row"
       justifyContent="flex-start"
       alignItems="flex-start">
-
-      <Grid xs={12} item>
-        <FormControl fullWidth variant="outlined">
-          <OutlinedInput
-            placeholder={'Room Name (optional)'}
-            id="sb-wc-server-secret"
-            type={!isFirefox ? 'text' : showPassword ? 'text' : 'password'}
-            value={roomName}
-            inputProps={{ autoFocus: true, autoComplete: "on", className: 'text-field' }}
-            onKeyUp={(e) => {
-              if (e.keyCode === 13) {
-                createRoom()
-              }
-            }}
-            onChange={(e) => {
-              setRoomName(e.target.value)
-            }}
-          />
-        </FormControl>
-      </Grid>
       <Grid xs={12} item>
         <FormControl fullWidth variant="outlined">
           <OutlinedInput
@@ -137,6 +117,25 @@ const CreateRoom = observer((props) => {
                 </IconButton>
               </InputAdornment>
             }
+          />
+        </FormControl>
+      </Grid>
+      <Grid xs={12} item>
+        <FormControl fullWidth variant="outlined">
+          <OutlinedInput
+            placeholder={'Room Name (optional)'}
+            id="sb-wc-server-secret"
+            type={!isFirefox ? 'text' : showPassword ? 'text' : 'password'}
+            value={roomName}
+            inputProps={{ autoFocus: true, autoComplete: "on", className: 'text-field' }}
+            onKeyUp={(e) => {
+              if (e.keyCode === 13) {
+                createRoom()
+              }
+            }}
+            onChange={(e) => {
+              setRoomName(e.target.value)
+            }}
           />
         </FormControl>
       </Grid>

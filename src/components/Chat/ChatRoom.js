@@ -27,18 +27,37 @@ import { isMobile } from 'react-device-detect';
 import { Navigate } from "react-router-dom";
 import SharedRoomStateContext from "../../contexts/SharedRoomState";
 import { GiftedChat } from "react-native-gifted-chat";
-import { alertTitleClasses } from '@mui/material';
+
+// eslint-disable-next-line no-undef
+const FileHelper = SBFileHelper;
+
 
 const q = new Queue()
 const _r = new Queue()
 let SB = require(process.env.NODE_ENV === 'development' ? 'snackabra/dist/snackabra' : 'snackabra')
 console.log("SB Version: ", SB.version)
 
+let messageTypes = {
+  SIMPLE_CHAT_MESSAGE: 'd341ca8645f94dc0adb1772865d973fc',
+  FILE_SHARD_METADATA: 'ac9ce10755b647849d8596011979e018',
+  IMAGE_MESSAGE: '2ef77f64d6b94a4ba677dcd1f20c08f2',
+  'reserved2': '7a962646710f4aefb44a709aaa04ba41',
+  'reserved3': 'ce59be06bd304102b55a731474758075',
+  'reserved4': 'cedda653151e4110abd81cf55c8884a6',
+  'reserved5': '5c4bec993da94bd5999fe7ea08f1cbce',
+  'reserved6': '721595ae2b6448cf8549d9fdac00151b',
+  'reserved7': '59c4fd9325cf4b37950ac15b040b8e01',
+}
+
 
 @observer
 class ChatRoom extends React.PureComponent {
   sbContext = this.props.sbContext
   sending = {}
+  knownShards = new Map()
+  toUpload = []
+  uploaded = []
+  updateMessagesTimeout = null
   state = {
     openAdminDialog: false,
     openWhisper: false,
@@ -50,10 +69,10 @@ class ChatRoom extends React.PureComponent {
     anchorEl: null,
     img: '',
     imgLoaded: false,
-    messages: this.channel?.messages ? toJS(this.channel.messages) : [],
+    messages: [],
     controlMessages: [],
     roomId: this.props.roomId || 'offline',
-    files: [],
+    files: false,
     images: [],
     loading: false,
     uploading: false,
@@ -132,7 +151,7 @@ class ChatRoom extends React.PureComponent {
       messages: this.channel?.messages ? toJS(this.channel.messages) : [],
       controlMessages: [],
       roomId: this.props.roomId || 'offline',
-      files: [],
+      files: false,
       images: [],
       loading: false,
       uploading: false,
@@ -240,53 +259,135 @@ class ChatRoom extends React.PureComponent {
     try {
       console.log('connecting')
       console.log(this.channel)
-      await this.channel.connect(this.recieveMessages)
+      await this.channel.connect(this.receiveMessages)
       if (username) this.sbContext.createContact(username, this.channel.key)
       this.setState({ user: this.sbContext.getContact(this.channel.key) })
-      this.channel.getOldMessages(0).then((r) => {
-        let controlMessages = [];
-        let messages = [];
-        console.log(r)
-        r.forEach((m, i) => {
-          console.log(m)
-          if (!m.control) {
-            const userId = `${m.user._id.x} ${m.user._id.y}`;
-            m.user._id = userId;
-            m.user.name = this.sbContext.getContact(m.user._id) !== undefined ? this.sbContext.contacts[userId] : m.user.name;
-            m.sender_username = m.user.name;
-            m.createdAt = new Date(parseInt(m.timestampPrefix, 2));
-            messages.push(m)
-          } else {
-            controlMessages.push(m)
-          }
+      this.getOldMessages()
+      if (this.channel.motd !== '') {
+        this.sendSystemInfo('MOTD: ' + this.props.channel.motd)
+      }
 
-        })
-        this.setState({ controlMessages: controlMessages })
-        if (this.channel.motd !== '') {
-          this.sendSystemInfo('MOTD: ' + this.props.channel.motd, (systemMessage) => {
-            this.channel.messages = messages
-            this.setState({ messages: [...messages, systemMessage] })
-          })
-        } else {
-          this.channel.messages = messages
-          this.setState({ messages: this.channel.messages })
-        }
-        setTimeout(() => {
-
-          this.openImageGallery()
-        }, 1000)
-
-      })
     } catch (e) {
       console.error(e)
     }
   }
 
-  recieveMessages = (msg) => {
+  getOldMessages = () => {
+    this.channel.getOldMessages(0).then((r) => {
+      let controlMessages = [];
+      let messages = [];
+      for (let i in r) {
+        const m = r[i]
+        this.receiveMessages(m)
+      }
+      this.updateMessageState()
+      // this.setState({ controlMessages: controlMessages })
+      // if (this.channel.motd !== '') {
+      //   this.sendSystemInfo('MOTD: ' + this.props.channel.motd, (systemMessage) => {
+      //     this.channel.messages = messages
+      //     this.setState({ messages: [...messages, systemMessage] })
+      //   })
+      // } else {
+      //   this.channel.messages = messages
+      //   this.setState({ messages: this.channel.messages })
+      // }
+      setTimeout(() => {
+
+        this.openImageGallery()
+      }, 1000)
+
+    })
+  }
+
+  updateMessageState = () => {
+
+    if (this.updateMessagesTimeout) {
+      clearTimeout(this.updateMessagesTimeout)
+    }
+    this.updateMessagesTimeout = setTimeout(() => {
+      this.setState({ messages: this.channel.messages }, () => {
+        console.log('updated message state')
+        console.log(this.state.messages)
+      })
+    }, 1000)
+
+  }
+
+  receiveMessages = (m) => {
+    try {
+
+      console.warn("Received message: ", m)
+      const userId = `${m.sender_pubKey.x} ${m.sender_pubKey.y}`;
+      m.user._id = userId;
+      m.user.name = this.sbContext.getContact(userId) !== undefined ? this.sbContext.contacts[userId] : m.user.name;
+      m.sender_username = m.user.name;
+
+
+      if (!m.messageType) {
+        // an 'app' like this will only process messages that it SPECIFICALLY understands
+        // We will attempt to do a legacy processing of the message, but this will be deprecated soon.
+
+        console.warn("Unknown message type received: ", m);
+        console.warn("Attempting to process as a legacy chat message... this will be deprecated soon.");
+        this.receiveMessagesLegacy(m);
+        return
+      }
+      console.warn(m)
+      switch (m.messageType) {
+        case messageTypes.SIMPLE_CHAT_MESSAGE:
+          console.log('SIMPLE_CHAT_MESSAGE')
+          this.handleSimpleChatMessage(m);
+          break;
+        case messageTypes.FILE_SHARD_METADATA:
+          console.log('FILE_SHARD_METADATA')
+          const obj = JSON.parse(m.contents)
+          this.setState({ controlMessages: [...this.state.controlMessages, m] })
+          // Tracks progress
+          if (this.toUpload.length > 0) {
+            if (this.toUpload.includes(obj.hash)) {
+              this.uploaded.push(obj.hash)
+              // setProgressBarWidth(Math.ceil(this.uploaded.length / this.toUpload.length * 100));
+            }
+
+          }
+          if (this.uploaded.length === this.toUpload.length) {
+            this.setState({ uploading: false })
+          }
+
+          this.knownShards.set(obj.hash, obj.handle)
+          break;
+        case messageTypes.IMAGE_MESSAGE:
+          console.log('IMAGE_MESSAGE')
+          this.handleSimpleChatMessage(m);
+          break;
+        default:
+          console.info('---- Ignoring message with unsupported message type');
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  handleSimpleChatMessage = (msg) => {
+    const _messages = JSON.parse(JSON.stringify(this.channel.messages));
+    this.channel.messages = _messages.reduce((acc, curr) => {
+      const msg_id = curr._id.toString()
+      if (!msg_id.match(/^sending/)) {
+        acc.push(curr);
+      } else {
+        delete this.sending[curr._id]
+      }
+      return acc;
+    }, []);
+  }
+
+  // For backaward compatibility with older versions of the chat app
+  receiveMessagesLegacy = (msg) => {
+    const _messages = JSON.parse(JSON.stringify(this.state.messages));
     if (msg) {
       console.log("==== here is the message: (ChatRoom.js)")
       if (!msg.control) {
-        const messages = this.state.messages.reduce((acc, curr) => {
+        const messages = _messages.reduce((acc, curr) => {
           const msg_id = curr._id.toString()
           if (!msg_id.match(/^sending/)) {
             acc.push(curr);
@@ -299,13 +400,12 @@ class ChatRoom extends React.PureComponent {
         msg.user._id = userId;
         msg.user.name = this.sbContext.getContact(msg.user._id) !== undefined ? this.sbContext.contacts[userId] : msg.user.name;
         msg.sender_username = msg.user.name;
-        msg.createdAt = new Date(parseInt(msg.timestampPrefix, 2));
         this.setState({ messages: [...messages, msg] }) // merges old messages with new (PSM learning)
       } else {
         this.setState({ controlMessages: [...this.state.controlMessages, msg] })
       }
     } else {
-      console.warn("this.recieveMessages() called with empty message")
+      console.warn("this.receiveMessages() called with empty message")
     }
   }
 
@@ -364,148 +464,81 @@ class ChatRoom extends React.PureComponent {
     }
   }
 
-  loadFiles = async (loaded) => {
-    this.setState({ loading: false, files: loaded })
+  loadFiles = () => {
+    this.setState({ loading: false, files: true })
   }
   //TODO: for images render in chat and then replace with received message
   sendFiles = async (giftedMessage) => {
-    this.setState({ uploading: true })
-    const filesArray = [];
-    const _files = this.state.files;
-    this.setState({ files: [] }, () => {
-      _files.forEach((file, i) => {
-        const message = {
-          createdAt: new Date(),
-          text: "",
-          image: file.url,
-          user: this.sbContext.getContact(this.channel.key),
-          _id: 'sending_' + giftedMessage[0]._id + Date.now()
-        }
-        _r.enqueue(message)
-        filesArray.push(file)
-      })
+    // let this.toUpload = []
+    this.setState({ files: false, uploading: true }, () => {
+      for (const [key, value] of FileHelper.finalFileList.entries()) {
 
-      // from snackabra interfaces:
-
-      // interface ImageMetaData {
-      //   imageId?: string,
-      //   previewId?: string,
-      //   imageKey?: string,
-      //   previewKey?: string,
-      //   // nonce and salt not needed, but if it's there, we do extra checks
-      //   previewNonce?: string,
-      //   previewSalt?: string
-      // }
-
-      // interface SBMessageContents {
-      //   sender_pubKey?: JsonWebKey,
-      //   sender_username?: string,
-      //   encrypted: boolean,
-      //   isVerfied: boolean,
-      //   contents: string,
-      //   sign: string,
-      //   image: string,
-      //   image_sign?: string,
-      //   imageMetadata_sign?: string,
-      //   imageMetaData?: ImageMetaData,
-      // }
-
-      // TODO ... big PSM TODO item: this needs to be in a mix of SBFile and SBImage helpers;
-      // otherwise test code or SDK users will have to extract code from webclient. should
-      // also reference how BAMF does this, presumably copy-pasted code from here currently?
-      for (let x in filesArray) {
-        const sbImage = filesArray[x]
-        sbImage.thumbnailReady.then(async () => {
-          const storePromises = await sbImage.getStorePromises(this.sbContext.activeroom)
-          const imageMetaData = {
-            imageId: sbImage.objectMetadata.full.id,
-            imageKey: sbImage.objectMetadata.full.key,
-            previewId: sbImage.objectMetadata.preview.id,
-            previewKey: sbImage.objectMetadata.preview.key,
+        if (value.sbImage) {
+          console.log('key', key)
+          console.log('value', value)
+          const message = {
+            createdAt: new Date(),
+            text: "",
+            messageType: messageTypes.SIMPLE_CHAT_MESSAGE,
+            image: value.sbImage.thumbnail,
+            user: this.sbContext.getContact(this.channel.key),
+            _id: 'sending_' + giftedMessage[0]._id + Date.now()
           }
-          const _contents = {
-            image: _files[x].thumbnail,
-            imageMetaData: imageMetaData,
-          }
-          let sbm = this.channel.newMessage(_contents)
-          q.enqueue(sbm)
-          Promise.all([storePromises.previewStorePromise]).then((previewVerification) => {
-            console.log('Preview image uploaded')
-            previewVerification[0].verification.then((verification) => {
-
-              // now the preview (up to 2MiB) has been safely stored
-              let controlMessage = new SB.SBMessage(this.sbContext.socket);
-              // controlMessage.imageMetaData = imageMetaData;
-              controlMessage.contents.control = true;
-              controlMessage.contents.verificationToken = verification;
-              controlMessage.contents.id = imageMetaData.previewId;
-              q.enqueue(controlMessage)
-              queueMicrotask(() => {
-                storePromises.fullStorePromise.then((verificationPromise) => {
-                  console.log(verificationPromise)
-                  verificationPromise.verification.then((_f_verification) => {
-                    console.log('Full image uploaded')
-                    let _f_controlMessage = new SB.SBMessage(this.sbContext.socket);
-                    _f_controlMessage.contents.control = true;
-                    _f_controlMessage.contents.verificationToken = _f_verification;
-                    _f_controlMessage.contents.id = imageMetaData.imageId;
-                    q.enqueue(_f_controlMessage)
-                  });
-                });
-              })
-
-              // PSM:
-              // the below code is roughly the direction post next jslib refator (1.4)
-              // // now the preview (up to 2MiB) has been safely stored
-              // // let controlMessage = new SB.SBMessage(this.sbContext.socket);
-              // // controlMessage.imageMetaData = imageMetaData;
-              // const controlMessageContents = {
-              //   control: true,
-              //   verificationToken: verification,
-              //   id: imageMetaData.previewId
-              // }
-              // let controlMessage = this.sbContext.newMessage(controlMessageContents)
-              // // controlMessage.contents.control = true;
-              // // controlMessage.contents.verificationToken = verification;
-              // // controlMessage.contents.id = imageMetaData.previewId;
-              // q.enqueue(controlMessage)
-              // queueMicrotask(() => {
-              //   storePromises.fullStorePromise.then((verificationPromise) => {
-              //     console.log(verificationPromise)
-              //     verificationPromise.verification.then((_f_verification) => {
-              //       console.log('Full image uploaded')
-              //       // let _f_controlMessage = new SB.SBMessage(this.sbContext.socket);
-              //       let _f_controlMessageContents = {
-              //         control: true,
-              //         verificationToken: _f_verification,
-              //         id: imageMetaData.imageId
-              //       }
-              //       let _f_controlMessage = this.sbContext.newMessage(_f_controlMessageContents)
-              //       // _f_controlMessage.contents.control = true;
-              //       // _f_controlMessage.contents.verificationToken = _f_verification;
-              //       // _f_controlMessage.contents.id = imageMetaData.imageId;
-              //       q.enqueue(_f_controlMessage)
-              //     });
-              //   });
-              // })
-
-            })
-          }).finally(() => {
-            if (Number(x) === filesArray.length - 1) {
-              this.setState({ uploading: false })
-              this.removeInputFiles()
+          _r.enqueue(message)
+          value.sbImage.thumbnailReady.then(() => {
+            let sbm = this.channel.newMessage('')
+            sbm.contents.image = value.sbImage.thumbnail
+            const imageMetaData = {
+              fullImageHash: value.uniqueShardId,
+              thumbnailHash: value.sbImage.thumbnailDetails.uniqueShardId,
+              previewHash: value.sbImage.previewDetails.uniqueShardId,
             }
+            sbm.contents.messageType = messageTypes.IMAGE_MESSAGE
+            sbm.contents.fileMetadata = imageMetaData;
+            q.enqueue(sbm)
           })
+        }
+      }
+    })
+
+    FileHelper.finalFileList.forEach((value, key) => {
+      // TODO (matt): this loop spins up a promise for every file that needs to be this.uploaded,
+      //              so we need some sort of progress feedback etc. especially since it's
+      //              a data room.  we could add a little progress icon next to each line of a
+      //              file that "spins" and then becomes a check mark when it's confirmed, note
+      //              that it is not FULLY confirmed until it "echoes" back to us!
+      const fileHash = value.uniqueShardId;
+
+      console.log(`---- uploading file ${key} with hash ${fileHash} ...`)
+      const buffer = FileHelper.globalBufferMap.get(fileHash)
+      if (!buffer) {
+        console.error(`**** failed to find buffer for ${fileHash} (should not happen)`)
+      } else {
+        this.toUpload.push(fileHash)
+        FileHelper.uploadBuffer(this.props.roomId, buffer).then((handle) => {
+          // the return value is of type Interfaces.SBObjectHandle
+          // now we add it to the set of known hash->handle mappings
+          // we *synchronously* know all fileHash values, but the returned handles are asynch outcomes
+          // knownShards.set(fileHash, handle)
+          // .. TODO: we need to track every new 'fileHash' like we do with 'ack's to make sure they are echoed back
+          // our mapping object
+          const obj = { hash: fileHash, handle: handle }
+          // and we separately send a message with the specific shard/file info (eg hash -> SBObjectHandle mapping)
+          const sbm = this.channel.newMessage(JSON.stringify(obj))
+          sbm.contents.messageType = messageTypes.FILE_SHARD_METADATA;
+          this.channel.sendMessage(sbm)
         })
       }
     })
+
+
   }
 
   sendMessages = (giftedMessage) => {
     console.log(giftedMessage)
     // await new Promise(resolve => setTimeout(resolve, 0)); // JS breathing room
     if (giftedMessage[0].text === "") {
-      if (this.state.files.length > 0) {
+      if (this.state.files) {
         this.sendFiles(giftedMessage)
       }
     } else {
@@ -518,9 +551,9 @@ class ChatRoom extends React.PureComponent {
       giftedMessage[0].user = this.state.user
       this.setState({ messages: [...this.state.messages, giftedMessage[0]] })
       this.sending[msg_id] = msg_id
-      // let sbm = new SB.SBMessage(this.sbContext.socket, giftedMessage[0].text)
       let sbm = this.channel.newMessage(giftedMessage[0].text)
-      sbm.send();
+      sbm.contents.messageType = messageTypes.SIMPLE_CHAT_MESSAGE;
+      this.channel.sendMessage(sbm)
     }
   }
 
@@ -567,7 +600,7 @@ class ChatRoom extends React.PureComponent {
 
       document.getElementById('fileInput').value = '';
     }
-    this.setState({ files: [] })
+    this.setState({ files: false })
   }
 
   showLoading = (bool) => {
@@ -592,9 +625,9 @@ class ChatRoom extends React.PureComponent {
 
   }
 
-  setFiles = (files) => {
-    this.setState({ files: [...files, ...this.state.files] })
-  }
+  // setFiles = (files) => {
+  //   this.setState({ files: [...files, ...this.state.files] })
+  // }
 
   closeWhisper = () => {
     this.setState({ openWhisper: false })
@@ -622,7 +655,6 @@ class ChatRoom extends React.PureComponent {
       return (<Navigate to={this.state.to} />)
     }
     // let inverted = false;
-    let messages = this.state.messages
 
     return (
 
@@ -633,7 +665,7 @@ class ChatRoom extends React.PureComponent {
         width: '100%',
         paddingTop: 48
       }}>
-        <DropZone notify={this.notify} dzRef={this.setDropzoneRef} addFile={this.loadFiles} showLoading={this.showLoading} overlayOpen={this.state.openPreview}>
+        <DropZone notify={this.notify} dzRef={this.setDropzoneRef} showFiles={this.loadFiles} showLoading={this.showLoading} openPreview={this.state.openPreview} roomId={this.state.roomId}>
           <AdminDialog open={this.state.openAdminDialog} sendSystemInfo={this.sendSystemInfo} onClose={() => {
             this.setOpenAdminDialog(false)
             this.props.onCloseAdminDialog()
@@ -679,7 +711,7 @@ class ChatRoom extends React.PureComponent {
             style={{
               width: '100%'
             }}
-            messages={messages}
+            messages={this.state.messages}
             onSend={this.sendMessages}
 
             user={this.state.user}
@@ -702,6 +734,7 @@ class ChatRoom extends React.PureComponent {
             renderMessageImage={(props) => {
               return <RenderImage
                 {...props}
+                roomId={this.state.roomId}
                 openImageOverlay={this.openImageOverlay}
                 downloadImage={this.downloadImage}
                 controlMessages={this.state.controlMessages}
@@ -721,7 +754,7 @@ class ChatRoom extends React.PureComponent {
                 roomId={this.state.roomId}
                 removeInputFiles={this.removeInputFiles}
                 files={this.state.files}
-                setFiles={this.setFiles}
+                // setFiles={this.setFiles}
                 uploading={this.state.uploading}
                 loading={this.state.loading} />
             }}
@@ -733,8 +766,8 @@ class ChatRoom extends React.PureComponent {
             }}
             renderSend={(props) => {
               return <RenderSend {...props}
-              roomId={this.state.roomId}
-              inputError={this.state.inputError} />
+                roomId={this.state.roomId}
+                inputError={this.state.inputError} />
             }}
             renderComposer={(props) => {
               return <RenderComposer {...props}
@@ -746,8 +779,8 @@ class ChatRoom extends React.PureComponent {
                 onBlur={() => {
                   this.setState({ typing: false })
                 }}
-                setFiles={this.setFiles}
-                filesAttached={this.state.files.length > 0}
+                // setFiles={this.setFiles}
+                filesAttached={this.state.files}
                 showLoading={this.showLoading} />
             }}
             onLongPress={() => false}

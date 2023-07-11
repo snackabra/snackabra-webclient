@@ -1,10 +1,10 @@
-import React, { useCallback, useMemo } from 'react'
-import { SBImage } from "../utils/ImageProcessor";
-import SnackabraContext from "../contexts/SnackabraContext";
+import React, { useCallback } from 'react'
+import { SBImage } from "../utils/ImageProcessorSBFileHelper";
 import Dropzone from 'react-dropzone'
 import { Grid } from "@mui/material";
-import { observer } from "mobx-react"
 import { isMobile } from 'react-device-detect';
+import { cloneMap } from '../utils/misc';
+import { on } from 'events';
 
 
 const baseStyle = {
@@ -35,51 +35,48 @@ const rejectStyle = {
   borderColor: '#ff1744',
 }
 
-const DropZone = observer((props) => {
-  const { children, dzRef, notify, overlayOpen } = props;
+const DropZone = (props) => {
+  const { children, dzRef, notify, openPreview } = props;
   const [success, setSuccess] = React.useState(false)
   const [previewOpen, setPreviewOpen] = React.useState(false)
-  const sbContext = React.useContext(SnackabraContext);
-
+  const elementId = `dropzone-${props.roomId}`
   let maxFiles = isMobile ? 15 : 30
-  const getSbImage = useCallback((file, sbContext) => {
-    return new Promise((resolve) => {
-      const sbImage = new SBImage(file, sbContext.SB);
-      sbImage.img.then((i) => {
-        sbImage.url = i.src
-        props.showLoading(false)
-        resolve(sbImage)
-        queueMicrotask(() => {
-          const SBImageCanvas = document.createElement('canvas');
-          sbImage.loadToCanvas(SBImageCanvas)
-        });
-      })
-    })
-  }, [props])
 
-  const selectFiles = useCallback(async (acceptedFiles) => {
+  const selectFiles = async () => {
     props.showLoading(true)
     try {
-      const files = []
-      for (let i in acceptedFiles) {
-        if (typeof acceptedFiles[i] === 'object') {
-          const attachment = await getSbImage(acceptedFiles[i], sbContext)
-          files.push(attachment)
-          window.SBFileHelper.handleFileDrop(acceptedFiles[i], (r)=>{
-            console.log(r)
-          });
+      console.log('SBFileHelper.finalFileList')
+      let files = []
+      // eslint-disable-next-line no-undef
+      const FileMap = new Map(SBFileHelper.finalFileList)
+
+      for (const [key, value] of FileMap.entries()) {
+        // eslint-disable-next-line no-undef
+        const original = SBFileHelper.finalFileList.get(key)
+        // eslint-disable-next-line no-undef
+        const buffer = SBFileHelper.globalBufferMap.get(value.uniqueShardId)
+        if (buffer) {
+          const sbImage = new SBImage(buffer, value);
+          await sbImage.processThumbnail()
+          sbImage.processImage()
+          original.sbImage = sbImage
+
+
+        } else {
+          throw new Error('Buffer not found')
         }
-      }
-      // props.addFile(files)
+      };
+      props.showFiles()
+
     } catch (e) {
       console.log(e)
     }
-  },[getSbImage, props, sbContext])
+  }
 
   React.useEffect(() => {
-    console.log(overlayOpen)
-    setPreviewOpen(overlayOpen)
-  }, [overlayOpen])
+    console.log(openPreview)
+    setPreviewOpen(openPreview)
+  }, [openPreview])
 
   React.useEffect(() => {
     if (success) {
@@ -90,12 +87,13 @@ const DropZone = observer((props) => {
   }, [success])
 
 
-  const onDropCallback = (acceptedFiles) => {
-    console.log(acceptedFiles)
-    if(!previewOpen){
-      selectFiles(acceptedFiles)
-    } 
-    
+  const onDropCallback = () => {
+    if (!previewOpen) {
+      selectFiles()
+    } else {
+      notify('Please close the preview before adding more files', 'info')
+    }
+
   }
 
   const onRejected = (e) => {
@@ -103,6 +101,12 @@ const DropZone = observer((props) => {
     switch (e[0].errors[0].code) {
       case 'too-many-files':
         notify(`Too many files attached, maximum limit is ${maxFiles}`, 'error')
+        break;
+      case 'file-invalid-type':
+        notify('Invalid file type', 'error')
+        break;
+      case 'file-too-large':
+        notify('File is too large', 'error')
         break;
       default:
         console.error(e[0].errors);
@@ -116,24 +120,44 @@ const DropZone = observer((props) => {
     notify('There was an error attaching your files', 'error');
   }
 
+  // We use this to get the raw drop event so we can use SBFileHelper to upload the files
+  const eventHandler = (e) => {
+    try {
+
+      const files = [];
+      const fileList = e.dataTransfer ? e.dataTransfer.files : e.target.files;
+      if (e.type === 'drop') {
+        for (var i = 0; i < fileList.length; i++) {
+          const file = fileList.item(i);
+          files.push(file);
+
+        }
+        // eslint-disable-next-line no-undef
+        SBFileHelper.handleFileDrop(e.nativeEvent, onDropCallback);
+      }
+
+      return files;
+    } catch (e) {
+      console.log(e)
+    }
+
+  }
+
 
   //This is where we would want to do something with the files when they are uploaded
   //https://mozilla.github.io/pdf.js/examples/
-  const onDropZone = useCallback(onDropCallback, [previewOpen, selectFiles])
+  // const onDropZone = useCallback(onDropCallback, [previewOpen, selectFiles])
 
 
   return (
-    <Dropzone id={'sb_drobox'} ref={dzRef} onDrop={onDropZone} onDropRejected={onRejected} onError={onError} noClick noKeyboard accept={{ 'image/*': [] }} maxFiles={maxFiles}>
+    <Dropzone id={elementId} ref={dzRef} onDropRejected={onRejected} onError={onError} noClick noKeyboard accept={{ 'image/*': [] }} maxFiles={maxFiles} getFilesFromEvent={eventHandler}>
       {({ getRootProps, getInputProps, isFocused, isDragAccept, isDragReject }) => {
-        const style = useMemo(
-          () => ({
-            ...baseStyle,
-            ...(isFocused ? focusedStyle : {}),
-            ...(isDragAccept ? acceptStyle : {}),
-            ...(isDragReject ? rejectStyle : {}),
-          }),
-          [isFocused, isDragAccept, isDragReject]
-        )
+        const style = {
+          ...baseStyle,
+          ...(isFocused ? focusedStyle : {}),
+          ...(isDragAccept ? acceptStyle : {}),
+          ...(isDragReject ? rejectStyle : {}),
+        }
         return (
           <Grid {...getRootProps({ style })}
             container
@@ -150,6 +174,6 @@ const DropZone = observer((props) => {
   )
 
 
-})
+}
 
 export default DropZone

@@ -7,11 +7,11 @@ function RenderMessageText(props) {
   const textStyle = {
     right: {
       color: props.currentMessage.whispered ? '#aaa' : 'white',
-      overflowWrap: 'break-word'
+      overflowWrap: 'anywhere'
     },
     left: {
       color: props.currentMessage.whispered ? '#aaa' : 'black',
-      overflowWrap: 'break-word'
+      overflowWrap: 'anywhere'
     }
   }
   return (

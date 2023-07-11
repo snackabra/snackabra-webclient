@@ -91,6 +91,15 @@ export const downloadFile = (fileData, fileName, fileType) => {
   }
 };
 
+export function cloneMap(map) {
+  const clonedMap = new Map();
+  map.forEach((value, key) => {
+    clonedMap.set(key, value);
+  });
+
+  return clonedMap;
+}
+
 export function isDataURL(s) {
   return !!s.match(isDataURL.regex);
 }

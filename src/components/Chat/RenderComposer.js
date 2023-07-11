@@ -51,11 +51,11 @@ const RenderComposer = observer((props) => {
 
   React.useEffect(() => {
     setFilesAttached(filesAttached)
-    if (filesAttached) {
+    if (filesAttached !== attachedFiles) {
       setText('')
       onTextChanged('')
     }
-  }, [filesAttached, onTextChanged, setText])
+  }, [attachedFiles, filesAttached, onTextChanged, setText])
 
   const getSbImage = (file, props, sbContext) => {
     return new Promise((resolve) => {

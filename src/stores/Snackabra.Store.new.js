@@ -4,14 +4,12 @@ import IndexedKV from "../utils/IndexedKV";
 
 console.log("=========== mobx-snackabra-store loading ===========")
 let SB = require(process.env.NODE_ENV === 'development' ? 'snackabra/dist/snackabra' : 'snackabra')
-
+console.log(SB.version)
 let cacheDb;
 let Crypto = new SB.SBCrypto();
 
 
 const save = Symbol("save");
-const mergeMessages = Symbol("mergeMessages");
-const receiveMessage = Symbol("receiveMessage");
 const getChannel = Symbol("getChannel");
 const migrate = Symbol("migrate");
 
@@ -23,6 +21,26 @@ configure({
   observableRequiresReaction: false,
   disableErrorBoundaries: false
 });
+
+function getDateTimeFromTimestampPrefix(prefix) {
+
+
+  const binaryTimestamp = prefix;
+  const decimalTimestamp = parseInt(binaryTimestamp, 2);
+
+  const datetime = new Date(decimalTimestamp);
+  const year = datetime.getFullYear();
+  const month = datetime.getMonth() + 1; // Adding 1 because months are zero-based (January is 0)
+  const day = datetime.getDate();
+  const hours = datetime.getHours();
+  const minutes = datetime.getMinutes();
+  const seconds = datetime.getSeconds();
+  const millisecondsOutput = datetime.getMilliseconds();
+
+  // Format the datetime components into a string
+  return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')} ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${millisecondsOutput.toString().padStart(3, '0')}`;
+
+}
 
 class SnackabraStore {
   readyResolver;
@@ -176,7 +194,6 @@ class SnackabraStore {
   }
 
   join = (channelId) => {
-    alert('join')
     try {
       const channel = new ChannelStore(this.SB, this.config, channelId);
       this._channels[channel.id] = channel;
@@ -244,7 +261,7 @@ class ChannelStore {
   _status = 'CLOSED'
   _key;
   _socket;
-  _messages = [];
+  _messages = new Map();
   _ready = false;
   readyResolver;
   ChannelStoreReadyFlag = new Promise((resolve) => {
@@ -270,6 +287,7 @@ class ChannelStore {
             key: this.key,
             lastSeenMessage: toJS(this.lastSeenMessage)
           }
+          console.warn('saving channel state', save)
           await cacheDb.setItem('sb_data_' + this.id, save)
         }
       } catch (e) {
@@ -278,32 +296,6 @@ class ChannelStore {
 
     }
 
-    this[mergeMessages] = async (existing, received) => {
-      let merged = [];
-      for (let i = 0; i < existing.length + received.length; i++) {
-        if (received.find(itmInner => itmInner._id === existing[i]?._id)) {
-          merged.push({
-            ...existing[i],
-            ...received.find(itmInner => itmInner._id === existing[i]?._id)
-          });
-        } else {
-          if (received[i]) {
-            merged.push(received[i]);
-          }
-        }
-      }
-      return merged.sort((a, b) => a._id > b._id ? 1 : -1);
-    };
-
-    this[receiveMessage] = async (m, messageCallback) => {
-      m.createdAt = new Date(parseInt(m.timestampPrefix, 2));
-      this.lastMessageTime = m.timestampPrefix;
-      this.lastSeenMessage = m._id
-      this.messages = await this[mergeMessages](this.messages, [m]);
-      if (typeof messageCallback === 'function') {
-        messageCallback(m);
-      }
-    };
 
     this[getChannel] = (channel) => {
       return new Promise((resolve) => {
@@ -311,7 +303,7 @@ class ChannelStore {
           if (data) {
             this.id = data.id;
             this.alias = data.alias;
-            this.messages = await this[mergeMessages](this.messages, data.messages);;
+            this.messages = this.mergeMessages(this.messages, data.messages);
             this.key = data.key;
             this.lastSeenMessage = data.lastSeenMessage;
             resolve(data)
@@ -322,7 +314,7 @@ class ChannelStore {
       })
     }
 
-    makeAutoObservable(this, {
+    makeObservable(this, {
       id: computed,
       key: computed,
       alias: computed,
@@ -376,7 +368,7 @@ class ChannelStore {
   }
 
   get messages() {
-    return toJS(this._messages);
+    return [...this._messages.values()];
   }
 
   set messages(messages) {
@@ -384,7 +376,9 @@ class ChannelStore {
       console.trace()
       return
     }
-    this._messages = messages;
+    for(let i in messages) {
+      this._messages.set(messages[i]._id, messages[i]);
+    }
     this[save]();
   }
 
@@ -418,18 +412,23 @@ class ChannelStore {
     return await cacheDb.getItem('sb_data_contacts')
   }
 
-  getOldMessages = (length) => {
-    return new Promise(async (resolve) => {
-      this._socket.api.getOldMessages(length).then(async (r_messages) => {
-        console.log("==== got these old messages:")
-        console.log(r_messages)
-        for (let x in r_messages) {
-          let m = r_messages[x]
-          this[receiveMessage](m, null)
-        }
-        this[save]();
-        resolve(r_messages);
-      });
+  getOldMessages = (length, messageCallback) => {
+    return new Promise((resolve, reject) => {
+      try {
+        this._socket.api.getOldMessages(length, true).then((r_messages) => {
+          console.log("==== got these old messages:")
+          this.messages = r_messages
+          for (let x in r_messages) {
+            let m = r_messages[x]
+            this.receiveMessage(m, messageCallback)
+          }
+          this[save]();
+          resolve(r_messages);
+        });
+      } catch (e) {
+        reject(e)
+      }
+
     });
   };
 
@@ -442,6 +441,14 @@ class ChannelStore {
     console.log(message)
     return new SB.SBMessage(this._socket, message);
   };
+
+  sendMessage = (SBM) => {
+    if (SBM instanceof SB.SBMessage) {
+      return this._socket.send(SBM);
+    } else {
+      throw new Error("sendMessage expects an SBMessage")
+    }
+  }
 
   get capacity() {
     return this._socket.api.getCapacity();
@@ -520,7 +527,7 @@ class ChannelStore {
       console.log("==== connecting to channel:" + this.id)
       console.log("==== with key:" + this.key)
       const c = await this.SB.connect(
-        m => { this[receiveMessage](m, messageCallback); },
+        m => { this.receiveMessage(m, messageCallback); },
         this.key,
         this.id
       );
@@ -559,6 +566,33 @@ class ChannelStore {
     }
     return this._socket.status
   }
+
+  receiveMessage = (m, messageCallback) => {
+    m.createdAt = getDateTimeFromTimestampPrefix(m.timestampPrefix);
+    this.lastMessageTime = m.timestampPrefix;
+    this.lastSeenMessage = m._id
+    this.messages = this.mergeMessages(this.messages, [m]);
+    if (typeof messageCallback === 'function') {
+      messageCallback(m);
+    }
+  };
+
+  mergeMessages = (existing, received) => {
+    let merged = [];
+    for (let i = 0; i < existing.length + received.length; i++) {
+      if (received.find(itmInner => itmInner._id === existing[i]?._id)) {
+        merged.push({
+          ...existing[i],
+          ...received.find(itmInner => itmInner._id === existing[i]?._id)
+        });
+      } else {
+        if (received[i]) {
+          merged.push(received[i]);
+        }
+      }
+    }
+    return merged.sort((a, b) => a._id > b._id ? 1 : -1);
+  };
 
 }
 

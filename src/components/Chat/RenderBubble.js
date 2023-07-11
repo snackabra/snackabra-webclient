@@ -30,7 +30,7 @@ const RenderBubble = (props) => {
         // overflow: "hidden",
         borderColor: "black",
         borderStyle: "solid",
-        overflowWrap: "break-word",
+        overflowWrap: "anywhere",
         borderWidth: "3px",
         flexGrow: 1,
         // maxWidth:"max(55%, 18rem)",
@@ -40,7 +40,7 @@ const RenderBubble = (props) => {
       },
       right: {
         // overflow: "hidden",
-        overflowWrap: "break-word",
+        overflowWrap: "anywhere",
         borderColor: "black",
         borderStyle: "solid",
         borderWidth: "3px",
