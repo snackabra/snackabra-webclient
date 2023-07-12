@@ -76,7 +76,7 @@ const ChatRoom = observer((props) => {
   const [loading, setLoading] = React.useState(false);
   const [uploading, setUploading] = React.useState(false);
   const [replyTo, setReplyTo] = React.useState(null);
-  const [dzRef, setDzRef] = React.useState(React.createRef());
+  const [dzRef, setDzRef] = React.useState(null);
 
   const [to, setTo] = React.useState(null);
   const [inputErrored, setInputErrored] = React.useState(false);
@@ -142,6 +142,7 @@ const ChatRoom = observer((props) => {
 
   React.useEffect(() => {
     if (channel) {
+      console.log('channel changed', messages)
       channel.messages = messages
     }
   }, [channel, messages]);
@@ -151,12 +152,6 @@ const ChatRoom = observer((props) => {
   const init = () => {
     const keys = channel.key
     const contact = sbContext.getContact(keys)
-
-    if (channel.messages.length > 0) {
-      for (let x in channel.messages) {
-        receiveMessages(channel.messages[x])
-      }
-    }
 
     if (!contact) {
       setOpenFirstVisit(true)
@@ -277,11 +272,6 @@ const ChatRoom = observer((props) => {
         case messageTypes.SIMPLE_CHAT_MESSAGE:
           console.log('SIMPLE_CHAT_MESSAGE')
           handleSimpleChatMessage(m);
-          if (m.sendingId) {
-            setTimeout(() => {
-            clearSending(m.sendingId)
-            }, 2000)
-          }
           break;
         case messageTypes.FILE_SHARD_METADATA:
           console.log('FILE_SHARD_METADATA')
@@ -304,42 +294,28 @@ const ChatRoom = observer((props) => {
         case messageTypes.IMAGE_MESSAGE:
           console.log('IMAGE_MESSAGE')
           handleSimpleChatMessage(m);
-          if (m.sendingId) {
-            clearSending(m.sendingId)
-          }
           break;
         default:
           console.warn("Unknown message type received: ", m);
           console.warn("Attempting to process as a legacy chat message... this will be deprecated soon.");
           receiveMessagesLegacy(m);
-          if (m.sendingId) {
-            clearSending(m.sendingId)
-          }
       }
     } catch (e) {
       console.error(e)
     }
   }
 
-  const clearSending = (sendingId) => {
-    let msgs = JSON.parse(JSON.stringify(messages))
-    console.log('Before CLearing', JSON.stringify(msgs))
-    const _messages = [];
-    for (let i in msgs) {
-      console.log('checking', msgs[i]._id, sendingId)
-      if (msgs[i]._id !== sendingId) {
-
-        _messages.push(messages[i])
-      } else {
-        console.log('clearing', sendingId)
-      }
-    }
-    console.log('After CLearing', JSON.stringify(_messages))
-    // setMessages(_messages)
-  }
-
   const handleSimpleChatMessage = (msg) => {
-    setMessages(_messages => [..._messages, msg])
+      setMessages(_messages => {
+        const _m = JSON.parse(JSON.stringify(_messages))
+        let _ = []
+        for(let i in _m) {
+          if(_m[i]._id !== msg.sendingId) {
+            _.push(_m[i])
+          }
+        }
+        return [..._, msg]
+      })
   }
 
   // For backaward compatibility with older versions of the chat app
@@ -445,9 +421,10 @@ const ChatRoom = observer((props) => {
             thumbnailHash: value.sbImage.thumbnailDetails.uniqueShardId,
             previewHash: value.sbImage.previewDetails.uniqueShardId,
           }
+          sbm.contents.sendingId = message._id
           sbm.contents.messageType = messageTypes.IMAGE_MESSAGE
           sbm.contents.fileMetadata = imageMetaData;
-          q.enqueue(sbm)
+          channel.sendMessage(sbm)
         })
       }
     }
@@ -474,7 +451,6 @@ const ChatRoom = observer((props) => {
   }
 
   const sendMessages = (giftedMessage) => {
-    console.log(giftedMessage)
     if (giftedMessage[0].text === "") {
       if (files) {
         sendFiles(giftedMessage)

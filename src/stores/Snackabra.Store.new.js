@@ -415,7 +415,7 @@ class ChannelStore {
   getOldMessages = (length, messageCallback) => {
     return new Promise((resolve, reject) => {
       try {
-        this._socket.api.getOldMessages(length, true).then((r_messages) => {
+        this._socket.api.getOldMessages(length).then((r_messages) => {
           console.log("==== got these old messages:")
           this.messages = r_messages
           for (let x in r_messages) {
