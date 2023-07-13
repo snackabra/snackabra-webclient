@@ -233,7 +233,7 @@ const ChatRoom = observer((props) => {
         const msg = _r.dequeue()
         msg._id = msg._id + Date.now()
         sending[msg._id] = msg._id
-        setMessages([...messages, msg])
+        setMessages(_messages => [..._messages, msg])
         _r.processing--
       }
     }, 25)
