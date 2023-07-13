@@ -244,10 +244,11 @@ const ChatRoom = observer((props) => {
       await channel.connect(receiveMessages)
       if (username) sbContext.createContact(username, channel.key)
       setUser(sbContext.getContact(channel.key))
-      channel.getOldMessages(0)
-      if (channel.motd !== '') {
-        sendSystemInfo('MOTD: ' + channel.motd)
-      }
+      channel.getOldMessages(0).then(() => {
+        if (channel.motd !== '') {
+          sendSystemInfo('MOTD: ' + channel.motd)
+        }
+      })
 
     } catch (e) {
       notify('Error connecting to channel', 'error')
@@ -456,7 +457,7 @@ const ChatRoom = observer((props) => {
       giftedMessage[0]._id = 'sending_' + giftedMessage[0]._id;
       const msg_id = giftedMessage[0]._id;
       giftedMessage[0].user = user
-      setMessages([...messages, giftedMessage[0]])
+      setMessages(_messages => [..._messages, giftedMessage[0]])
       let sbm = channel.newMessage(giftedMessage[0].text)
       sbm.contents.sendingId = msg_id;
       sbm.contents.messageType = messageTypes.SIMPLE_CHAT_MESSAGE;
@@ -475,8 +476,7 @@ const ChatRoom = observer((props) => {
       info: true
     }
 
-    setMessages([...messages, systemMessage])
-
+    setMessages(_messages => [..._messages, systemMessage])
     if (callback) {
       callback(systemMessage)
     }
@@ -484,7 +484,7 @@ const ChatRoom = observer((props) => {
   }
 
   const sendSystemMessage = (message) => {
-    setMessages([...messages, {
+    setMessages(_messages => [..._messages, {
       _id: `${messages.length}_${Date.now()}`,
       user: { _id: 'system', name: 'System Message' },
       createdAt: new Date(),
