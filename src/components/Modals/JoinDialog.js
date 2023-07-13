@@ -4,18 +4,28 @@ import { Grid, TextField, Typography } from "@mui/material";
 import { StyledButton } from "../../styles/Buttons";
 import NotificationContext from "../../contexts/NotificationContext";
 import { useNavigate } from "react-router-dom";
+import { observer } from "mobx-react";
+import SnackabraContext from "../../contexts/SnackabraContext";
 
-const JoinDialog = (props) => {
+const JoinDialog = observer((props) => {
+  const sbContext = React.useContext(SnackabraContext);
   const Notifications = React.useContext(NotificationContext);
   const navigate = useNavigate();
-
   const [open, setOpen] = React.useState(props.open);
-  const [roomId, setRoomId] = React.useState("");
+  const [roomId, setRoomId] = React.useState(props.joinRoomId);
   const [error, setErrored] = React.useState(false);
+  const [roomName, setRoomName] = React.useState(`Room ${Object.keys(sbContext.channels).length + 1}`);
+  const [userName, setUserName] = React.useState('');
 
   React.useEffect(() => {
     setOpen(props.open)
   }, [props.open])
+
+  React.useEffect(() => {
+    if (props.joinRoomId && props.joinRoomId !== roomId) {
+      setRoomId(props.joinRoomId)
+    }
+  }, [props.joinRoomId, roomId])
 
   const updateRoomId = (e) => {
     console.log(e.target.value)
@@ -29,6 +39,16 @@ const JoinDialog = (props) => {
     setErrored(true)
   }
 
+  const join = () => {
+    sbContext.join(roomId, userName).then((channel) => {
+      sbContext.channels[channel._id].alias = roomName
+      const user = userName.length > 0 ? userName : 'Unamed'
+      sbContext.createContact(user, channel.key)
+      navigate("/" + roomId);
+      setRoomId("");
+      props.onClose();
+    })
+  }
 
   const connect = () => {
 
@@ -36,9 +56,7 @@ const JoinDialog = (props) => {
       const uriParts = roomId.split('/')
       const pathname = uriParts[uriParts.length - 1]
       if (pathname.length === 64) {
-        navigate("/" + pathname);
-        setRoomId("");
-        props.onClose()
+        join()
       } else {
         errorNotify('The room id provided is not the correct format.')
       }
@@ -46,9 +64,7 @@ const JoinDialog = (props) => {
     } else {
       console.log(window.location.origin + "/" + roomId)
       if (roomId.length === 64) {
-        navigate("/" + roomId);
-        setRoomId("");
-        props.onClose()
+        join()
       } else {
         errorNotify('The room id provided is not the correct format.')
       }
@@ -67,16 +83,28 @@ const JoinDialog = (props) => {
       <Grid container
         direction="row"
         justifyContent="flex-start"
-        alignItems="flex-start">
-        <Grid item xs={12}>
-          <Typography variant={'body1'}>
-            Enter the room ID or URL you would like to connect to.
-          </Typography>
+        alignItems="flex-start"
+        style={{ width: '100%' }}>
+        <Grid item xs={12} >
+          {props.joinRoomId ? (
+
+            <Typography variant={'body1'}>
+              Welcome! If this is the first time you've been to this room, enter
+              your username (optional) for this room and press 'Ok' and we we will generate fresh cryptographic keys that are
+              unique to you and to this room.
+            </Typography>
+          ) : (
+            <Typography variant={'body1'}>
+              Enter the room ID or URL you would like to connect to.
+            </Typography>)
+          }
+
         </Grid>
         <Grid item xs={12} sx={{ pb: 2, pt: 2 }}>
           <TextField
             id="sb-room-id"
             error={error}
+            label={'Room ID'}
             placeholder="Room ID or URL"
             fullWidth
             onChange={updateRoomId}
@@ -88,6 +116,44 @@ const JoinDialog = (props) => {
             }}
           />
         </Grid>
+
+        <Grid item xs={12} sx={{ pb: 2, pt: 2 }}>
+          <TextField
+            id="sb-room-user-name"
+            label={'Room Name (optional)'}
+            error={error}
+            placeholder={'Room Name (optional)'}
+            fullWidth
+            onChange={(e) => {
+              setRoomName(e.target.value)
+            }}
+            value={roomName}
+            onKeyUp={(e) => {
+              if (e.keyCode === 13) {
+                connect()
+              }
+            }}
+          />
+        </Grid>
+        <Grid item xs={12} sx={{ pb: 2, pt: 2 }}>
+          <TextField
+            id="sb-room-user-name"
+            label={'Username (optional)'}
+            error={error}
+            placeholder="Username (optional)"
+            fullWidth
+            onChange={(e) => {
+              setUserName(e.target.value)
+            }}
+            value={userName}
+            onKeyUp={(e) => {
+              if (e.keyCode === 13) {
+                connect()
+              }
+            }}
+          />
+        </Grid>
+
       </Grid>
       <Grid container
         direction="row"
@@ -99,6 +165,6 @@ const JoinDialog = (props) => {
     </ResponsiveDialog>
   )
 
-}
+})
 
 export default JoinDialog

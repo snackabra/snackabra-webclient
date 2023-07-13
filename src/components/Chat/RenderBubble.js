@@ -7,7 +7,7 @@ const RenderBubble = (props) => {
   const { currentMessage, previousMessage } = props
   const [isVerifiedGuest, setVerifiedGuest] = React.useState(false)
   const [newProps, setNewProps] = React.useState({})
-  const isAdmin = props.socket.admin
+  const isAdmin = props.socket.admin || props.socket.owner
 
   React.useEffect(() => {
     const init = async () => {

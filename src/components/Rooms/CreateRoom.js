@@ -96,7 +96,7 @@ const CreateRoom = observer((props) => {
             type={!isFirefox ? 'text' : showPassword ? 'text' : 'password'}
             value={secret}
             error={errored}
-            inputProps={{ autoFocus: false, autoComplete: "off", className: showPassword ? 'text-field' : 'password-field' }}
+            inputProps={{ autoFocus: true, autoComplete: "off", className: showPassword ? 'text-field' : 'password-field' }}
             onKeyUp={(e) => {
               if (e.keyCode === 13) {
                 createRoom()
@@ -124,10 +124,10 @@ const CreateRoom = observer((props) => {
         <FormControl fullWidth variant="outlined">
           <OutlinedInput
             placeholder={'Room Name (optional)'}
-            id="sb-wc-server-secret"
-            type={!isFirefox ? 'text' : showPassword ? 'text' : 'password'}
+            id="sb-wc-server-name"
+            type={'text'}
             value={roomName}
-            inputProps={{ autoFocus: true, autoComplete: "on", className: 'text-field' }}
+            inputProps={{ autoFocus: false, autoComplete: "on", className: 'text-field' }}
             onKeyUp={(e) => {
               if (e.keyCode === 13) {
                 createRoom()

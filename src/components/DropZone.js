@@ -1,10 +1,9 @@
-import React, { useCallback } from 'react'
+import React from 'react'
 import { SBImage } from "../utils/ImageProcessorSBFileHelper";
 import Dropzone from 'react-dropzone'
 import { Grid } from "@mui/material";
 import { isMobile } from 'react-device-detect';
-import { cloneMap } from '../utils/misc';
-import { on } from 'events';
+
 
 
 const baseStyle = {
@@ -74,7 +73,6 @@ const DropZone = (props) => {
   }
 
   React.useEffect(() => {
-    console.log(openPreview)
     setPreviewOpen(openPreview)
   }, [openPreview])
 

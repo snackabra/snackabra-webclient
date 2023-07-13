@@ -35,6 +35,8 @@ import { useTheme } from '@mui/material/styles';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import SwipeableViews from 'react-swipeable-views';
+import FirstVisitDialog from "../components/Modals/FirstVisitDialog";
+import { set } from 'mobx';
 
 
 function TabPanel(props) {
@@ -76,13 +78,18 @@ const ResponsiveDrawer = observer((props) => {
   const [editingRoomId, setEditingRoomId] = React.useState(false);
   const [updatedName, setUpdatedName] = React.useState(false);
   const [swipeInhibiter, inhibitSwipe] = React.useState(0);
+  const [joinRoomId, setJoinRoomId] = React.useState(false);
 
   React.useEffect(() => {
     if (room_id && room_id !== roomId) {
       setRoomId(room_id)
+      if (!sbContext.channels[room_id]) {
+        setJoinRoomId(room_id)
+        setOpenJoinDialog(true)
+      }
     }
 
-  }, [roomId, room_id])
+  }, [roomId, room_id, sbContext.channels])
 
   React.useEffect(() => {
     const listenForMessages = (event) => {
@@ -208,18 +215,20 @@ const ResponsiveDrawer = observer((props) => {
             <ListItemText primary={'Data Management'} />
           </ListItemButton>
         </ListItem>
+        {sbContext.channels[roomId]?.owner &&
+          <ListItem disablePadding>
+            <ListItemButton onClick={() => {
+              setOpenAdminDialog(true)
+              NavAppBarContext.setMenuOpen(false)
+            }}>
+              <ListItemIcon>
+                <AdminPanelSettingsIcon />
+              </ListItemIcon>
+              <ListItemText primary={'Administration'} />
+            </ListItemButton>
+          </ListItem>
+        }
 
-        <ListItem sx={{ display: !sbContext.admin ? 'none' : 'inherit' }} disablePadding>
-          <ListItemButton onClick={() => {
-            setOpenAdminDialog(true)
-            NavAppBarContext.setMenuOpen(false)
-          }}>
-            <ListItemIcon>
-              <AdminPanelSettingsIcon />
-            </ListItemIcon>
-            <ListItemText primary={'Administration'} />
-          </ListItemButton>
-        </ListItem>
 
         <Divider />
         <Tabs
@@ -233,7 +242,6 @@ const ResponsiveDrawer = observer((props) => {
         >
           {Object.keys(sbContext.channels).map((_d, index) => {
             const room = _d
-            const roomName = sbContext.channels[_d].alias || 'Unnamed'
             const bgColor = room === roomId ? '#ff5c42' : 'inherit';
             const color = room === roomId ? '#fff' : 'inherit';
             return (
@@ -247,7 +255,7 @@ const ResponsiveDrawer = observer((props) => {
                     {editingRoomId !== room ?
 
 
-                      <Typography sx={{ color: color }} className='sb-tab-link' noWrap>{roomName}</Typography>
+                      <Typography sx={{ color: color }} className='sb-tab-link' noWrap>{sbContext.channels[_d].alias || 'Unamed'}</Typography>
                       :
                       <TextField
                         id={editingRoomId}
@@ -298,7 +306,7 @@ const ResponsiveDrawer = observer((props) => {
 
   const container = window !== undefined ? () => window().document.body : undefined;
   const { height } = Dimensions.get('window')
-
+  console.log(sbContext.channels[roomId]?.owner)
   return (
     <SafeAreaView sx={{ display: 'flex', p: 0 }}>
       <CssBaseline />
@@ -311,7 +319,7 @@ const ResponsiveDrawer = observer((props) => {
       <CreateRoomDialog open={openCreateDialog} onClose={() => {
         setOpenCreateDialog(false)
       }} />
-      <JoinDialog open={openJoinDialog} onClose={() => {
+      <JoinDialog open={openJoinDialog} joinRoomId={joinRoomId} onClose={() => {
         setOpenJoinDialog(false)
       }} />
       <Box
@@ -385,6 +393,7 @@ const ResponsiveDrawer = observer((props) => {
           disabled={!!swipeInhibiter}
         >
           {Object.keys(sbContext.channels).map((item, index) => {
+            if (!sbContext.channels[item].key) return (<div key={`${item}-tab-panel`}></div>)
             return (
               <TabPanel
                 key={`${item}-tab-panel`}

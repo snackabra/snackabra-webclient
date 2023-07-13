@@ -15,10 +15,10 @@ function isNumeric(v) {
 }
 
 const AdminDialog = observer((props) => {
-  const sbContext = React.useContext(SnackabraContext);
+  const channel = props.channel;
   const notify = React.useContext(NotificationContext);
-  const [roomCapacity, setRoomCapacity] = useState(sbContext.capacity);
-  const [motd, setMOTD] = useState(sbContext.motd);
+  const [roomCapacity, setRoomCapacity] = useState(channel.capacity);
+  const [motd, setMOTD] = useState(channel.motd);
   const [open, setOpen] = useState(props.open);
   const [openLockDialog, setOpenLockDialog] = useState(false);
 
@@ -27,7 +27,7 @@ const AdminDialog = observer((props) => {
   }, [props.open])
 
   const lockRoom = () => {
-    sbContext.lockRoom();
+    channel.lockRoom();
     props.onClose();
   }
 
@@ -37,7 +37,7 @@ const AdminDialog = observer((props) => {
 
   const setCapacity = () => {
     if (isNumeric(roomCapacity)) {
-      sbContext.setRoomCapacity(Number(roomCapacity)).then(() => {
+      channel.setRoomCapacity(Number(roomCapacity)).then(() => {
         props.onClose();
       })
     } else {
@@ -81,7 +81,7 @@ const AdminDialog = observer((props) => {
           sx={{ pb: 1, pt: 1 }}
         />
         <StyledButton variant={"contained"} onClick={() => {
-          sbContext.setMOTD(motd)
+          channel.motd = motd
           if (motd !== '') {
             sendMotdMessage()
           }

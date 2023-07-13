@@ -62,7 +62,7 @@ const ChatRoom = observer((props) => {
   const [user, setUser] = React.useState({});
   const [height, setHeight] = React.useState(0);
   const [visibility, setVisibility] = React.useState('visible');
-  const [openAdminDialog, setOpenAdminDialog] = React.useState(false);
+  const [openAdminDialog, setOpenAdminDialog] = React.useState(props.openAdminDialog);
   const [openWhisper, setOpenWhisper] = React.useState(false);
   const [openPreview, setOpenPreview] = React.useState(false);
   const [openChangeName, setOpenChangeName] = React.useState(false);
@@ -141,11 +141,17 @@ const ChatRoom = observer((props) => {
   }, []);
 
   React.useEffect(() => {
-    if (channel) {
+    if (channel && channel.messages.length !== messages.length) {
       console.log('channel changed', messages)
       channel.messages = messages
     }
   }, [channel, messages]);
+
+  React.useEffect(() => {
+    if(props.openAdminDialog !== openAdminDialog) {
+      setOpenAdminDialog(props.openAdminDialog)
+    }
+  }, [openAdminDialog, props.openAdminDialog])
 
 
 
@@ -235,28 +241,18 @@ const ChatRoom = observer((props) => {
 
   const connect = async (username) => {
     try {
-      // console.log('connecting')
-      // console.log(channel)
       await channel.connect(receiveMessages)
       if (username) sbContext.createContact(username, channel.key)
       setUser(sbContext.getContact(channel.key))
-      getOldMessages()
+      channel.getOldMessages(0)
       if (channel.motd !== '') {
         sendSystemInfo('MOTD: ' + props.channel.motd)
       }
 
     } catch (e) {
+      notify('Error connecting to channel', 'error')
       console.error(e)
     }
-  }
-
-  const getOldMessages = () => {
-    channel.getOldMessages(channel.messages.length).then((r) => {
-      for (let i in r) {
-        const m = r[i]
-        receiveMessages(m)
-      }
-    })
   }
 
   const receiveMessages = (m) => {
@@ -265,7 +261,8 @@ const ChatRoom = observer((props) => {
       console.warn("Received message: ", m)
       const userId = `${m?.sender_pubKey?.x} ${m?.sender_pubKey?.y}`;
       m.user._id = userId;
-      m.user.name = sbContext.getContact(userId) !== undefined ? sbContext.contacts[userId] : m.user.name;
+      console.log(JSON.stringify(sbContext.getContact(userId)))
+      m.user.name = sbContext.getContact(userId).name;
       m.sender_username = m.user.name;
 
       switch (m.messageType) {
@@ -535,7 +532,7 @@ const ChatRoom = observer((props) => {
       paddingTop: 48
     }}>
       <DropZone notify={notify} dzRef={setDropzoneRef} showFiles={loadFiles} showLoading={(bool) => { setLoading(bool) }} openPreview={openPreview} roomId={roomId}>
-        <AdminDialog open={openAdminDialog} sendSystemInfo={sendSystemInfo} onClose={() => {
+        <AdminDialog open={openAdminDialog} sendSystemInfo={sendSystemInfo} channel={channel} onClose={() => {
           setOpenAdminDialog(false)
           props.onCloseAdminDialog()
         }} />
@@ -565,10 +562,10 @@ const ChatRoom = observer((props) => {
           // setState({ openChangeName: false })
         }} />
         {/* <AttachMenu open={attachMenu} handleClose={handleClose} /> */}
-        <FirstVisitDialog open={openFirstVisit} sbContext={sbContext} messageCallback={receiveMessages} onClose={(username) => {
+        <FirstVisitDialog open={openFirstVisit} onClose={(username) => {
           setOpenFirstVisit(false)
           connect(username)
-        }} roomId={roomId} />
+        }} />
         <GiftedChat
           id={`sb_chat_${roomId}`}
           isKeyboardInternallyHandled={false}
@@ -583,9 +580,6 @@ const ChatRoom = observer((props) => {
           user={user}
           inverted={false}
           alwaysShowSend={true}
-          loadEarlier={sbContext.moreMessages}
-          isLoadingEarlier={sbContext.loadingMore}
-          onLoadEarlier={getOldMessages}
           renderMessage={RenderMessage}
           renderActions={(props) => {
             return <RenderAttachmentIcon
