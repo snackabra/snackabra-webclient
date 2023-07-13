@@ -15,12 +15,22 @@ function isNumeric(v) {
 }
 
 const AdminDialog = observer((props) => {
-  const channel = props.channel;
+  const sbContext = React.useContext(SnackabraContext);
   const notify = React.useContext(NotificationContext);
+  const channel = sbContext.channels[props.roomId];
   const [roomCapacity, setRoomCapacity] = useState(channel.capacity);
   const [motd, setMOTD] = useState(channel.motd);
   const [open, setOpen] = useState(props.open);
   const [openLockDialog, setOpenLockDialog] = useState(false);
+
+  React.useEffect(() => {
+    if (motd === null && props.motd) {
+      setMOTD(props.motd)
+    }
+    if (roomCapacity === null && props.capacity) {
+      setRoomCapacity(props.capacity)
+    }
+  }, [motd, roomCapacity, props])
 
   React.useEffect(() => {
     setOpen(props.open)
@@ -37,9 +47,8 @@ const AdminDialog = observer((props) => {
 
   const setCapacity = () => {
     if (isNumeric(roomCapacity)) {
-      channel.setRoomCapacity(Number(roomCapacity)).then(() => {
-        props.onClose();
-      })
+      channel.capacity = Number(roomCapacity)
+      props.onClose();
     } else {
       notify.setMessage('Invalid room capacity');
       notify.setSeverity('error');

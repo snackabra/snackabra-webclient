@@ -272,6 +272,8 @@ class ChannelStore {
   _messages = new Map();
   _ready = false;
   _owner = false;
+  _capacity = 0;
+  _motd = '';
   _messageCallback;
   readyResolver;
   ChannelStoreReadyFlag = new Promise((resolve) => {
@@ -291,11 +293,13 @@ class ChannelStore {
       try {
         if (this.id) {
           const save = {
-            id: this._id,
-            alias: this._alias,
-            messages: this._messages,
-            owner: this._owner,
-            key: this._key,
+            id: toJS(this._id),
+            alias: toJS(this._alias),
+            messages: toJS(this._messages),
+            owner: toJS(this._owner),
+            key: toJS(this._key),
+            motd: toJS(this._motd),
+            capacity: toJS(this._capacity),
             lastSeenMessage: toJS(this.lastSeenMessage)
           }
           console.warn('saving channel state', save)
@@ -317,6 +321,8 @@ class ChannelStore {
             this.messages = this.mergeMessages(this.messages, data.messages);
             this.key = data.key;
             this.lastSeenMessage = data.lastSeenMessage;
+            this.motd = data.motd;
+            this.capacity = data.capacity;
             resolve(data)
           } else {
             resolve(false)
@@ -325,13 +331,14 @@ class ChannelStore {
       })
     }
 
-    makeObservable(this, {
+    makeAutoObservable(this, {
       id: computed,
       key: computed,
       alias: computed,
       socket: computed,
       capacity: computed,
       motd: computed,
+      owner: computed,
       status: computed,
       messages: computed,
       getOldMessages: action,
@@ -366,7 +373,7 @@ class ChannelStore {
   }
 
   get key() {
-    return this._key;
+    return toJS(this._key);
   }
 
   set key(key) {
@@ -419,10 +426,50 @@ class ChannelStore {
     this[save]();
   }
 
+  get capacity() {
+    return this._capacity;
+  }
+
+  set capacity(capacity) {
+    this._capacity = capacity;
+    if(this.owner && this._socket){
+      this._socket.api.updateCapacity(capacity);
+    }
+    this[save]();
+  };
+
+  get motd() {
+    return this._motd;
+  }
+
+  set motd(motd) {
+    if(this.owner && this._socket){
+      this._socket.api.setMOTD(motd);
+    }
+    this._motd = motd;
+    this[save]();
+  }
+
+  get status() {
+    return this._status;
+  }
+
+  set status(status) {
+    this._status = status;
+  }
+
+  get owner() {
+    return this._owner
+  }
+
+  set owner(owner) {
+    this._owner = owner
+  }
+
   getOldMessages = (length, messageCallback) => {
     return new Promise((resolve, reject) => {
       try {
-        this._socket.api.getOldMessages(0).then((r_messages) => {
+        this._socket.api.getOldMessages(length).then((r_messages) => {
           console.log("==== got these old messages:")
           this.messages = r_messages
           for (let x in r_messages) {
@@ -456,42 +503,6 @@ class ChannelStore {
       throw new Error("sendMessage expects an SBMessage")
     }
   }
-
-  get capacity() {
-    if (this._socket) {
-      return this._socket.api.getCapacity();
-    }
-    return 0
-  }
-  set capacity(capacity) {
-    this._socket.api.updateCapacity(capacity);
-  };
-  get motd() {
-    if (this._socket) {
-      return this._socket.motd;
-    }
-    return '';
-  }
-  set motd(motd) {
-    this._socket.api.setMOTD(motd);
-  }
-
-  get status() {
-    return this._status;
-  }
-
-  set status(status) {
-    this._status = status;
-  }
-
-  get owner() {
-    return this._owner
-  }
-
-  set owner(owner) {
-    this._owner = owner
-  }
-
 
   // This isnt in the the jslib atm
   // PSM: it is now but needs testing
@@ -557,10 +568,12 @@ class ChannelStore {
       console.log("==== connected to channel:"); console.log(c);
       if (c) {
         await c.channelSocketReady;
-        console.log("==== connected to channel:")
         this.key = c.exportable_privateKey
         this.socket = c;
         this.owner = c.owner
+        const r = await c.api.getCapacity();
+        this.capacity = r.capacity;
+        this.motd = c.motd;
         this.readyResolver();
         await this[save]();
         return this

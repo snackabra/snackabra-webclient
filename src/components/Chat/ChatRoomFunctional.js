@@ -148,7 +148,7 @@ const ChatRoom = observer((props) => {
   }, [channel, messages]);
 
   React.useEffect(() => {
-    if(props.openAdminDialog !== openAdminDialog) {
+    if (props.openAdminDialog !== openAdminDialog) {
       setOpenAdminDialog(props.openAdminDialog)
     }
   }, [openAdminDialog, props.openAdminDialog])
@@ -246,7 +246,7 @@ const ChatRoom = observer((props) => {
       setUser(sbContext.getContact(channel.key))
       channel.getOldMessages(0)
       if (channel.motd !== '') {
-        sendSystemInfo('MOTD: ' + props.channel.motd)
+        sendSystemInfo('MOTD: ' + channel.motd)
       }
 
     } catch (e) {
@@ -303,16 +303,16 @@ const ChatRoom = observer((props) => {
   }
 
   const handleSimpleChatMessage = (msg) => {
-      setMessages(_messages => {
-        const _m = JSON.parse(JSON.stringify(_messages))
-        let _ = []
-        for(let i in _m) {
-          if(_m[i]._id !== msg.sendingId) {
-            _.push(_m[i])
-          }
+    setMessages(_messages => {
+      const _m = JSON.parse(JSON.stringify(_messages))
+      let _ = []
+      for (let i in _m) {
+        if (_m[i]._id !== msg.sendingId) {
+          _.push(_m[i])
         }
-        return [..._, msg]
-      })
+      }
+      return [..._, msg]
+    })
   }
 
   // For backaward compatibility with older versions of the chat app
@@ -532,10 +532,16 @@ const ChatRoom = observer((props) => {
       paddingTop: 48
     }}>
       <DropZone notify={notify} dzRef={setDropzoneRef} showFiles={loadFiles} showLoading={(bool) => { setLoading(bool) }} openPreview={openPreview} roomId={roomId}>
-        <AdminDialog open={openAdminDialog} sendSystemInfo={sendSystemInfo} channel={channel} onClose={() => {
-          setOpenAdminDialog(false)
-          props.onCloseAdminDialog()
-        }} />
+        <AdminDialog
+          roomId={roomId}
+          motd={channel.motd}
+          capacity={channel.capacity}
+          open={openAdminDialog}
+          sendSystemInfo={sendSystemInfo}
+          onClose={() => {
+            setOpenAdminDialog(false)
+            props.onCloseAdminDialog()
+          }} />
         <WhisperUserDialog replyTo={replyTo} open={openWhisper} onClose={() => {
           setOpenWhisper(false)
         }} />

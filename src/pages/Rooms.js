@@ -35,8 +35,6 @@ import { useTheme } from '@mui/material/styles';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import SwipeableViews from 'react-swipeable-views';
-import FirstVisitDialog from "../components/Modals/FirstVisitDialog";
-import { set } from 'mobx';
 
 
 function TabPanel(props) {
@@ -253,7 +251,6 @@ const ResponsiveDrawer = observer((props) => {
                 >
                   <Grid xs={7} item>
                     {editingRoomId !== room ?
-
 
                       <Typography sx={{ color: color }} className='sb-tab-link' noWrap>{sbContext.channels[_d].alias || 'Unamed'}</Typography>
                       :
