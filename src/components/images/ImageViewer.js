@@ -3,7 +3,7 @@ import NotificationContext from "../../contexts/NotificationContext";
 import { Image } from 'mui-image'
 import { createUseGesture, dragAction, pinchAction } from '@use-gesture/react'
 import { a, useSpring, config } from '@react-spring/web'
-let SB = require(process.env.NODE_ENV === 'development' ? 'snackabra/dist/snackabra' : 'snackabra')
+let SB = require('snackabra')
 
 const useGesture = createUseGesture([dragAction, pinchAction])
 

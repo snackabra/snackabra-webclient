@@ -5,7 +5,7 @@ import { StyledButton } from "../../styles/Buttons";
 import { useState, useEffect } from "react";
 import { observer } from "mobx-react"
 import SnackabraContext from "../../contexts/SnackabraContext";
-let SB = require(process.env.NODE_ENV === 'development' ? 'snackabra/dist/snackabra' : 'snackabra')
+let SB = require('snackabra')
 
 const WhisperUserDialog = observer((props) => {
   const sbContext = React.useContext(SnackabraContext);

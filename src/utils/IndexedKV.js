@@ -1,22 +1,3 @@
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-const Ready = (...args) => {
-    let target = args[0];
-    let descriptor = args[2];
-    const originalMethod = descriptor.value;
-    descriptor.value = async function () {
-        const obj = target.constructor.name;
-        const prop = `${obj}ReadyFlag`;
-        if (prop in this) {
-            await this[prop];
-        }
-        return originalMethod.apply(this, arguments);
-    };
-};
 /**
 * @description
 * IndexedKV is a wrapper around IndexedDB that provides a simple interface for
@@ -84,7 +65,8 @@ class IndexedKV {
      * @returns {Promise<Array<IDBRequest["result"]>>}
      */
     openCursor(regex, callback) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
+            await this.IndexedKVReadyFlag
             if (this.db) {
                 const transaction = this.db.transaction([this.options.table], "readonly");
                 const objectStore = transaction.objectStore(this.options.table);
@@ -119,7 +101,8 @@ class IndexedKV {
      * @returns {Promise<IDBValidKey>}
      */
     setItem(key, value) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
+            await this.IndexedKVReadyFlag
             if (this.db) {
                 const objectStore = this.db.transaction([this.options.table], "readwrite").objectStore(this.options.table);
                 const request = objectStore.get(key);
@@ -166,7 +149,8 @@ class IndexedKV {
      * @returns {Promise<IDBValidKey | IDBRequest["result"]>}
      */
     add(key, value) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
+            await this.IndexedKVReadyFlag
             if (this.db) {
                 const objectStore = this.db.transaction([this.options.table], "readwrite").objectStore(this.options.table);
                 const request = objectStore.get(key);
@@ -202,7 +186,8 @@ class IndexedKV {
      * @returns
      */
     getItem(key) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
+            await this.IndexedKVReadyFlag
             if (this.db) {
                 const transaction = this.db.transaction([this.options.table]);
                 const objectStore = transaction.objectStore(this.options.table);
@@ -232,7 +217,8 @@ class IndexedKV {
      * @returns {Promise<Array<any> | null>}
      */
     getAll() {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
+            await this.IndexedKVReadyFlag
             if (this.db) {
                 const transaction = this.db.transaction([this.options.table]);
                 const objectStore = transaction.objectStore(this.options.table);
@@ -263,7 +249,8 @@ class IndexedKV {
      * @returns {Promise<boolean>}
      */
     removeItem(key) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
+            await this.IndexedKVReadyFlag
             if (this.db) {
                 const request = this.db.transaction([this.options.table], "readwrite")
                     .objectStore(this.options.table)
@@ -281,23 +268,23 @@ class IndexedKV {
         });
     }
 }
-__decorate([
-    Ready
-], IndexedKV.prototype, "openCursor", null);
-__decorate([
-    Ready
-], IndexedKV.prototype, "setItem", null);
-__decorate([
-    Ready
-], IndexedKV.prototype, "add", null);
-__decorate([
-    Ready
-], IndexedKV.prototype, "getItem", null);
-__decorate([
-    Ready
-], IndexedKV.prototype, "getAll", null);
-__decorate([
-    Ready
-], IndexedKV.prototype, "removeItem", null);
+// __decorate([
+//     Ready
+// ], IndexedKV.prototype, "openCursor", null);
+// __decorate([
+//     Ready
+// ], IndexedKV.prototype, "setItem", null);
+// __decorate([
+//     Ready
+// ], IndexedKV.prototype, "add", null);
+// __decorate([
+//     Ready
+// ], IndexedKV.prototype, "getItem", null);
+// __decorate([
+//     Ready
+// ], IndexedKV.prototype, "getAll", null);
+// __decorate([
+//     Ready
+// ], IndexedKV.prototype, "removeItem", null);
 export default IndexedKV;
 //# sourceMappingURL=IndexedKV.js.map

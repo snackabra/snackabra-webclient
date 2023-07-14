@@ -4,7 +4,7 @@ import InputIcon from '@mui/icons-material/Download';
 import CheckIcon from '@mui/icons-material/Check';
 import { isSameUser } from "react-native-gifted-chat";
 import { downloadFile } from '../../utils/misc'
-let SB = require(process.env.NODE_ENV === 'development' ? 'snackabra/dist/snackabra' : 'snackabra')
+let SB = require('snackabra')
 
 const styles = {
   left: {

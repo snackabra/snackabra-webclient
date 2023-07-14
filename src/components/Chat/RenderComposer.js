@@ -6,7 +6,7 @@ import { observer } from "mobx-react"
 import { isDataURL } from '../../utils/misc';
 
 // import { base64ToArrayBuffer } from "snackabra"
-let SB = require(process.env.NODE_ENV === 'development' ? 'snackabra/dist/snackabra' : 'snackabra')
+let SB = require('snackabra')
 
 const RenderComposer = observer((props) => {
   const sendElementId = `send-button-${props.roomId}`

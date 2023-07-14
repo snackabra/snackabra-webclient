@@ -34,7 +34,7 @@ const FileHelper = SBFileHelper;
 
 const q = new Queue()
 const _r = new Queue()
-let SB = require(process.env.NODE_ENV === 'development' ? 'snackabra/dist/snackabra' : 'snackabra')
+let SB = require('snackabra')
 console.log("SB Version: ", SB.version)
 
 let messageTypes = {

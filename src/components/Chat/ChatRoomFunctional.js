@@ -38,7 +38,7 @@ const ChatRoom = observer((props) => {
 
   const q = new Queue()
   const _r = new Queue()
-  let SB = require(process.env.NODE_ENV === 'development' ? 'snackabra/dist/snackabra' : 'snackabra')
+  let SB = require('snackabra')
 
   let messageTypes = {
     SIMPLE_CHAT_MESSAGE: 'd341ca8645f94dc0adb1772865d973fc',
