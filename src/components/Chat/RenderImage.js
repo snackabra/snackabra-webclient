@@ -4,6 +4,7 @@ import InputIcon from '@mui/icons-material/Download';
 import CheckIcon from '@mui/icons-material/Check';
 import { isSameUser } from "react-native-gifted-chat";
 import { downloadFile } from '../../utils/misc'
+let SB = require(process.env.NODE_ENV === 'development' ? 'snackabra/dist/snackabra' : 'snackabra')
 
 const styles = {
   left: {
@@ -30,36 +31,33 @@ const RenderImage = (props) => {
     setIsDownloading(true)
     //  mtg: In scenarios where the preview and full size image are the same file because the full image is below 4MB
     const type = message.imageMetaData.imageId === message.imageMetaData.previewId ? 'p' : 'f'
-    props.sbContext.SB.storage.retrieveImage(
-      message.imageMetaData,
-      props.controlMessages,
-      message.imageMetaData.imageId,
-      message.imageMetaData.imageKey,
-      type).then((data) => {
-        if (data.hasOwnProperty('error')) {
+    // props.sbContext.SB.storage.retrieveImage(
+    //   message.imageMetaData,
+    //   props.controlMessages,
+    //   message.imageMetaData.imageId,
+    //   message.imageMetaData.imageKey,
+    //   type).then((data) => {
+    props.sbContext.SB.storage.fetchData(props.controlMessages[message.fileMetadata.fullImageHash]).then((data) => {
+      if (data.hasOwnProperty('error')) {
+        setTimeout(() => {
+          setIsDownloading(false)
+          setDownloaded(false)
+        }, 2000)
+        throw new Error(`Could not open image (${data.error})`)
+
+      } else {
+        try {
+          downloadFile( SB.arrayBufferToBase64(data, 'b64'), 'image.jpeg', type)
+          setDownloaded(true)
           setTimeout(() => {
             setIsDownloading(false)
             setDownloaded(false)
-          }, 2000)
-          throw new Error(`Could not open image (${data.error})`)
-
-        } else {
-          try {
-            var regex = new RegExp(/data:([\w/\-\.]+);(\w+),(.*)/, '');
-            var match = data['url'].match(regex);
-            const type = match[1]
-            const fileData = match[3]
-            downloadFile(fileData, 'image.jpeg', type)
-            setDownloaded(true)
-            setTimeout(() => {
-              setIsDownloading(false)
-              setDownloaded(false)
-            }, 10000)
-          } catch {
-            throw new Error("Error processing file download")
-          }
+          }, 10000)
+        } catch {
+          throw new Error("Error processing file download")
         }
-      })
+      }
+    })
   }
 
   const getStyle = () => {

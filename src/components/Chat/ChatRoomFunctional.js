@@ -54,10 +54,10 @@ const ChatRoom = observer((props) => {
   const sbContext = props.sbContext
   const channel = sbContext.channels[props.roomId];
   const sending = {}
-  const knownShards = new Map()
+  // const knownShards = new Map()
   let toUpload = []
   let uploaded = []
-
+  // FileHelper.knownShards = knownShards
   const [messages, setMessages] = React.useState([]);
   const [user, setUser] = React.useState({});
   const [height, setHeight] = React.useState(0);
@@ -81,7 +81,7 @@ const ChatRoom = observer((props) => {
   const [to, setTo] = React.useState(null);
   const [inputErrored, setInputErrored] = React.useState(false);
   const [typing, setTyping] = React.useState(false);
-  const [controlMessages, setControlMessages] = React.useState([]);
+  const [controlMessages, setControlMessages] = React.useState({});
 
   React.useEffect(() => {
     let resizeTimeout = null;
@@ -274,7 +274,10 @@ const ChatRoom = observer((props) => {
         case messageTypes.FILE_SHARD_METADATA:
           console.log('FILE_SHARD_METADATA')
           const obj = JSON.parse(m.contents)
-          setControlMessages([...controlMessages, m])
+          setControlMessages(_controlMessages => {
+            _controlMessages[obj.hash] = obj.handle
+            return _controlMessages
+          })
           // Tracks progress
           if (toUpload.length > 0) {
             if (toUpload.includes(obj.hash)) {
@@ -288,8 +291,8 @@ const ChatRoom = observer((props) => {
             toUpload = []
             uploaded = []
           }
-
-          knownShards.set(obj.hash, obj.handle)
+          console.log('FILE_SHARD_METADATA', obj.hash, obj.handle)
+          // FileHelper.knownShards.set(obj.hash, obj.handle)
           break;
         case messageTypes.IMAGE_MESSAGE:
           console.log('IMAGE_MESSAGE')
@@ -337,9 +340,12 @@ const ChatRoom = observer((props) => {
         msg.user._id = userId;
         msg.user.name = sbContext.getContact(msg.user._id) !== undefined ? sbContext.contacts[userId] : msg.user.name;
         msg.sender_username = msg.user.name;
-        setMessages([..._msgs, msg])
+        setMessages(_messages => [..._messages, msg])
       } else {
-        setControlMessages([...controlMessages, msg])
+        setControlMessages(_controlMessages => {
+          _controlMessages[msg.hash] = msg.handle
+          return _controlMessages
+        })
       }
     } else {
       console.warn("receiveMessages() called with empty message")
@@ -356,10 +362,11 @@ const ChatRoom = observer((props) => {
     props.inhibitSwipe(1)
     let _images = [];
     for (let x in messages) {
-      if (messages[x].image !== '') {
+      if (messages[x].hasOwnProperty('image') && messages[x].image.length > 0) {
         _images.push(messages[x])
       }
     }
+    console.log(`IMAGES `, _images)
     setImg(message)
     setOpenPreview(true)
     setImages(_images)

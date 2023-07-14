@@ -3,6 +3,7 @@ import NotificationContext from "../../contexts/NotificationContext";
 import { Image } from 'mui-image'
 import { createUseGesture, dragAction, pinchAction } from '@use-gesture/react'
 import { a, useSpring, config } from '@react-spring/web'
+let SB = require(process.env.NODE_ENV === 'development' ? 'snackabra/dist/snackabra' : 'snackabra')
 
 const useGesture = createUseGesture([dragAction, pinchAction])
 
@@ -22,14 +23,18 @@ export default function ImageViewer(props) {
     }))
 
     React.useEffect(() => {
+        console.log('loading image', image)
         setImage(image.image)
         if (image?.image) {
-            sbContext.SB.storage.retrieveImage(image.imageMetaData, controlMessages).then((data) => {
+            console.log('loading full size image', image)
+            console.log('controlMessages', controlMessages)
+            sbContext.SB.storage.fetchData(controlMessages[image.fileMetadata.previewHash]).then((data) => {
                 if (data.hasOwnProperty('error')) {
                     console.error(data['error'])
                     notify.warn('Could not load full size image')
                 } else {
-                    setImage(data['url'])
+                    console.log('loaded full size image', data)
+                    setImage('data:image/jpeg;base64,' + SB.arrayBufferToBase64(data, 'b64'))
                     setImageLoaded(true)
                 }
             }).catch((error) => {
