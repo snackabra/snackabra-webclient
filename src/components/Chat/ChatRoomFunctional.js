@@ -55,8 +55,8 @@ const ChatRoom = observer((props) => {
   const channel = sbContext.channels[props.roomId];
   const sending = {}
   const knownShards = new Map()
-  const toUpload = []
-  const uploaded = []
+  let toUpload = []
+  let uploaded = []
 
   const [messages, setMessages] = React.useState([]);
   const [user, setUser] = React.useState({});
@@ -285,6 +285,8 @@ const ChatRoom = observer((props) => {
           }
           if (uploaded.length === toUpload.length) {
             setUploading(false)
+            toUpload = []
+            uploaded = []
           }
 
           knownShards.set(obj.hash, obj.handle)
@@ -427,7 +429,7 @@ const ChatRoom = observer((props) => {
       }
     }
 
-    FileHelper.finalFileList.forEach((value, key) => {
+    for (const [key, value] of FileHelper.finalFileList.entries()) {
       const fileHash = value.uniqueShardId;
 
       console.log(`---- uploading file ${key} with hash ${fileHash} ...`)
@@ -441,11 +443,24 @@ const ChatRoom = observer((props) => {
           const sbm = channel.newMessage(JSON.stringify(obj))
           sbm.contents.messageType = messageTypes.FILE_SHARD_METADATA;
           channel.sendMessage(sbm)
+          // removeFileFromSBFileHelper(fileHash)
         })
       }
-    })
+    }
 
+  }
 
+  const removeFileFromSBFileHelper = (uniqueShardId) => {
+    for (const [key, value] of FileHelper.finalFileList.entries()) {
+      if (value.uniqueShardId === uniqueShardId) {
+        FileHelper.globalBufferMap.delete(value.sbImage.previewDetails.uniqueShardId)
+        FileHelper.globalBufferMap.delete(value.sbImage.thumbnailDetails.uniqueShardId)
+        FileHelper.globalBufferMap.delete(value.uniqueShardId)
+        FileHelper.finalFileList.delete(value.sbImage.previewDetails.fullName)
+        FileHelper.finalFileList.delete(value.sbImage.thumbnailDetails.fullName)
+        FileHelper.finalFileList.delete(key)
+      }
+    }
   }
 
   const sendMessages = (giftedMessage) => {

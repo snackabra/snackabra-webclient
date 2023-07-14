@@ -56,11 +56,9 @@ const DropZone = (props) => {
         const buffer = SBFileHelper.globalBufferMap.get(value.uniqueShardId)
         if (buffer) {
           const sbImage = new SBImage(buffer, value);
-          await sbImage.processThumbnail()
+          sbImage.processThumbnail()
           sbImage.processImage()
           original.sbImage = sbImage
-
-
         } else {
           throw new Error('Buffer not found')
         }
@@ -119,20 +117,41 @@ const DropZone = (props) => {
   }
 
   // We use this to get the raw drop event so we can use SBFileHelper to upload the files
-  const eventHandler = (e) => {
+  const eventHandler = async (e) => {
+    console.log(e)
     try {
 
       const files = [];
-      const fileList = e.dataTransfer ? e.dataTransfer.files : e.target.files;
-      if (e.type === 'drop') {
-        for (var i = 0; i < fileList.length; i++) {
-          const file = fileList.item(i);
-          files.push(file);
-
+      // eslint-disable-next-line no-undef
+      if (e[0] instanceof FileSystemHandle) {
+        let fakeEvent = {
+          preventDefault: () => { console.log('preventDefault')},
+          target: {
+            files: []
+          }
         }
+        for (let x in e) {
+          const file = await e[x].getFile()
+          files.push(file)
+          fakeEvent.target.files.push(file)
+        }
+        console.log(files)
         // eslint-disable-next-line no-undef
-        SBFileHelper.handleFileDrop(e.nativeEvent, onDropCallback);
+        SBFileHelper.handleFileDrop(fakeEvent, onDropCallback);
+        return files;
+      } else {
+        const fileList = e.dataTransfer ? e.dataTransfer.files : e.target.files;
+        if (e.type === 'drop') {
+          for (var i = 0; i < fileList.length; i++) {
+            const file = fileList.item(i);
+            files.push(file);
+
+          }
+          // eslint-disable-next-line no-undef
+          SBFileHelper.handleFileDrop(e.nativeEvent, onDropCallback);
+        }
       }
+
 
       return files;
     } catch (e) {
@@ -148,7 +167,7 @@ const DropZone = (props) => {
 
 
   return (
-    <Dropzone id={elementId} ref={dzRef} onDropRejected={onRejected} onError={onError} noClick noKeyboard accept={{ 'image/*': [] }} maxFiles={maxFiles} getFilesFromEvent={eventHandler}>
+    <Dropzone id={elementId} ref={dzRef} onDropRejected={onRejected} onError={onError} noClick noKeyboard accept={{ 'image/*': [] }} maxFiles={maxFiles} getFilesFromEvent={async (e) => { return await eventHandler(e) }}>
       {({ getRootProps, getInputProps, isFocused, isDragAccept, isDragReject }) => {
         const style = {
           ...baseStyle,

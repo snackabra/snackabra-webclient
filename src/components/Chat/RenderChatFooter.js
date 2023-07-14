@@ -6,12 +6,13 @@ import Fab from '@mui/material/Fab';
 import { TouchableOpacity } from 'react-native';
 import ConfirmationDialog from '../Modals/ConfirmationDialog';
 import { isMobile } from 'react-device-detect';
+import { set } from 'mobx';
 
 
 
 const RenderChatFooter = (props) => {
   // eslint-disable-next-line no-undef
-const FileHelper = SBFileHelper;
+  const FileHelper = SBFileHelper;
   const elementId = `preview-${props.roomId}`
   const incomingFiles = props.files
   const [files, setFiles] = React.useState([])
@@ -40,10 +41,11 @@ const FileHelper = SBFileHelper;
         }
 
       }
+      console.log('_files', _files)
       setFiles(_files)
     }
 
-  }, [files.length, incomingFiles])
+  }, [FileHelper.finalFileList, files.length, incomingFiles])
 
   React.useEffect(() => {
     setLoading(props.loading)
@@ -51,13 +53,15 @@ const FileHelper = SBFileHelper;
 
   React.useEffect(() => {
     setUploading(props.uploading)
+    if(!props.uploading){
+      setFiles([])
+    }
   }, [props.uploading])
 
 
   const removeItem = (index, uniqueShardId) => {
     for (const [key, value] of FileHelper.finalFileList.entries()) {
-      if(value.uniqueShardId === uniqueShardId){
-        console.log('value', value)
+      if (value.uniqueShardId === uniqueShardId) {
         FileHelper.globalBufferMap.delete(value.sbImage.previewDetails.uniqueShardId)
         FileHelper.globalBufferMap.delete(value.sbImage.thumbnailDetails.uniqueShardId)
         FileHelper.globalBufferMap.delete(value.uniqueShardId)
@@ -165,6 +169,10 @@ const FileHelper = SBFileHelper;
                   </Grid>
                 )
               } else {
+                // we make sure the thumbnail is ready before we render it
+                file.sbImage.thumbnailReady.then(() => {
+                  setFiles((_files) =>  _files[index] = file)
+                })
                 return (<Grid key={index + 'grid'} className='previewImage' sx={{ width: containerHeight - 8, minHeight: containerHeight - 8, padding: 8 }}
                   direction="row"
                   justifyContent="center"
