@@ -303,7 +303,6 @@ const ResponsiveDrawer = observer((props) => {
 
   const container = window !== undefined ? () => window().document.body : undefined;
   const { height } = Dimensions.get('window')
-  console.log(sbContext.channels[roomId]?.owner)
   return (
     <SafeAreaView sx={{ display: 'flex', p: 0 }}>
       <CssBaseline />

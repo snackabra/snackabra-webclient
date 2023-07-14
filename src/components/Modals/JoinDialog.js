@@ -28,7 +28,6 @@ const JoinDialog = observer((props) => {
   }, [props.joinRoomId, roomId])
 
   const updateRoomId = (e) => {
-    console.log(e.target.value)
     setRoomId(e.target.value.trim())
   }
 
