@@ -80,9 +80,26 @@ class SnackabraStore {
 
     }
 
+    const getChannelsCache = async () => {
+      let channels = await cacheDb.getItem('sb_data_channels');
+      console.log(channels)
+      if (channels && Object.keys(channels).length > 0) {
+        this.channels = channels;
+      } else {
+        let _channels = await cacheDb.openCursor(/^sb_data_[A-Za-z0-9]{64}$/);
+        console.log(_channels)
+        channels = {};
+        for (let x in _channels) {
+          channels[_channels[x].value.id] = _channels[x].value
+        }
+        this.channels = channels;
+      }
+      return channels;
+    }
+
     this[migrate] = async (v) => {
       const sb_data = JSON.parse(await cacheDb.getItem('sb_data'));
-      const channels = await cacheDb.getItem('sb_data_channels');
+      let channels = await getChannelsCache();
 
       switch (v) {
         case 1:
@@ -105,7 +122,6 @@ class SnackabraStore {
           this[migrate](3)
           return;
         case 3:
-
           let contacts = await cacheDb.getItem('sb_data_contacts') || {};
           for (let x in channels) {
             if (channels[x]) {
@@ -315,10 +331,11 @@ class ChannelStore {
     this[getChannel] = (channel) => {
       return new Promise((resolve) => {
         cacheDb.getItem('sb_data_' + channel).then(async (data) => {
+          console.log('got channel data', data)
           if (data) {
             this.id = data.id;
             this.alias = data.alias;
-            this.messages = this.mergeMessages(this.messages, data.messages);
+            this.messages = data.messages;
             this.key = data.key;
             this.lastSeenMessage = data.lastSeenMessage;
             this.motd = data.motd;
@@ -386,7 +403,7 @@ class ChannelStore {
   }
 
   get messages() {
-    return [...this._messages.values()];
+    return this._messages;
   }
 
   set messages(messages) {
@@ -394,9 +411,14 @@ class ChannelStore {
       console.trace()
       return
     }
-    for (let i in messages) {
-      this._messages.set(messages[i]._id, messages[i]);
+    if (messages instanceof Map) {
+      this._messages = messages;
+    } else {
+      for (let i in messages) {
+        this._messages.set(messages[i]._id, messages[i]);
+      }
     }
+
     this[save]();
   }
 
@@ -432,7 +454,7 @@ class ChannelStore {
 
   set capacity(capacity) {
     this._capacity = capacity;
-    if(this.owner && this._socket){
+    if (this.owner && this._socket) {
       this._socket.api.updateCapacity(capacity);
     }
     this[save]();
@@ -443,7 +465,7 @@ class ChannelStore {
   }
 
   set motd(motd) {
-    if(this.owner && this._socket){
+    if (this.owner && this._socket) {
       this._socket.api.setMOTD(motd);
     }
     this._motd = motd;

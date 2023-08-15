@@ -10,6 +10,7 @@ const RenderBubble = (props) => {
   const isAdmin = props.socket.admin || props.socket.owner
 
   React.useEffect(() => {
+    console.log(currentMessage)
     const init = async () => {
       //TODO: this is breaking the server for some reason
       // const verified = await props.socket.api.postPubKey(current_user_key)

@@ -419,7 +419,7 @@ export class SBImage {
           const file = new File([photo], name)
           e.target.files = [file]
           // eslint-disable-next-line no-undef
-          SBFileHelper.handleFileDrop(e, (r)=>{
+          window.SBFileHelper.handleFileDrop(e, (r)=>{
             for(let i in r){
               if(r[i].name === name){
                 this.thumbnailDetails = {
@@ -453,7 +453,7 @@ export class SBImage {
           const file = new File([results[0]], name)
           e.target.files = [file]
           // eslint-disable-next-line no-undef
-          SBFileHelper.handleFileDrop(e, (r)=>{
+          window.SBFileHelper.handleFileDrop(e, (r)=>{
             for(let i in r){
               if(r[i].name === name){
                 this.previewDetails = {

@@ -29,7 +29,7 @@ import SharedRoomStateContext from "../../contexts/SharedRoomState";
 import { GiftedChat } from "react-native-gifted-chat";
 
 // eslint-disable-next-line no-undef
-const FileHelper = SBFileHelper;
+const FileHelper = window.SBFileHelper;
 
 
 const q = new Queue()

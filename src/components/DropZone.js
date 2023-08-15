@@ -1,9 +1,11 @@
 import React from 'react'
 import { SBImage } from "../utils/ImageProcessorSBFileHelper";
-import Dropzone from 'react-dropzone'
+import Dropzone from 'react-dropzone/dist/es/index'
+import * as DropUtils from 'react-dropzone/dist/es/utils'
 import { Grid } from "@mui/material";
 import { isMobile } from 'react-device-detect';
-
+import { fromEvent } from "file-selector";
+console.log(DropUtils)
 
 
 const baseStyle = {
@@ -38,8 +40,10 @@ const DropZone = (props) => {
   const { children, dzRef, notify, openPreview } = props;
   const [success, setSuccess] = React.useState(false)
   const [previewOpen, setPreviewOpen] = React.useState(false)
+  const [dragAccept, setDragAccept] = React.useState(false)
+  const [draggReject, setDragReject] = React.useState(false)
   const elementId = `dropzone-${props.roomId}`
-  let maxFiles = isMobile ? 15 : 30
+  let maxFiles = isMobile ? 5 : 10
 
   const selectFiles = async () => {
     props.showLoading(true)
@@ -47,13 +51,15 @@ const DropZone = (props) => {
       console.log('SBFileHelper.finalFileList')
       let files = []
       // eslint-disable-next-line no-undef
-      const FileMap = new Map(SBFileHelper.finalFileList)
+      const FileMap = new Map(window.SBFileHelper.finalFileList)
 
       for (const [key, value] of FileMap.entries()) {
         // eslint-disable-next-line no-undef
-        const original = SBFileHelper.finalFileList.get(key)
+        const original = window.SBFileHelper.finalFileList.get(key)
         // eslint-disable-next-line no-undef
-        const buffer = SBFileHelper.globalBufferMap.get(value.uniqueShardId)
+        const buffer = window.SBFileHelper.globalBufferMap.get(value.uniqueShardId)
+        // eslint-disable-next-line no-undef
+        const preview = window.SBFileHelper.finalFileList.get(value.uniqueShardId)
         if (buffer) {
           const sbImage = new SBImage(buffer, value);
           sbImage.processThumbnail()
@@ -109,35 +115,95 @@ const DropZone = (props) => {
         notify('There was an issue attaching your files', 'error');
         break;
     }
+    setTimeout(() => {
+      console.log('resetting')
+      setDragAccept(false)
+      setDragReject(false)
+    }, 2000)
   }
 
   const onError = (e) => {
     console.error(e);
-    notify('There was an error attaching your files', 'error');
+    notify('There was an error attaching your files', 'error', 5);
+
+  }
+
+  const onDragEnter = (event) => {
+    // alert(DropUtils.isEvtWithFiles(e))
+    // console.log('dragenter & dragover')
+    // const fileList = e.dataTransfer ? e.dataTransfer.files : e.target.files;
+    // console.log(e, fileList)
+    if (DropUtils.isEvtWithFiles(event)) {
+      Promise.resolve(fromEvent(event)).then(function (files) {
+
+        var fileCount = files.length;
+        var isDragAccept = fileCount > 0 && DropUtils.allFilesAccepted({
+          files: files,
+          accept: DropUtils.acceptPropAsAcceptAttr({ 'image/*': [] }),
+          minSize: 0,
+          maxSize: Infinity,
+          multiple: true,
+          maxFiles: maxFiles,
+          validator: null
+        });
+        var isDragReject = fileCount > 0 && !isDragAccept;
+        setDragAccept(isDragAccept)
+        setDragReject(isDragReject)
+        console.log('dragrefjectedornot',{
+          isDragAccept: isDragAccept,
+          isDragReject: isDragReject,
+          isDragActive: true,
+          type: "setDraggedFiles"
+        });
+
+        // if (onDragEnter) {
+        //   onDragEnter(event);
+        // }
+      }).catch(function (e) {
+        console.error(e);
+      });
+    }
+  }
+  const onDragLeave = () => {
+    setDragAccept(false)
+    setDragReject(false)
+  }
+  const toggleDragState = (e) => {
+    if (e.type === 'dragleave') {
+      setDragAccept(false)
+      setDragReject(false)
+    }
   }
 
   // We use this to get the raw drop event so we can use SBFileHelper to upload the files
-  const eventHandler = async (e) => {
-    console.log(e)
-    try {
+  const eventHandler = (e) => {
+    console.log(Object.assign({}, e))
+    if (e.type === 'dragenter') {
+      console.log('dragenter')
+      console.log(e)
+      // setDragAccept(true)
+      return true;
+    }
 
-      const files = [];
+    const files = [];
+
+    if (dragAccept && !draggReject) {
       // eslint-disable-next-line no-undef
       if (e[0] instanceof FileSystemHandle) {
         let fakeEvent = {
-          preventDefault: () => { console.log('preventDefault')},
+          preventDefault: () => { console.log('preventDefault') },
           target: {
             files: []
           }
         }
         for (let x in e) {
-          const file = await e[x].getFile()
+          const file = e[x].getFile()
           files.push(file)
           fakeEvent.target.files.push(file)
         }
         console.log(files)
         // eslint-disable-next-line no-undef
-        SBFileHelper.handleFileDrop(fakeEvent, onDropCallback);
+        window.SBFileHelper.handleFileDrop(fakeEvent, onDropCallback);
         return files;
       } else {
         const fileList = e.dataTransfer ? e.dataTransfer.files : e.target.files;
@@ -148,15 +214,22 @@ const DropZone = (props) => {
 
           }
           // eslint-disable-next-line no-undef
-          SBFileHelper.handleFileDrop(e.nativeEvent, onDropCallback);
+          window.SBFileHelper.handleFileDrop(e.nativeEvent, onDropCallback);
         }
       }
+    }else{
+      const fileList = e.dataTransfer ? e.dataTransfer.files : e.target.files;
+      if (e.type === 'drop') {
+        for (var i = 0; i < fileList.length; i++) {
+          const file = fileList.item(i);
+          files.push(file);
 
-
-      return files;
-    } catch (e) {
-      console.log(e)
+        }
+      }
     }
+
+
+    return files;
 
   }
 
@@ -167,13 +240,14 @@ const DropZone = (props) => {
 
 
   return (
-    <Dropzone id={elementId} ref={dzRef} onDropRejected={onRejected} onError={onError} noClick noKeyboard accept={{ 'image/*': [] }} maxFiles={maxFiles} getFilesFromEvent={async (e) => { return await eventHandler(e) }}>
+    <Dropzone id={elementId} ref={dzRef} onDropRejected={onRejected} onError={onError} noClick noKeyboard accept={{ 'image/*': [] }} maxFiles={maxFiles} getFilesFromEvent={eventHandler} onDragEnter={onDragEnter} onDragLeave={onDragLeave}>
+
       {({ getRootProps, getInputProps, isFocused, isDragAccept, isDragReject }) => {
         const style = {
           ...baseStyle,
           ...(isFocused ? focusedStyle : {}),
-          ...(isDragAccept ? acceptStyle : {}),
-          ...(isDragReject ? rejectStyle : {}),
+          ...(dragAccept ? acceptStyle : {}),
+          ...(draggReject ? rejectStyle : {}),
         }
         return (
           <Grid {...getRootProps({ style })}

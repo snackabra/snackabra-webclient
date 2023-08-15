@@ -33,7 +33,7 @@ import { GiftedChat } from "react-native-gifted-chat";
 const ChatRoom = observer((props) => {
   const shardRoomContext = React.useContext(SharedRoomStateContext)
   // eslint-disable-next-line no-undef
-  const FileHelper = SBFileHelper;
+  const FileHelper = window.SBFileHelper;
 
 
   const q = new Queue()
@@ -58,7 +58,7 @@ const ChatRoom = observer((props) => {
   let toUpload = []
   let uploaded = []
   // FileHelper.knownShards = knownShards
-  const [messages, setMessages] = React.useState([]);
+  const [messages, setMessages] = React.useState(new Map());
   const [user, setUser] = React.useState({});
   const [height, setHeight] = React.useState(0);
   const [visibility, setVisibility] = React.useState('visible');
@@ -118,7 +118,7 @@ const ChatRoom = observer((props) => {
     init();
 
     return () => {
-      setMessages([]);
+      setMessages(new Map());
       setOpenAdminDialog(false);
       setOpenWhisper(false);
       setOpenPreview(false);
@@ -141,9 +141,9 @@ const ChatRoom = observer((props) => {
   }, []);
 
   React.useEffect(() => {
-    if (channel && channel.messages.length !== messages.length) {
+    if (channel && channel.messages.size !== messages.size && messages.size > 0) {
       console.log('channel changed', messages)
-      channel.messages = messages
+      // channel.messages = messages
     }
   }, [channel, messages]);
 
@@ -233,7 +233,7 @@ const ChatRoom = observer((props) => {
         const msg = _r.dequeue()
         msg._id = msg._id + Date.now()
         sending[msg._id] = msg._id
-        setMessages(_messages => [..._messages, msg])
+        setMessages(_messages => new Map(_messages).set(msg._id, msg))
         _r.processing--
       }
     }, 25)
@@ -244,6 +244,9 @@ const ChatRoom = observer((props) => {
       await channel.connect(receiveMessages)
       if (username) sbContext.createContact(username, channel.key)
       setUser(sbContext.getContact(channel.key))
+
+      console.log('a channel', channel)
+      // setMessages(channel.messages)
       channel.getOldMessages(0).then(() => {
         if (channel.motd !== '') {
           sendSystemInfo('MOTD: ' + channel.motd)
@@ -309,28 +312,19 @@ const ChatRoom = observer((props) => {
   }
 
   const handleSimpleChatMessage = (msg) => {
-    setMessages(_messages => {
-      const _m = JSON.parse(JSON.stringify(_messages))
-      let _ = []
-      for (let i in _m) {
-        if (_m[i]._id !== msg.sendingId) {
-          _.push(_m[i])
-        }
-      }
-      return [..._, msg]
-    })
+    setMessages(_messages => new Map(_messages).set(msg._id, msg))
   }
 
   // For backaward compatibility with older versions of the chat app
   const receiveMessagesLegacy = (msg) => {
-    const _messages = JSON.parse(JSON.stringify(messages));
     if (msg) {
       console.log("==== here is the message: (ChatRoom.js)")
       if (!msg.control) {
-        const _msgs = _messages.reduce((acc, curr) => {
+        [...messages.entries()].reduce((acc, curr) => {
           const msg_id = curr._id.toString()
           if (!msg_id.match(/^sending/)) {
             acc.push(curr);
+            setMessages(_messages => new Map(_messages).set(msg_id, curr))
           } else {
             delete sending[curr._id]
           }
@@ -340,7 +334,7 @@ const ChatRoom = observer((props) => {
         msg.user._id = userId;
         msg.user.name = sbContext.getContact(msg.user._id) !== undefined ? sbContext.contacts[userId] : msg.user.name;
         msg.sender_username = msg.user.name;
-        setMessages(_messages => [..._messages, msg])
+        setMessages(_messages => new Map(_messages).set(msg._id, msg))
       } else {
         setControlMessages(_controlMessages => {
           _controlMessages[msg.hash] = msg.handle
@@ -457,18 +451,18 @@ const ChatRoom = observer((props) => {
 
   }
 
-  const removeFileFromSBFileHelper = (uniqueShardId) => {
-    for (const [key, value] of FileHelper.finalFileList.entries()) {
-      if (value.uniqueShardId === uniqueShardId) {
-        FileHelper.globalBufferMap.delete(value.sbImage.previewDetails.uniqueShardId)
-        FileHelper.globalBufferMap.delete(value.sbImage.thumbnailDetails.uniqueShardId)
-        FileHelper.globalBufferMap.delete(value.uniqueShardId)
-        FileHelper.finalFileList.delete(value.sbImage.previewDetails.fullName)
-        FileHelper.finalFileList.delete(value.sbImage.thumbnailDetails.fullName)
-        FileHelper.finalFileList.delete(key)
-      }
-    }
-  }
+  // const removeFileFromSBFileHelper = (uniqueShardId) => {
+  //   for (const [key, value] of FileHelper.finalFileList.entries()) {
+  //     if (value.uniqueShardId === uniqueShardId) {
+  //       FileHelper.globalBufferMap.delete(value.sbImage.previewDetails.uniqueShardId)
+  //       FileHelper.globalBufferMap.delete(value.sbImage.thumbnailDetails.uniqueShardId)
+  //       FileHelper.globalBufferMap.delete(value.uniqueShardId)
+  //       FileHelper.finalFileList.delete(value.sbImage.previewDetails.fullName)
+  //       FileHelper.finalFileList.delete(value.sbImage.thumbnailDetails.fullName)
+  //       FileHelper.finalFileList.delete(key)
+  //     }
+  //   }
+  // }
 
   const sendMessages = (giftedMessage) => {
     if (giftedMessage[0].text === "") {
@@ -479,7 +473,7 @@ const ChatRoom = observer((props) => {
       giftedMessage[0]._id = 'sending_' + giftedMessage[0]._id;
       const msg_id = giftedMessage[0]._id;
       giftedMessage[0].user = user
-      setMessages(_messages => [..._messages, giftedMessage[0]])
+      setMessages(_messages => new Map(_messages).set(giftedMessage[0]._id, giftedMessage[0]))
       let sbm = channel.newMessage(giftedMessage[0].text)
       sbm.contents.sendingId = msg_id;
       sbm.contents.messageType = messageTypes.SIMPLE_CHAT_MESSAGE;
@@ -489,7 +483,7 @@ const ChatRoom = observer((props) => {
 
   const sendSystemInfo = (msg_string, callback) => {
     const systemMessage = {
-      _id: messages.length,
+      _id: `${messages.length}_${Date.now()}`,
       text: msg_string,
       createdAt: new Date(),
       user: { _id: 'system', name: 'System Message' },
@@ -498,7 +492,8 @@ const ChatRoom = observer((props) => {
       info: true
     }
 
-    setMessages(_messages => [..._messages, systemMessage])
+    setMessages(_messages => new Map(_messages).set(systemMessage._id, systemMessage))
+
     if (callback) {
       callback(systemMessage)
     }
@@ -506,12 +501,12 @@ const ChatRoom = observer((props) => {
   }
 
   const sendSystemMessage = (message) => {
-    setMessages(_messages => [..._messages, {
+    setMessages(_messages => new Map(_messages).set(message._id, {
       _id: `${messages.length}_${Date.now()}`,
       user: { _id: 'system', name: 'System Message' },
       createdAt: new Date(),
       text: message + '\n\n Details in console'
-    }])
+    }))
   }
 
   const removeInputFiles = () => {
@@ -523,20 +518,20 @@ const ChatRoom = observer((props) => {
   }
 
   const saveUsername = (newUsername, _id) => {
-    sbContext.createContact(newUsername, _id)
-    const _m = Object.assign(messages)
-    _m.forEach((_message, i) => {
-      console.log(_message, i)
-      if (_message.user._id === _id) {
-        _message.user.name = newUsername;
-        _message.sender_username = newUsername;
-        _m[i] = _message;
-      }
-    })
-    setMessages(_m)
-    setOpenChangeName(false)
-    setChangeUserNameProps({})
-    channel.messages = _m
+    // sbContext.createContact(newUsername, _id)
+    // const _m = Object.assign(messages)
+    // _m.forEach((_message, i) => {
+    //   console.log(_message, i)
+    //   if (_message.user._id === _id) {
+    //     _message.user.name = newUsername;
+    //     _message.sender_username = newUsername;
+    //     _m[i] = _message;
+    //   }
+    // })
+    // setMessages(_m)
+    // setOpenChangeName(false)
+    // setChangeUserNameProps({})
+    // channel.messages = _m
 
   }
 
@@ -602,7 +597,7 @@ const ChatRoom = observer((props) => {
           style={{
             width: '100%'
           }}
-          messages={messages}
+          messages={Array.from(messages, ([name, value]) => (value))}
           onSend={sendMessages}
 
           user={user}

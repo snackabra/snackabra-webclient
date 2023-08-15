@@ -87,7 +87,7 @@ const ResponsiveDrawer = observer((props) => {
       }
     }
 
-  }, [roomId, room_id, sbContext.channels])
+  }, [roomId, room_id, sbContext?.channels])
 
   React.useEffect(() => {
     const listenForMessages = (event) => {
