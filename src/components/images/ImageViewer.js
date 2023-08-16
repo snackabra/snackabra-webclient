@@ -23,24 +23,27 @@ export default function ImageViewer(props) {
     }))
 
     React.useEffect(() => {
-        console.log('loading image', image)
         setImage(image.image)
         if (image?.image) {
-            console.log('loading full size image', image)
-            console.log('controlMessages', controlMessages)
-            sbContext.SB.storage.fetchData(controlMessages[image.fileMetadata.previewHash]).then((data) => {
-                if (data.hasOwnProperty('error')) {
-                    console.error(data['error'])
+
+            if (controlMessages[image.fileMetadata.previewHash]) {
+                sbContext.SB.storage.fetchData(controlMessages[image.fileMetadata.previewHash]).then((data) => {
+                    if (data.hasOwnProperty('error')) {
+                        console.error(data['error'])
+                        notify.warn('Could not load full size image')
+                    } else {
+                        console.log('loaded full size image', data)
+                        setImage('data:image/jpeg;base64,' + SB.arrayBufferToBase64(data, 'b64'))
+                        setImageLoaded(true)
+                    }
+                }).catch((error) => {
+                    console.error('openPreview() exception: ' + error.message);
                     notify.warn('Could not load full size image')
-                } else {
-                    console.log('loaded full size image', data)
-                    setImage('data:image/jpeg;base64,' + SB.arrayBufferToBase64(data, 'b64'))
-                    setImageLoaded(true)
-                }
-            }).catch((error) => {
-                console.error('openPreview() exception: ' + error.message);
+                })
+            } else {
+                setImageLoaded(true)
                 notify.warn('Could not load full size image')
-            })
+            }
         }
     }, [controlMessages, image, notify, sbContext.SB.storage])
 
@@ -66,8 +69,8 @@ export default function ImageViewer(props) {
             setClosing(false)
         }
 
-    // Ignored this is not an exhaustive dependency list
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // Ignored this is not an exhaustive dependency list
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [props.img])
 
     React.useEffect(() => {

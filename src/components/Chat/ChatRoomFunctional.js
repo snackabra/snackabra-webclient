@@ -298,7 +298,7 @@ const ChatRoom = observer((props) => {
           // FileHelper.knownShards.set(obj.hash, obj.handle)
           break;
         case messageTypes.IMAGE_MESSAGE:
-          console.log('IMAGE_MESSAGE')
+          console.log('IMAGE_MESSAGE', m)
           handleSimpleChatMessage(m);
           break;
         default:
@@ -353,14 +353,15 @@ const ChatRoom = observer((props) => {
   }
 
   const openImageOverlay = (message) => {
+
     props.inhibitSwipe(1)
     let _images = [];
-    for (let x in messages) {
-      if (messages[x].hasOwnProperty('image') && messages[x].image.length > 0) {
-        _images.push(messages[x])
+    for (const [key, value] of messages.entries()) {
+      console.log(`MESSAGES `,key, value)
+      if (value.hasOwnProperty('image') && value.image.length > 0) {
+        _images.push(value)
       }
     }
-    console.log(`IMAGES `, _images)
     setImg(message)
     setOpenPreview(true)
     setImages(_images)
