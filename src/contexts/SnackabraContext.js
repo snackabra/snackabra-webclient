@@ -13,6 +13,7 @@ export class SnackabraProvider extends React.Component {
 
   componentDidMount() {
     // this is the one global SB object for the app
+    console.log(this.props.config)
     const sbContext = new SnackabraStore(this.props.config)
     window.SBFileHelper = new SBFileHelper(this.props.config)
     sbContext.ready.then(() => {

@@ -5,7 +5,6 @@ import * as DropUtils from 'react-dropzone/dist/es/utils'
 import { Grid } from "@mui/material";
 import { isMobile } from 'react-device-detect';
 import { fromEvent } from "file-selector";
-console.log(DropUtils)
 
 
 const baseStyle = {
@@ -179,9 +178,6 @@ const DropZone = (props) => {
   const eventHandler = (e) => {
     console.log(Object.assign({}, e))
     if (e.type === 'dragenter') {
-      console.log('dragenter')
-      console.log(e)
-      // setDragAccept(true)
       return true;
     }
 

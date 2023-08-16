@@ -1,5 +1,4 @@
 import {SB} from 'snackabra/dist/snackabra.js'
-console.log(SB)
 const SKIP_DIR = true;
 export const version = "0.0.16";
 const DEBUG = true;
@@ -277,6 +276,7 @@ export class SBFileHelper {
         return false;
     }
     uploadBuffer(myChannelId, payload, name) {
+        console.log("uploadBuffer: ", this.server);
         return new Promise((resolve) => {
             this.server.storage.storeObject(payload, 'p', myChannelId).then((res) => {
                 res.fileName = name;

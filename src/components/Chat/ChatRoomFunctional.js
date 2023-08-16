@@ -395,7 +395,6 @@ const ChatRoom = observer((props) => {
     setLoading(false)
     setFiles(true)
   }
-  //TODO: for images render in chat and then replace with received message
   const sendFiles = async (giftedMessage) => {
     // let toUpload = []
     setFiles(false)
@@ -435,6 +434,7 @@ const ChatRoom = observer((props) => {
 
       console.log(`---- uploading file ${key} with hash ${fileHash} ...`)
       const buffer = FileHelper.globalBufferMap.get(fileHash)
+      console.log('buffer', buffer)
       if (!buffer) {
         console.error(`**** failed to find buffer for ${fileHash} (should not happen)`)
       } else {

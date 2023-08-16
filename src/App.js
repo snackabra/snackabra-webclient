@@ -40,9 +40,9 @@ const App = () => {
             <NotificationProvider>
               <SharedRoomStateProvider>
                 <NavBarActionProvider>
-                  <LogProvider>
+                  {/* <LogProvider> */}
                     <AppRoutes />
-                  </LogProvider>
+                  {/* </LogProvider> */}
                   <NotificationBar />
                 </NavBarActionProvider>
               </SharedRoomStateProvider>
