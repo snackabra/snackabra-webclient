@@ -36,6 +36,8 @@ const rejectStyle = {
 }
 
 const DropZone = (props) => {
+  // eslint-disable-next-line no-undef
+  const FileHelper = window.SBFileHelper;
   const { children, dzRef, notify, openPreview } = props;
   const [success, setSuccess] = React.useState(false)
   const [previewOpen, setPreviewOpen] = React.useState(false)
@@ -44,28 +46,32 @@ const DropZone = (props) => {
   const elementId = `dropzone-${props.roomId}`
   let maxFiles = isMobile ? 5 : 10
 
-  const selectFiles = async () => {
+  const selectFiles = () => {
+    console.log(FileHelper.knownShards)
     props.showLoading(true)
     try {
       console.log('SBFileHelper.finalFileList')
-      let files = []
-      // eslint-disable-next-line no-undef
+      
       const FileMap = new Map(window.SBFileHelper.finalFileList)
 
       for (const [key, value] of FileMap.entries()) {
-        // eslint-disable-next-line no-undef
-        const original = window.SBFileHelper.finalFileList.get(key)
-        // eslint-disable-next-line no-undef
-        const buffer = window.SBFileHelper.globalBufferMap.get(value.uniqueShardId)
-        // eslint-disable-next-line no-undef
-        const preview = window.SBFileHelper.finalFileList.get(value.uniqueShardId)
-        if (buffer) {
-          const sbImage = new SBImage(buffer, value);
-          sbImage.processThumbnail()
-          sbImage.processImage()
-          original.sbImage = sbImage
-        } else {
-          throw new Error('Buffer not found')
+        console.log('asdfadsfjkbasdkjfaskjfb',key, value);
+        console.log(FileHelper.knownShards.get(value.uniqueShardId))
+        if (!FileHelper.knownShards.has(value.uniqueShardId)) {
+          const original = window.SBFileHelper.finalFileList.get(key)
+          const buffer = window.SBFileHelper.globalBufferMap.get(value.uniqueShardId)
+          // const preview = window.SBFileHelper.finalFileList.get(value.uniqueShardId)
+          if (buffer) {
+            const sbImage = new SBImage(buffer, value);
+            sbImage.processThumbnail()
+            sbImage.processImage()
+            original.sbImage = sbImage
+          } else {
+            throw new Error('Buffer not found')
+          }
+        }else{
+          const original = window.SBFileHelper.finalFileList.get(key)
+          original.knownShard = value.uniqueShardId
         }
       };
       props.showFiles()
@@ -89,16 +95,15 @@ const DropZone = (props) => {
 
 
   const onDropCallback = () => {
-    if (!previewOpen) {
-      selectFiles()
-    } else {
-      notify('Please close the preview before adding more files', 'info')
-    }
+    // if (!previewOpen) {
+    selectFiles()
+    // } else {
+    //   notify('Please close the preview before adding more files', 'info')
+    // }
 
   }
 
   const onRejected = (e) => {
-    console.log(e[0].errors[0].code)
     switch (e[0].errors[0].code) {
       case 'too-many-files':
         notify(`Too many files attached, maximum limit is ${maxFiles}`, 'error')
@@ -128,10 +133,7 @@ const DropZone = (props) => {
   }
 
   const onDragEnter = (event) => {
-    // alert(DropUtils.isEvtWithFiles(e))
-    // console.log('dragenter & dragover')
-    // const fileList = e.dataTransfer ? e.dataTransfer.files : e.target.files;
-    // console.log(e, fileList)
+
     if (DropUtils.isEvtWithFiles(event)) {
       Promise.resolve(fromEvent(event)).then(function (files) {
 
@@ -148,7 +150,7 @@ const DropZone = (props) => {
         var isDragReject = fileCount > 0 && !isDragAccept;
         setDragAccept(isDragAccept)
         setDragReject(isDragReject)
-        console.log('dragrefjectedornot',{
+        console.log('dragrefjectedornot', {
           isDragAccept: isDragAccept,
           isDragReject: isDragReject,
           isDragActive: true,
@@ -213,18 +215,18 @@ const DropZone = (props) => {
           window.SBFileHelper.handleFileDrop(e.nativeEvent, onDropCallback);
         }
       }
-    }else{
+    } else {
       const fileList = e.dataTransfer ? e.dataTransfer.files : e.target.files;
       if (e.type === 'drop') {
-        for (var i = 0; i < fileList.length; i++) {
-          const file = fileList.item(i);
+        for (var x = 0; x < fileList.length; x++) {
+          const file = fileList.item(x);
           files.push(file);
 
         }
       }
     }
 
-
+    onDragLeave()
     return files;
 
   }
