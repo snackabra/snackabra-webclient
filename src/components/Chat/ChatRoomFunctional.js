@@ -28,14 +28,11 @@ import SharedRoomStateContext from "../../contexts/SharedRoomState";
 import { GiftedChat } from "react-native-gifted-chat";
 
 
-
-
 const ChatRoom = observer((props) => {
   const shardRoomContext = React.useContext(SharedRoomStateContext)
   // eslint-disable-next-line no-undef
   const FileHelper = window.SBFileHelper;
-
-
+  const fileMetadata = new Map();
   const q = new Queue()
   const _r = new Queue()
   let SB = require('snackabra')
@@ -57,7 +54,7 @@ const ChatRoom = observer((props) => {
   // const knownShards = new Map()
   let toUpload = []
   let uploaded = []
-  // FileHelper.knownShards = knownShards
+
   const [messages, setMessages] = React.useState(new Map());
   const [user, setUser] = React.useState({});
   const [height, setHeight] = React.useState(0);
@@ -295,10 +292,13 @@ const ChatRoom = observer((props) => {
             uploaded = []
           }
           console.log('FILE_SHARD_METADATA', obj.hash, obj.handle)
-          // FileHelper.knownShards.set(obj.hash, obj.handle)
+          FileHelper.knownShards.set(obj.hash, obj.handle)
           break;
         case messageTypes.IMAGE_MESSAGE:
           console.log('IMAGE_MESSAGE', m)
+          for(let x in m.fileMetadata) {
+            fileMetadata.set(x, m.fileMetadata)
+          }
           handleSimpleChatMessage(m);
           break;
         default:
@@ -357,7 +357,7 @@ const ChatRoom = observer((props) => {
     props.inhibitSwipe(1)
     let _images = [];
     for (const [key, value] of messages.entries()) {
-      console.log(`MESSAGES `,key, value)
+      console.log(`MESSAGES `, key, value)
       if (value.hasOwnProperty('image') && value.image.length > 0) {
         _images.push(value)
       }

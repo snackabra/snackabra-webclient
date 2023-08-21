@@ -79,6 +79,10 @@ const ResponsiveDrawer = observer((props) => {
   const [joinRoomId, setJoinRoomId] = React.useState(false);
 
   React.useEffect(() => {
+    if (room_id && !room_id.match(/\w{64}/)) {
+      navigate('/404')
+      return;
+    }
     if (room_id && room_id !== roomId) {
       setRoomId(room_id)
       if (!sbContext.channels[room_id]) {
