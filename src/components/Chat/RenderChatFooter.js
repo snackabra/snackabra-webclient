@@ -7,6 +7,7 @@ import { TouchableOpacity } from 'react-native';
 import ConfirmationDialog from '../Modals/ConfirmationDialog';
 import { isMobile } from 'react-device-detect';
 import { set } from 'mobx';
+import { _ } from 'core-js';
 
 
 
@@ -21,6 +22,7 @@ const RenderChatFooter = (props) => {
   const [isShown, setIsShown] = React.useState('')
   const [toRemove, setToRemove] = React.useState('')
   const [showConfirm, setShowConfirm] = React.useState(false)
+  const [thumbnailReadyPromises, setThumbnailReadyPromises] = React.useState([])
 
   const containerHeight = 50
 
@@ -58,6 +60,27 @@ const RenderChatFooter = (props) => {
     }
   }, [props.uploading])
 
+  // This helps the component wait for the thumbnail to be ready before rendering it, while not blocking on the thumbnail to be ready
+  React.useEffect(() => {
+    let promises = []
+    if (thumbnailReadyPromises.length > 0) {
+      for (let i = 0; i < thumbnailReadyPromises.length; i++) {
+        const promise = thumbnailReadyPromises[i].promise
+        promises.push(promise)
+      }
+      Promise.all(promises).then(() => {
+        setThumbnailReadyPromises([])
+      })
+    }
+  }, [thumbnailReadyPromises])
+
+  const waitForThumbnail = (file) => {
+    const foundItem = thumbnailReadyPromises.find(item => item.hash === file.hash);
+    if (foundItem) {
+      return
+    }
+    setThumbnailReadyPromises(_thumbnailReadyPromises => [..._thumbnailReadyPromises, { promise: file.sbImage.thumbnailReady, hash: file.hash }])
+  }
 
   const removeItem = (index, uniqueShardId) => {
     for (const [key, value] of FileHelper.finalFileList.entries()) {
@@ -177,10 +200,9 @@ const RenderChatFooter = (props) => {
                   </Grid>
                 )
               } else {
+                console.log('file.sbImage', file.sbImage)
                 // we make sure the thumbnail is ready before we render it
-                file.sbImage.thumbnailReady.then(() => {
-                  setFiles((_files) => _files[index] = file)
-                })
+                waitForThumbnail(file)
                 return (<Grid key={index + 'grid'} className='previewImage' sx={{ width: containerHeight - 8, minHeight: containerHeight - 8, padding: 8 }}
                   direction="row"
                   justifyContent="center"

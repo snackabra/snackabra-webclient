@@ -55,24 +55,24 @@ const DropZone = (props) => {
       const FileMap = new Map(window.SBFileHelper.finalFileList)
 
       for (const [key, value] of FileMap.entries()) {
-        console.log('asdfadsfjkbasdkjfaskjfb',key, value);
+        console.log('asdfadsfjkbasdkjfaskjfb', key, value);
         console.log(FileHelper.knownShards.get(value.uniqueShardId))
+
+        const original = window.SBFileHelper.finalFileList.get(key)
         if (!FileHelper.knownShards.has(value.uniqueShardId)) {
-          const original = window.SBFileHelper.finalFileList.get(key)
-          const buffer = window.SBFileHelper.globalBufferMap.get(value.uniqueShardId)
-          // const preview = window.SBFileHelper.finalFileList.get(value.uniqueShardId)
-          if (buffer) {
-            const sbImage = new SBImage(buffer, value);
-            sbImage.processThumbnail()
-            sbImage.processImage()
-            original.sbImage = sbImage
-          } else {
-            throw new Error('Buffer not found')
-          }
-        }else{
-          const original = window.SBFileHelper.finalFileList.get(key)
           original.knownShard = value.uniqueShardId
         }
+        const buffer = window.SBFileHelper.globalBufferMap.get(value.uniqueShardId)
+        // const preview = window.SBFileHelper.finalFileList.get(value.uniqueShardId)
+        if (buffer) {
+          const sbImage = new SBImage(buffer, value);
+          sbImage.processThumbnail()
+          sbImage.processImage()
+          original.sbImage = sbImage
+        } else {
+          throw new Error('Buffer not found')
+        }
+
       };
       props.showFiles()
 
