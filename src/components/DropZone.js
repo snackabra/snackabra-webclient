@@ -51,7 +51,7 @@ const DropZone = (props) => {
     props.showLoading(true)
     try {
       console.log('SBFileHelper.finalFileList')
-      
+
       const FileMap = new Map(window.SBFileHelper.finalFileList)
 
       for (const [key, value] of FileMap.entries()) {
@@ -176,33 +176,40 @@ const DropZone = (props) => {
     }
   }
 
+  const getFilesFromFileSystemHandle = async (e) => {
+    let files = []
+    let fakeEvent = {
+      preventDefault: () => { console.log('preventDefault') },
+      target: {
+        files: []
+      }
+    }
+    for (let x in e) {
+      const file = await e[x].getFile()
+      files.push(file)
+      fakeEvent.target.files.push(file)
+    }
+    console.log(files)
+    // eslint-disable-next-line no-undef
+    window.SBFileHelper.handleFileDrop(fakeEvent, onDropCallback);
+    return files
+  }
+
   // We use this to get the raw drop event so we can use SBFileHelper to upload the files
   const eventHandler = (e) => {
+    console.log('eventHandler', e)
     console.log(Object.assign({}, e))
     if (e.type === 'dragenter') {
       return true;
     }
 
     const files = [];
-
-    if (dragAccept && !draggReject) {
+    // eslint-disable-next-line no-undef
+    if ((dragAccept && !draggReject) || e[0] instanceof FileSystemHandle) {
       // eslint-disable-next-line no-undef
       if (e[0] instanceof FileSystemHandle) {
-        let fakeEvent = {
-          preventDefault: () => { console.log('preventDefault') },
-          target: {
-            files: []
-          }
-        }
-        for (let x in e) {
-          const file = e[x].getFile()
-          files.push(file)
-          fakeEvent.target.files.push(file)
-        }
-        console.log(files)
-        // eslint-disable-next-line no-undef
-        window.SBFileHelper.handleFileDrop(fakeEvent, onDropCallback);
-        return files;
+
+        return getFilesFromFileSystemHandle(e);
       } else {
         const fileList = e.dataTransfer ? e.dataTransfer.files : e.target.files;
         if (e.type === 'drop') {
@@ -240,7 +247,7 @@ const DropZone = (props) => {
   return (
     <Dropzone id={elementId} ref={dzRef} onDropRejected={onRejected} onError={onError} noClick noKeyboard accept={{ 'image/*': [] }} maxFiles={maxFiles} getFilesFromEvent={eventHandler} onDragEnter={onDragEnter} onDragLeave={onDragLeave}>
 
-      {({ getRootProps, getInputProps, isFocused, isDragAccept, isDragReject }) => {
+      {({ getRootProps, getInputProps, isFocused }) => {
         const style = {
           ...baseStyle,
           ...(isFocused ? focusedStyle : {}),
