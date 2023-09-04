@@ -53,7 +53,7 @@ const RenderChatFooter = (props) => {
 
   React.useEffect(() => {
     setUploading(props.uploading)
-    if(!props.uploading){
+    if (!props.uploading) {
       setFiles([])
     }
   }, [props.uploading])
@@ -78,6 +78,14 @@ const RenderChatFooter = (props) => {
   }
 
   const removeFiles = () => {
+    for (const [key, value] of FileHelper.finalFileList.entries()) {
+      FileHelper.globalBufferMap.delete(value.sbImage.previewDetails.uniqueShardId)
+      FileHelper.globalBufferMap.delete(value.sbImage.thumbnailDetails.uniqueShardId)
+      FileHelper.globalBufferMap.delete(value.uniqueShardId)
+      FileHelper.finalFileList.delete(value.sbImage.previewDetails.fullName)
+      FileHelper.finalFileList.delete(value.sbImage.thumbnailDetails.fullName)
+      FileHelper.finalFileList.delete(key)
+    }
     for (let x in files) {
       delete files[x]
     }
@@ -171,7 +179,7 @@ const RenderChatFooter = (props) => {
               } else {
                 // we make sure the thumbnail is ready before we render it
                 file.sbImage.thumbnailReady.then(() => {
-                  setFiles((_files) =>  _files[index] = file)
+                  setFiles((_files) => _files[index] = file)
                 })
                 return (<Grid key={index + 'grid'} className='previewImage' sx={{ width: containerHeight - 8, minHeight: containerHeight - 8, padding: 8 }}
                   direction="row"
