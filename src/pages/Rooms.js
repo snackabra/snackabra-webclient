@@ -66,7 +66,7 @@ const ResponsiveDrawer = observer((props) => {
   const navigate = useNavigate()
   const { window } = props;
   const theme = useTheme();
-  const [value, setValue] = React.useState(0);
+  const [value, setValue] = React.useState(-1);
   const [roomId, setRoomId] = React.useState(false);
   const [openImportDialog, setOpenImportDialog] = React.useState(false);
   const [openDataOperations, setOpenDataOperations] = React.useState(false);
@@ -91,7 +91,7 @@ const ResponsiveDrawer = observer((props) => {
       }
     }
 
-  }, [roomId, room_id, sbContext?.channels])
+  }, [navigate, roomId, room_id, sbContext.channels])
 
   React.useEffect(() => {
     const listenForMessages = (event) => {

@@ -312,7 +312,13 @@ const ChatRoom = observer((props) => {
   }
 
   const handleSimpleChatMessage = (msg) => {
-    setMessages(_messages => new Map(_messages).set(msg._id, msg))
+    setMessages(_messages => {
+      const _n_messages = new Map(_messages).set(msg._id, msg)
+      if(msg.hasOwnProperty('sendingId')) {
+        _n_messages.delete(msg.sendingId)
+      }
+      return _n_messages
+    })
   }
 
   // For backaward compatibility with older versions of the chat app
