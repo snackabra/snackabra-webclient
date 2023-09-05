@@ -205,14 +205,16 @@ const DropZone = (props) => {
 
     const files = [];
     // eslint-disable-next-line no-undef
-    if ((dragAccept && !draggReject) || e[0] instanceof FileSystemHandle) {
+    console.log((dragAccept && !draggReject) || e[0] instanceof FileSystemHandle || e?.type === 'change')
+    // eslint-disable-next-line no-undef
+    if ((dragAccept && !draggReject) || e[0] instanceof FileSystemHandle || e?.type === 'change') {
       // eslint-disable-next-line no-undef
       if (e[0] instanceof FileSystemHandle) {
 
         return getFilesFromFileSystemHandle(e);
       } else {
         const fileList = e.dataTransfer ? e.dataTransfer.files : e.target.files;
-        if (e.type === 'drop') {
+        if (e.type === 'drop' || e.type === 'change') {
           for (var i = 0; i < fileList.length; i++) {
             const file = fileList.item(i);
             files.push(file);
@@ -224,7 +226,7 @@ const DropZone = (props) => {
       }
     } else {
       const fileList = e.dataTransfer ? e.dataTransfer.files : e.target.files;
-      if (e.type === 'drop') {
+      if (e.type === 'drop' || e.type === 'change') {
         for (var x = 0; x < fileList.length; x++) {
           const file = fileList.item(x);
           files.push(file);
