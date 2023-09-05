@@ -26,8 +26,9 @@ export default function ImageViewer(props) {
         setImage(image.image)
         if (image?.image) {
 
-            if (controlMessages[image.fileMetadata.previewHash]) {
-                sbContext.SB.storage.fetchData(controlMessages[image.fileMetadata.previewHash]).then((data) => {
+            const hash = image.fileMetadata.previewHash ? image.fileMetadata.previewHash : image.fileMetadata.fullImageHash
+            if (hash) {
+                sbContext.SB.storage.fetchData(controlMessages[hash]).then((data) => {
                     if (data.hasOwnProperty('error')) {
                         console.error(data['error'])
                         notify.warn('Could not load full size image')
