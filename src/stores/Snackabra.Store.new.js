@@ -291,6 +291,7 @@ class ChannelStore {
   _capacity = 0;
   _motd = '';
   _messageCallback;
+  _savingTimout = null;
   readyResolver;
   ChannelStoreReadyFlag = new Promise((resolve) => {
     this._ready = true;
@@ -306,24 +307,29 @@ class ChannelStore {
 
     this[save] = async () => {
       await this.ChannelStoreReadyFlag
-      try {
-        if (this.id) {
-          const save = {
-            id: toJS(this._id),
-            alias: toJS(this._alias),
-            messages: toJS(this._messages),
-            owner: toJS(this._owner),
-            key: toJS(this._key),
-            motd: toJS(this._motd),
-            capacity: toJS(this._capacity),
-            lastSeenMessage: toJS(this.lastSeenMessage)
-          }
-          console.warn('saving channel state', save)
-          await cacheDb.setItem('sb_data_' + this.id, save)
-        }
-      } catch (e) {
-        console.warn('There was an issue saving the channel state.', e.message)
+      if (this._savingTimout) {
+        clearTimeout(this._savingTimout)
       }
+      this._savingTimout = setTimeout(async () => {
+        try {
+          if (this.id) {
+            const save = {
+              id: toJS(this._id),
+              alias: toJS(this._alias),
+              messages: toJS(this._messages),
+              owner: toJS(this._owner),
+              key: toJS(this._key),
+              motd: toJS(this._motd),
+              capacity: toJS(this._capacity),
+              lastSeenMessage: toJS(this.lastSeenMessage)
+            }
+            console.warn('saving channel state', save)
+            await cacheDb.setItem('sb_data_' + this.id, save)
+          }
+        } catch (e) {
+          console.warn('There was an issue saving the channel state.', e.message)
+        }
+      }, 250)
 
     }
 
