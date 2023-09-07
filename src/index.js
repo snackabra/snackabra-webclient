@@ -10,7 +10,8 @@ let SB = require('snackabra')
 console.log(SB)
 window.SB = {
   Snackabra: SB.Snackabra,
-  SBCrypto: SB.SBCrypto
+  SBCrypto: SB.SBCrypto,
+  SBMessage: SB.SBMessage,
 }
 
 

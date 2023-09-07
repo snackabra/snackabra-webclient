@@ -15,6 +15,7 @@ import { SharedRoomStateProvider } from "./contexts/SharedRoomState";
 import { LogProvider } from "./contexts/LogContext";
 import { SnackabraProvider } from "./contexts/SnackabraContext";
 import NotificationBar from "./components/NotificationBar";
+import { VoipProvider } from './contexts/Voip/VoipContext'
 
 
 i18n.loadLocaleData({
@@ -40,9 +41,11 @@ const App = () => {
             <NotificationProvider>
               <SharedRoomStateProvider>
                 <NavBarActionProvider>
-                  {/* <LogProvider> */}
+                  <VoipProvider config={sbConfig}>
+                    {/* <LogProvider> */}
                     <AppRoutes />
-                  {/* </LogProvider> */}
+                    {/* </LogProvider> */}
+                  </VoipProvider>
                   <NotificationBar />
                 </NavBarActionProvider>
               </SharedRoomStateProvider>

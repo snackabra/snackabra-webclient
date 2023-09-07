@@ -4,6 +4,7 @@ import IconButton from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import CallIcon from '@mui/icons-material/Call';
 import MenuList from '@mui/material/MenuList';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemIcon from '@mui/material/ListItemIcon';
@@ -16,16 +17,22 @@ import ConnectionStatus from "./ConnectionStatus"
 import SharedRoomStateContext from "../../contexts/SharedRoomState";
 import { observer } from "mobx-react"
 import SnackabraContext from "../../contexts/SnackabraContext";
+import VoipContext from '../../contexts/Voip/VoipContext';
 import { downloadFile } from "../../utils/misc"
+import CallWindow from '../Modals/CallWindow';
+import { set } from 'core-js/core/dict';
+
 
 const ITEM_HEIGHT = 48;
 
 const RoomMenu = observer((props) => {
   let { room_id } = useParams();
+  const voipContext = React.useContext(VoipContext);
   const sbContext = React.useContext(SnackabraContext);
   const notify = React.useContext(NotificationContext);
   const roomState = React.useContext(SharedRoomStateContext);
   const [anchorEl, setAnchorEl] = React.useState(null);
+  const [openCallWindow, setOpenCallWindow] = React.useState(false);
   const open = Boolean(anchorEl);
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -78,19 +85,49 @@ const RoomMenu = observer((props) => {
     }
 
   }, [notify, sbContext])
-  
+
+  const startOrJoinCall = () => {
+    // const room = sbContext.channels[props.roomId]
+    // voipContext.openCallWindow(room.key, props.roomId)
+    setOpenCallWindow(true)
+  }
+
+  const closeCallWindow = () => {
+    setOpenCallWindow(false)
+  }
+
   return (
     <div>
-      <IconButton
-        aria-label="more"
-        id="long-button"
-        aria-controls={open ? 'long-menu' : undefined}
-        aria-expanded={open ? 'true' : undefined}
-        aria-haspopup="true"
-        onClick={handleClick}
-      >
-        <MoreVertIcon sx={{ color: props.selected ? '#fff' : 'inherit' }} />
-      </IconButton>
+      <CallWindow open={openCallWindow} onClose={closeCallWindow} room={props.roomId} keys={sbContext.channels[props.roomId].key}/>
+      {room_id === props.roomId ?
+        <>
+          <IconButton
+            aria-label="more"
+            id="long-button"
+            aria-controls={open ? 'long-menu' : undefined}
+            aria-expanded={open ? 'true' : undefined}
+            aria-haspopup="true"
+            onClick={handleClick}
+          >
+            <ConnectionStatus roomId={props.roomId} >
+              <MoreVertIcon sx={{ color: props.selected ? '#fff' : 'inherit' }} />
+            </ConnectionStatus>
+          </IconButton>
+
+        </> :
+        <IconButton
+          aria-label="more"
+          id="long-button"
+          aria-controls={open ? 'long-menu' : undefined}
+          aria-expanded={open ? 'true' : undefined}
+          aria-haspopup="true"
+          onClick={handleClick}
+        >
+          <MoreVertIcon sx={{ color: props.selected ? '#fff' : 'inherit' }} />
+        </IconButton>
+
+      }
+
       <Menu
         id="long-menu"
         MenuListProps={{
@@ -151,7 +188,12 @@ const RoomMenu = observer((props) => {
           </MenuItem>
         </MenuList>
       </Menu>
-      {room_id === props.roomId && <ConnectionStatus roomId={props.roomId} />}
+      <IconButton
+        aria-label="cancel room rename"
+        edge="end"
+      >
+        <CallIcon sx={{ color: "#fff" }} onClick={startOrJoinCall} />
+      </IconButton>
     </div>
   );
 })

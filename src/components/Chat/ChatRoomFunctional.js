@@ -25,11 +25,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { isMobile } from 'react-device-detect';
 import { Navigate } from "react-router-dom";
 import SharedRoomStateContext from "../../contexts/SharedRoomState";
+import VoipContext from "../../contexts/Voip/VoipContext";
 import { GiftedChat } from "react-native-gifted-chat";
+
+
 
 
 const ChatRoom = observer((props) => {
   const shardRoomContext = React.useContext(SharedRoomStateContext)
+  const voipContext = React.useContext(VoipContext)
   // eslint-disable-next-line no-undef
   const FileHelper = window.SBFileHelper;
   const fileMetadata = new Map();
@@ -41,7 +45,7 @@ const ChatRoom = observer((props) => {
     SIMPLE_CHAT_MESSAGE: 'd341ca8645f94dc0adb1772865d973fc',
     FILE_SHARD_METADATA: 'ac9ce10755b647849d8596011979e018',
     IMAGE_MESSAGE: '2ef77f64d6b94a4ba677dcd1f20c08f2',
-    'reserved2': '7a962646710f4aefb44a709aaa04ba41',
+    VOIP_SIGNAL: '7a962646710f4aefb44a709aaa04ba41',
     'reserved3': 'ce59be06bd304102b55a731474758075',
     'reserved4': 'cedda653151e4110abd81cf55c8884a6',
     'reserved5': '5c4bec993da94bd5999fe7ea08f1cbce',
@@ -300,6 +304,9 @@ const ChatRoom = observer((props) => {
             fileMetadata.set(x, m.fileMetadata)
           }
           handleSimpleChatMessage(m);
+          break;
+        case messageTypes.VOIP_SIGNAL:
+          console.log('VOIP_SIGNAL', m)
           break;
         default:
           console.warn("Unknown message type received: ", m);

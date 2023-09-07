@@ -15,7 +15,7 @@ const ConnectionStatus = observer((props) => {
     // MTG: we can make this better by using callbacks in jslib
     React.useEffect(() => {
         let iterator
-        if(iterator) {
+        if (iterator) {
             clearInterval(iterator)
         }
         iterator = setInterval(() => {
@@ -41,26 +41,29 @@ const ConnectionStatus = observer((props) => {
 
     }, [statusMessage])
 
-    const reload = () => {
+    const reload = (e) => {
+        e.stopPropagation()
         window.location.reload();
     }
 
     return (
         <>
             {status !== 'error' ?
-                <Tooltip title={`Connection Status (${statusMessage})`}>
+                <>
                     <Badge
-                        sx={{ pl: 2 }}
+                        sx={{ position: 'absolute', top: 8, right: 8 }}
                         badgeContent=""
                         color={status}
-                        variant="solid"
+                        variant="dot"
                     />
-                </Tooltip>
+                    <Tooltip title={`Connection Status (${statusMessage})`}>
+
+                        {props.children}
+                    </Tooltip>
+                </>
                 :
-                <Tooltip title={`Connection Status (${sbContext.status})`}>
-                    <IconButton onClick={reload} aria-label="reload" color="secondary" >
-                        <RefreshIcon color="error" />
-                    </IconButton>
+                <Tooltip title={`Connection Status (${sbContext.status || 'CLOSED'})`}>
+                    <RefreshIcon onClick={reload} color="error" />
                 </Tooltip>
 
             }
