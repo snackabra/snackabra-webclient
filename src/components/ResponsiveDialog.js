@@ -38,14 +38,14 @@ export default function ResponsiveDialog(props) {
         <DialogContent>
           {props.children}
         </DialogContent>
-        {props.showActions &&
+        {/* {props.showActions &&
           (<DialogActions>
             <StyledButton variant={'contained'} autoFocus onClick={handleClose}>
               Cancel
             </StyledButton>
 
           </DialogActions>)
-        }
+        } */}
       </Dialog>
     </div>
   );

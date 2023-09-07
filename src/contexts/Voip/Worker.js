@@ -1,20 +1,16 @@
+'use strict';
+export default () => {  // eslint-disable-line
+  let scount = 0;
+  let rcount = 0;
+  let currentCryptoKey;
+  let useCryptoOffset;
 
-class WorkerAsClass {
-  scount = 0;
-  rcount = 0;
-  currentCryptoKey;
-  useCryptoOffset;
-  constructor() {
-    // Handler for RTCRtpScriptTransforms.
-    if (window.RTCTransformEvent) {
-      window.onrtctransform = (event) => {
-        const transformer = event.transformer;
-        this.handleTransform(transformer.options.operation, transformer.readable, transformer.writable);
-      };
-    }
-  }
+  console.log = (...args) => {
+    postMessage({ operation: 'log', args: JSON.stringify(args) });
+  };
 
-  dump = (encodedFrame, direction, max = 16) => {
+
+  const dump = (encodedFrame, direction, max = 16) => {
     const data = new Uint8Array(encodedFrame.data);
     let bytes = '';
     for (let j = 0; j < data.length && j < max; j++) {
@@ -29,40 +25,40 @@ class WorkerAsClass {
     );
   }
 
-  encodeFunction = async (encodedFrame, controller) => {
-    if (this.scount++ < 30) { // dump the first 30 packets.
-      this.dump(encodedFrame, 'send');
+  const encodeFunction = async (encodedFrame, controller) => {
+    if (scount++ < 30) { // dump the first 30 packets.
+      dump(encodedFrame, 'send');
     }
     let iv = crypto.getRandomValues(new Uint8Array(12));
-    const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, this.currentCryptoKey.encryptionKey, encodedFrame.data);
+    const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, currentCryptoKey.encryptionKey, encodedFrame.data);
     const data = new Blob([iv, encrypted]);
     encodedFrame.data = await data.arrayBuffer();
 
     controller.enqueue(encodedFrame);
   }
 
-  decodeFunction = async (encodedFrame, controller) => {
-    if (this.rcount++ < 30) { // dump the first 30 packets
-      this.dump(encodedFrame, 'recv');
+  const decodeFunction = async (encodedFrame, controller) => {
+    if (rcount++ < 30) { // dump the first 30 packets
+      dump(encodedFrame, 'recv');
     }
     const blob = new Blob([encodedFrame.data]);
     const iv = await blob.slice(0, 12).arrayBuffer();
     const data = await blob.slice(12, blob.size).arrayBuffer();
-    encodedFrame.data = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, this.currentCryptoKey.encryptionKey, data);
+    encodedFrame.data = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, currentCryptoKey.encryptionKey, data);
     controller.enqueue(encodedFrame);
   }
 
-  handleTransform = async (operation, readable, writable) => {
+  const handleTransform = async (operation, readable, writable) => {
     if (operation === 'encode') {
       const transformStream = new TransformStream({
-        transform: this.encodeFunction,
+        transform: encodeFunction,
       });
       readable
         .pipeThrough(transformStream)
         .pipeTo(writable);
     } else if (operation === 'decode') {
       const transformStream = new TransformStream({
-        transform: this.decodeFunction,
+        transform: decodeFunction,
       });
       readable
         .pipeThrough(transformStream)
@@ -71,18 +67,40 @@ class WorkerAsClass {
   }
 
   // Handler for messages, including transferable streams.
-  postMessage = async (event) => {
-    console.log(event)
+  // const postMessage = async (event) => {
+  //   console.log(event)
+  //   if (event) {
+  //     if (event.operation === 'encode' || event.operation === 'decode') {
+  //       return await handleTransform(event.operation, event.readable, event.writable);
+  //     }
+  //     if (event.operation === 'setCryptoKey') {
+  //       currentCryptoKey = event.currentCryptoKey;
+  //       useCryptoOffset = event.useCryptoOffset;
+  //     }
+  //   }
+  // };
+  onmessage = async (event) => {
+    postMessage('asdasdasdasdasd')
     if (event) {
-      if (event.operation === 'encode' || event.operation === 'decode') {
-        return await this.handleTransform(event.operation, event.readable, event.writable);
+      if (event.data.operation === 'encode' || event.data.operation === 'decode') {
+        return await handleTransform(event.data.operation, event.data.readable, event.data.writable);
       }
-      if (event.operation === 'setCryptoKey') {
-        this.currentCryptoKey = event.currentCryptoKey;
-        this.useCryptoOffset = event.useCryptoOffset;
+      if (event.data.operation === 'setCryptoKey') {
+        currentCryptoKey = event.data.currentCryptoKey;
+        useCryptoOffset = event.data.useCryptoOffset;
       }
     }
   };
-}
 
-export default WorkerAsClass;
+  // eslint-disable-next-line no-restricted-globals
+  if (self.RTCTransformEvent) {
+    // eslint-disable-next-line no-restricted-globals
+    self.onrtctransform = (event) => {
+      const transformer = event.transformer;
+      handleTransform(transformer.options.operation, transformer.readable, transformer.writable);
+    };
+  }
+
+  console.log('Worker loaded');
+
+}

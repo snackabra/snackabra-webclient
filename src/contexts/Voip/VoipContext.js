@@ -1,5 +1,5 @@
 import * as React from "react"
-import WorkerAsClass from "./Worker";
+import WorkerE2EE from "./Worker";
 import { Button, Divider, FormControl, Grid, IconButton, InputLabel, Select } from "@mui/material";
 import StopScreenShareIcon from '@mui/icons-material/StopScreenShare';
 import ScreenShareIcon from '@mui/icons-material/ScreenShare';
@@ -24,28 +24,41 @@ let webRTCconfig = {
   encodedInsertableStreams: true
 };
 
+const worker = WorkerE2EE.toString();
+const blob = new Blob([`(${worker})()`]);
+
 export class VoipProvider extends React.Component {
   messageType = '7a962646710f4aefb44a709aaa04ba41' // DO NOT CHANGE THIS
   lastMessage;
   messages = []
-  pc;
+  pc = {};
   localStream;
   Crypto;
   myKey;
+  myId;
   sbContext;
   channel;
   channelId;
   videoCFG = true;
   audioCFG = true;
-  worker = new WorkerAsClass();
+  worker = new Worker(URL.createObjectURL(blob), { name: '384 E2EE worker', writable: true, readable: true });
   preferredVideoCodecMimeType = 'video/VP8';
   localVideo;
-  remoteVideo;
+  remoteVideo = {};
 
   state = {
     open: false,
     connected: false,
     screenShared: false,
+  }
+  componentDidMount = () => {
+    this.worker.onmessage = (e) => {
+      if (e.data.operation === 'log') {
+        console.log(JSON.parse(e.data.args))
+      }else{
+        console.log(e)
+      }
+    }
   }
 
   openCallWindow = (key, channelId) => {
@@ -85,7 +98,7 @@ export class VoipProvider extends React.Component {
   }
 
   hangupClick = async () => {
-    this.hangup();
+    this.hangup(this.myId);
     this.sendMessage({ type: 'bye' });
     // localVideo.classList.remove('shrink')
   }
@@ -115,7 +128,7 @@ export class VoipProvider extends React.Component {
     // stopButton.classList.add('d-block')
     // stopButton.classList.remove('d-none')
 
-    this.hangup();
+    this.hangup(this.myId);
     navigator.mediaDevices.getDisplayMedia({ audio: this.audioCFG, video: this.videoCFG }).then(async (stream) => {
       this.localStream = stream;
       this.localVideo.srcObject = this.localStream;
@@ -192,6 +205,7 @@ export class VoipProvider extends React.Component {
 
   connect = (key, channel) => {
     this.myKey = key
+    this.myId = this.sbContext.getContact(key)._id
     this.Crypto = new window.SB.SBCrypto()
     this.channel = this.sbContext.channels[channel]
     const originalRecieveMessage = this.channel._messageCallback
@@ -234,6 +248,7 @@ export class VoipProvider extends React.Component {
 
   sendMessage(message) {
     console.log('Client sending message: ', message);
+    message.sender = this.sbContext.getContact(this.myKey)._id
     this.emit(JSON.stringify(message));
   }
 
@@ -254,15 +269,15 @@ export class VoipProvider extends React.Component {
         break;
       case 'ready':
         // A second tab joined. This tab will initiate a call unless in a call already.
-        if (this.pc) {
+        if (this.pc[data._id]) {
           console.log('already in call, ignoring');
           return;
         }
         this.makeCall();
         break;
       case 'bye':
-        if (this.pc) {
-          this.hangup();
+        if (this.pc[data._id]) {
+          this.hangup(data._id);
           this.setState({ connected: false })
           // localVideo.classList.remove('shrink')
         }
@@ -274,7 +289,7 @@ export class VoipProvider extends React.Component {
   };
 
   reInit = () => {
-    this.hangup();
+    this.hangup(this.myId);
     setTimeout(() => {
       this.joinPeers().then(() => {
         console.log('joined peers')
@@ -285,10 +300,10 @@ export class VoipProvider extends React.Component {
     }, 1000)
   }
 
-  hangup = () => {
-    if (this.pc) {
-      this.pc.close();
-      this.pc = null;
+  hangup = (_id) => {
+    if (this.pc[_id]) {
+      this.pc[_id].close();
+      delete this.pc[_id];
     }
     this.localStream.getTracks().forEach(track => track.stop());
     this.localStream = null;
@@ -310,9 +325,9 @@ export class VoipProvider extends React.Component {
     })
   }
 
-  createPeerConnection = () => {
-    this.pc = new RTCPeerConnection(webRTCconfig);
-    this.pc.onicecandidate = e => {
+  createPeerConnection = (_id) => {
+    this.pc[_id] = new RTCPeerConnection(webRTCconfig);
+    this.pc[_id].onicecandidate = e => {
       const message = {
         type: 'candidate',
         candidate: null,
@@ -324,59 +339,60 @@ export class VoipProvider extends React.Component {
       }
       this.sendMessage(message);
     };
-    this.localStream.getTracks().forEach(track => this.pc.addTrack(track, this.localStream));
-    this.pc.getSenders().forEach(this.setupSenderTransform);
-    this.pc.ontrack = e => {
+    this.localStream.getTracks().forEach(track => this.pc[_id].addTrack(track, this.localStream));
+    this.pc[_id].getSenders().forEach(this.setupSenderTransform);
+    this.pc[_id].ontrack = e => {
       this.setupReceiverTransform(e.receiver);
       this.remoteVideo.srcObject = e.streams[0]
     }
   }
 
-  makeCall = async () => {
+  makeCall = async (_id) => {
     console.log('Setting crypto keys to ', this.channel.socket.keys);
 
-    this.createPeerConnection();
+    this.createPeerConnection(_id);
 
-    const offer = await this.pc.createOffer();
+    const offer = await this.pc[_id].createOffer();
     this.sendMessage({ type: 'offer', sdp: offer.sdp });
-    await this.pc.setLocalDescription(offer);
+    await this.pc[_id].setLocalDescription(offer);
   }
 
   handleOffer = async (offer) => {
-    if (this.pc) {
+    if (this.pc[offer._id]) {
       console.warn('existing peerconnection, replacing');
       // return;
     }
     await this.createPeerConnection();
-    await this.pc.setRemoteDescription(offer);
+    await this.pc[offer._id].setRemoteDescription(offer);
 
-    const answer = await this.pc.createAnswer();
+    const answer = await this.pc[offer._id].createAnswer();
     this.sendMessage({ type: 'answer', sdp: answer.sdp });
-    await this.pc.setLocalDescription(answer);
+    await this.pc[offer._id].setLocalDescription(answer);
   }
 
   handleAnswer = async (answer) => {
-    if (!this.pc) {
+    if (!this.pc[answer._id]) {
       console.error('no peerconnection');
       return;
     }
-    await this.pc.setRemoteDescription(answer);
+    await this.pc[answer._id].setRemoteDescription(answer);
   }
 
   handleCandidate = async (candidate) => {
-    if (!this.pc) {
+    if (!this.pc[candidate._id]) {
       console.error('no peerconnection');
       return;
     }
     if (!candidate.candidate) {
-      await this.pc.addIceCandidate(null);
+      await this.pc[candidate._id].addIceCandidate(null);
     } else {
-      await this.pc.addIceCandidate(candidate);
+      await this.pc[candidate._id].addIceCandidate(candidate);
     }
   }
 
   setupSenderTransform = (sender) => {
     if (window.RTCRtpScriptTransform) {
+      // eslint-disable-next-line no-param-reassign
       sender.transform = new window.RTCRtpScriptTransform(this.worker, { operation: 'encode' });
       return;
     }
@@ -502,7 +518,7 @@ export const VoipComponent = () => {
 
   React.useEffect(() => {
 
-    if(!voipContext.state.connected && connected){
+    if (!voipContext.state.connected && connected) {
       setConnected(false)
       voipContext.hangupClick()
 
@@ -558,6 +574,9 @@ export const VoipComponent = () => {
   return (
     <Grid container>
       <Grid item xs={12}>
+        {
+
+        }
         <video id="remoteVideo" style={{ width: "100%", backgroundColor: 'black' }} playsInline autoPlay></video>
         {/* <video id="localVideo" playsInline autoPlay></video> */}
       </Grid>

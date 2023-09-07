@@ -13,16 +13,23 @@ const CallWindow = (props) => {
 
     React.useEffect(() => {
         setOpen(props.open)
-        if(props.open){
+        if (props.open) {
             voipContext.sbContext = sbContext
-            voipContext.initVideoCallClick(props.keys,props.room)
+            voipContext.initVideoCallClick(props.keys, props.room)
         }
     }, [props.keys, props.open, props.room, sbContext, voipContext])
+
+    const closeCallWindow = () => {
+        if (voipContext.state.connected) {
+            voipContext.hangupClick()
+        }
+        props.onClose()
+    }
 
     return (
         <ResponsiveDialog
             title={'VOIP'}
-            onClose={() => props.onClose()}
+            onClose={closeCallWindow}
             open={open}>
             <Grid container
                 direction="row"
