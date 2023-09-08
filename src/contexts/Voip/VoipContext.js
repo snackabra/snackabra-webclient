@@ -1,6 +1,6 @@
 import * as React from "react"
 import WorkerE2EE from "./Worker";
-import { Button, Divider, FormControl, Grid, IconButton, InputLabel, Select } from "@mui/material";
+import { Divider, FormControl, Grid, IconButton, InputLabel, Select } from "@mui/material";
 import StopScreenShareIcon from '@mui/icons-material/StopScreenShare';
 import ScreenShareIcon from '@mui/icons-material/ScreenShare';
 import VideocamOffIcon from '@mui/icons-material/VideocamOff';
@@ -27,6 +27,7 @@ let webRTCconfig = {
 const worker = WorkerE2EE.toString();
 const blob = new Blob([`(${worker})()`]);
 
+
 export class VoipProvider extends React.Component {
   messageType = '7a962646710f4aefb44a709aaa04ba41' // DO NOT CHANGE THIS
   lastMessage;
@@ -45,6 +46,9 @@ export class VoipProvider extends React.Component {
   preferredVideoCodecMimeType = 'video/VP8';
   localVideo;
   remoteVideo = {};
+  srdAnswerPending = false;
+  ignoreOffer = false;
+
 
   state = {
     open: false,
@@ -55,7 +59,7 @@ export class VoipProvider extends React.Component {
     this.worker.onmessage = (e) => {
       if (e.data.operation === 'log') {
         console.log(JSON.parse(e.data.args))
-      }else{
+      } else {
         console.log(e)
       }
     }
@@ -76,23 +80,21 @@ export class VoipProvider extends React.Component {
     this.remoteVideo = video
   }
 
+  addRemoteVideo = (_id) => {
+    this.remoteVideo[_id] = document.getElementById(_id)
+  }
+
+  addEventListeners = () => {
+
+  }
+
   initVideoCallClick = async (key, channel) => {
-    // initVideoCallButton.disabled = true;
-    // joinButton.disabled = true;
-    // hangupButton.disabled = false;
-    // videoControls.classList.remove('d-none')
-    // videoControls.classList.add('d-flex');
     this.setState({ connected: true })
     await this.connect(key, channel)
     this.joinPeers()
   }
 
   joinCallClick = async (joinKey, channel) => {
-    // initVideoCallButton.disabled = true;
-    // joinButton.disabled = true;
-    // hangupButton.disabled = false;
-    // videoControls.classList.remove('d-none')
-    // videoControls.classList.add('d-flex');
     await this.connect(joinKey, channel)
     this.joinPeers()
   }
@@ -100,33 +102,9 @@ export class VoipProvider extends React.Component {
   hangupClick = async () => {
     this.hangup(this.myId);
     this.sendMessage({ type: 'bye' });
-    // localVideo.classList.remove('shrink')
   }
 
-  // selectMicrophone = () => {
-  //   this.audioCFG = { audio: { deviceId: { exact: select.value } } };
-  //   var constraints = { audio: this.audioCFG, video: this.videoCFG };
-  //   navigator.mediaDevices.getUserMedia(constraints).then(function (stream) {
-  //     this.localStream = stream;
-  //     localVideo.srcObject = this.localStream;
-  //     this.reInit();
-  //   });
-  // }
-
-  // selectCamera = () => {
-  //   this.videoCFG = { deviceId: { exact: select.value } };
-  //   var constraints = { audio: this.audioCFG, video: this.videoCFG };
-  //   navigator.mediaDevices.getUserMedia(constraints).then(function (stream) {
-  //     this.localStream = stream;
-  //     this.localVideo.srcObject = this.localStream;
-  //     this.reInit();
-  //   });
-  // }
-
   shareScreenClick = async () => {
-    // shareButton.classList.add('d-none')
-    // stopButton.classList.add('d-block')
-    // stopButton.classList.remove('d-none')
 
     this.hangup(this.myId);
     navigator.mediaDevices.getDisplayMedia({ audio: this.audioCFG, video: this.videoCFG }).then(async (stream) => {
@@ -141,7 +119,6 @@ export class VoipProvider extends React.Component {
     }).catch(function (error) {
       if (error.name === 'NotAllowedError') {
         console.error('Screen sharing was canceled by the user.');
-        // stopButton.click()
       } else {
         console.error('Could not share the screen: ', error);
       }
@@ -150,50 +127,14 @@ export class VoipProvider extends React.Component {
   }
 
   stopClick = async () => {
-    // videoControls.classList.remove('d-flex')
-    // videoControls.classList.add('d-none');
-    // stopButton.classList.add('d-none')
-    // shareButton.classList.add('d-block')
-    // shareButton.classList.remove('d-none')
     this.reInit()
   }
-
-  // muteVideoClick = async () => {
-  //   const videoIcon = muteVideoButton.querySelector('#fa-video');
-  //   const videoSlashIcon = muteVideoButton.querySelector('#fa-video-slash');
-
-  //   if (this.toggleMuteVideo()) {
-  //     videoIcon.classList.remove('d-none')
-  //     videoSlashIcon.classList.add('d-none')
-  //     muteVideoButton.classList.remove('btn-danger')
-  //   } else {
-  //     videoIcon.classList.add('d-none')
-  //     videoSlashIcon.classList.remove('d-none')
-  //     muteVideoButton.classList.add('btn-danger')
-  //   }
-  // }
-
-  // muteAudioClick = async () => {
-  //   const micIcon = muteButton.querySelector('#fa-microphone');
-  //   const micSlashIcon = muteButton.querySelector('#fa-microphone-slash');
-
-  //   if (this.toggleMuteAudio()) {
-  //     micIcon.classList.remove('d-none')
-  //     micSlashIcon.classList.add('d-none')
-  //     muteButton.classList.remove('btn-danger')
-  //   } else {
-  //     micIcon.classList.add('d-none')
-  //     micSlashIcon.classList.remove('d-none')
-  //     muteButton.classList.add('btn-danger')
-  //   }
-  // }
 
   receiveMessage = async (message) => {
 
     if (message.messageType !== this.messageType) return
     this.lastMessage = message
     this.messages.push(message);
-    console.log('Client received message:', message);
     if (message.sender_pubKey.x + ' ' + message.sender_pubKey.y !== this.myKey.x + ' ' + this.myKey.y) {
       const rtcMessage = JSON.parse(message.text)
       console.log(rtcMessage)
@@ -217,7 +158,6 @@ export class VoipProvider extends React.Component {
     this.worker.postMessage({
       operation: 'setCryptoKey',
       currentCryptoKey: this.channel.socket.keys,
-      // useCryptoOffset,
     });
     this.setState({ connected: true })
   }
@@ -227,14 +167,6 @@ export class VoipProvider extends React.Component {
 
     const sbm = this.channel.newMessage(message);
     console.log(sbm)
-    // const message = {
-    //   createdAt: new Date(),
-    //   text: "",
-    //   messageType: messageTypes.SIMPLE_CHAT_MESSAGE,
-    //   image: value.sbImage.thumbnail,
-    //   user: sbContext.getContact(channel.key),
-    //   _id: 'sending_' + giftedMessage[0]._id + Date.now()
-    // }
     console.log(this.sbContext.getContact(this.myKey))
     sbm.contents.user = this.sbContext.getContact(this.myKey)
     sbm.contents.sendingId = 'voip_' + Date.now()
@@ -257,6 +189,19 @@ export class VoipProvider extends React.Component {
       console.log('not ready yet');
       return;
     }
+
+    console.log('Client received message:', data)
+    // TODO : fix this
+    data._id = data.sender
+    // const isStable = this.pc[data._id] && (
+    //   this.pc[data._id].signalingState === 'stable' ||
+    //   (this.pc[data._id].signalingState === 'have-local-offer' && this.srdAnswerPending));
+    // this.ignoreOffer =
+    //   data.type === 'offer' && (this.makingOffer || !isStable);
+    // if (this.ignoreOffer) {
+    //   console.log('glare - ignoring offer');
+    //   return;
+    // }
     switch (data.type) {
       case 'offer':
         this.handleOffer(data);
@@ -268,18 +213,16 @@ export class VoipProvider extends React.Component {
         this.handleCandidate(data);
         break;
       case 'ready':
-        // A second tab joined. This tab will initiate a call unless in a call already.
         if (this.pc[data._id]) {
           console.log('already in call, ignoring');
           return;
         }
-        this.makeCall();
+        this.makeCall(data._id);
         break;
       case 'bye':
         if (this.pc[data._id]) {
           this.hangup(data._id);
           this.setState({ connected: false })
-          // localVideo.classList.remove('shrink')
         }
         break;
       default:
@@ -305,11 +248,11 @@ export class VoipProvider extends React.Component {
       this.pc[_id].close();
       delete this.pc[_id];
     }
-    this.localStream.getTracks().forEach(track => track.stop());
+    if (this.localStream) {
+      this.localStream.getTracks().forEach(track => track.stop());
+    }
+    this.pc = {};
     this.localStream = null;
-    // initVideoCallButton.disabled = false;
-    // joinButton.disabled = false;
-    // hangupButton.disabled = true;
   };
 
   joinPeers = () => {
@@ -325,8 +268,33 @@ export class VoipProvider extends React.Component {
     })
   }
 
+  assert_equals = (a, b, msg) => {
+    if (a !== b) {
+      new Error(`${msg} expected ${b} but got ${a}`)
+    }
+  }
+
   createPeerConnection = (_id) => {
     this.pc[_id] = new RTCPeerConnection(webRTCconfig);
+
+    // this.pc[_id].onnegotiationneeded = async () => {
+    //   try {
+    //     console.log('SLD due to negotiationneeded');
+    //     this.assert_equals(this.pc[_id].signalingState, 'stable', 'negotiationneeded always fires in stable state');
+    //     this.assert_equals(this.makingOffer, false, 'negotiationneeded not already in progress');
+    //     this.makingOffer = true;
+    //     await this.pc[_id].setLocalDescription();
+    //     this.assert_equals(this.pc[_id].signalingState, 'have-local-offer', 'negotiationneeded not racing with onmessage');
+    //     this.assert_equals(this.pc[_id].localDescription.type, 'offer', 'negotiationneeded SLD worked');
+    //     console.log(this.pc[_id].localDescription)
+    //     this.sendMessage({description: this.pc[_id].localDescription});
+    //   } catch (e) {
+    //     console.error(e)
+    //   } finally {
+    //     this.makingOffer = false;
+    //   }
+    // };
+
     this.pc[_id].onicecandidate = e => {
       const message = {
         type: 'candidate',
@@ -341,9 +309,19 @@ export class VoipProvider extends React.Component {
     };
     this.localStream.getTracks().forEach(track => this.pc[_id].addTrack(track, this.localStream));
     this.pc[_id].getSenders().forEach(this.setupSenderTransform);
+    // console.trace('lskdafsdkfhalskdjbfaslkjf',_id)
     this.pc[_id].ontrack = e => {
+
       this.setupReceiverTransform(e.receiver);
-      this.remoteVideo.srcObject = e.streams[0]
+      const updatedEvent = new CustomEvent('remoteJoin', {
+        detail: {
+          type: 'remoteJoin',
+          _id: _id,
+          stream: e.streams[0]
+        },
+      });
+      document.dispatchEvent(updatedEvent);
+      // this.remoteVideo.srcObject = e.streams[0]
     }
   }
 
@@ -362,7 +340,7 @@ export class VoipProvider extends React.Component {
       console.warn('existing peerconnection, replacing');
       // return;
     }
-    await this.createPeerConnection();
+    await this.createPeerConnection(offer._id);
     await this.pc[offer._id].setRemoteDescription(offer);
 
     const answer = await this.pc[offer._id].createAnswer();
@@ -375,7 +353,9 @@ export class VoipProvider extends React.Component {
       console.error('no peerconnection');
       return;
     }
+    this.srdAnswerPending = true;
     await this.pc[answer._id].setRemoteDescription(answer);
+    this.srdAnswerPending = false;
   }
 
   handleCandidate = async (candidate) => {
@@ -464,6 +444,7 @@ export const VoipComponent = () => {
   const [videoMuted, setVideoMuted] = React.useState(false)
   const [screenShared, setScreenShared] = React.useState(false)
   const [connected, setConnected] = React.useState(false)
+  const [remoteVideoIds, setRemoteVideoIds] = React.useState([])
   const [anchorEl, setAnchorEl] = React.useState(null);
   const sbContext = React.useContext(SnackabraContext);
   const open = Boolean(anchorEl);
@@ -512,9 +493,17 @@ export const VoipComponent = () => {
     });
 
     voipContext.setLocalVideo(document.getElementById('localVideo'))
-    voipContext.setRemoteVideo(document.getElementById('remoteVideo'))
+    // voipContext.setRemoteVideo(document.getElementById('remoteVideo'))
 
   }, [voipContext, sbContext])
+
+  React.useEffect(() => {
+    document.addEventListener('remoteJoin', (e) => {
+      console.log('remoteJoin', e)
+      setRemoteVideoIds([...remoteVideoIds, e.detail])
+      // voipContext.addRemoteVideo(e.detail._id)
+    })
+  }, [])
 
   React.useEffect(() => {
 
@@ -570,16 +559,30 @@ export const VoipComponent = () => {
     voipContext.shareScreenClick()
   }
 
+  const setVideoSrcObject = (id, stream) => {
+    const video = document.getElementById(id)
+    if (video) {
+      video.srcObject = stream
+    } else {
+      console.log('no video')
+    }
+  }
 
   return (
     <Grid container>
-      <Grid item xs={12}>
-        {
 
-        }
-        <video id="remoteVideo" style={{ width: "100%", backgroundColor: 'black' }} playsInline autoPlay></video>
-        {/* <video id="localVideo" playsInline autoPlay></video> */}
-      </Grid>
+      {remoteVideoIds.map((video, index) => {
+        setTimeout(() => {
+          setVideoSrcObject(video._id, video.stream)
+        }, 250)
+        return <Grid key={index} item xs={12}>
+          <video style={{ width: "100%", backgroundColor: 'black' }} id={video._id} playsInline autoPlay></video>
+        </Grid>
+      })
+      }
+      {/* <video id="remoteVideo" style={{ width: "100%", backgroundColor: 'black' }} playsInline autoPlay></video> */}
+      {/* <video id="localVideo" playsInline autoPlay></video> */}
+
       <Grid item xs={12}>
         {/* <video id="remoteVideo" playsInline autoPlay></video> */}
         <video style={{ width: "100%", backgroundColor: 'blue' }} id="localVideo" playsInline autoPlay muted></video>
