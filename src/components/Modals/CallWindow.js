@@ -1,7 +1,6 @@
 import * as React from "react"
 import ResponsiveDialog from "../ResponsiveDialog";
-import { Grid, Typography } from "@mui/material";
-import { StyledButton } from "../../styles/Buttons";
+import { Grid } from "@mui/material";
 import VoipContext, { VoipComponent } from '../../contexts/Voip/VoipContext';
 import SnackabraContext from "../../contexts/SnackabraContext";
 
@@ -30,13 +29,14 @@ const CallWindow = (props) => {
         <ResponsiveDialog
             title={'VOIP'}
             onClose={closeCallWindow}
-            open={open}>
+            open={open}
+            fullScreen>
             <Grid container
                 direction="row"
                 justifyContent="flex-start"
                 alignItems="flex-start">
                 <Grid item xs={12}>
-                    <VoipComponent />
+                    <VoipComponent closeCallWindow={closeCallWindow}/>
                 </Grid>
             </Grid>
         </ResponsiveDialog>

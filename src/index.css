@@ -12,14 +12,14 @@ a {
   overflow: visible !important;
 }
 
-
 .textinput-composer {
   appearance: none;
   background-color: rgba(0, 0, 0, 0);
   border-radius: 0px;
   border: 0px solid black;
   box-sizing: border-box;
-  font: 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font: 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
   margin: 0px;
   padding: 0px;
   resize: none;
@@ -69,23 +69,23 @@ body {
 } */
 
 div[data-testid="GC_WRAPPER"] {
-  width: 100%
+  width: 100%;
 }
 
 #root,
 body,
 html {
   height: 100%;
-  overflow: hidden
+  overflow: hidden;
 }
 
 .RoomSwipable .MuiBox-root {
-  padding: 0
+  padding: 0;
 }
 
 .sb-tab-link {
   text-transform: none;
-  color: inherit
+  color: inherit;
 }
 
 .flex {
@@ -102,7 +102,7 @@ html {
 }
 
 #image-carousel .react-swipeable-view-container {
-  height: 100%
+  height: 100%;
 }
 
 #image-carousel .react-swipeable-view-container div {
@@ -133,3 +133,30 @@ html {
     grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
   }
 }
+
+.local-video {
+  width: 100%;
+  height: calc(100% - 47px);
+  background-color: black;
+  position: absolute;
+  right: 0;
+  transition: all 0.5s ease-in-out;
+}
+
+.local-video.minimized {
+  height: inherit;
+  border: 1px solid #000;
+  width: 240px;
+  bottom: 47px;
+}
+
+@media (max-width: 600px) {
+  .local-video.minimized {
+    height: inherit;
+    border: 1px solid #000;
+    width: 120px;
+    bottom: 47px;
+  }
+}
+
+

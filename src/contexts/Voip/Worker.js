@@ -29,10 +29,10 @@ export default () => {  // eslint-disable-line
     if (scount++ < 30) { // dump the first 30 packets.
       dump(encodedFrame, 'send');
     }
-    let iv = crypto.getRandomValues(new Uint8Array(12));
-    const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, currentCryptoKey.encryptionKey, encodedFrame.data);
-    const data = new Blob([iv, encrypted]);
-    encodedFrame.data = await data.arrayBuffer();
+    // let iv = crypto.getRandomValues(new Uint8Array(12));
+    // const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, currentCryptoKey.encryptionKey, encodedFrame.data);
+    // const data = new Blob([iv, encrypted]);
+    // encodedFrame.data = await data.arrayBuffer();
 
     controller.enqueue(encodedFrame);
   }
@@ -41,10 +41,10 @@ export default () => {  // eslint-disable-line
     if (rcount++ < 30) { // dump the first 30 packets
       dump(encodedFrame, 'recv');
     }
-    const blob = new Blob([encodedFrame.data]);
-    const iv = await blob.slice(0, 12).arrayBuffer();
-    const data = await blob.slice(12, blob.size).arrayBuffer();
-    encodedFrame.data = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, currentCryptoKey.encryptionKey, data);
+    // const blob = new Blob([encodedFrame.data]);
+    // const iv = await blob.slice(0, 12).arrayBuffer();
+    // const data = await blob.slice(12, blob.size).arrayBuffer();
+    // encodedFrame.data = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, currentCryptoKey.encryptionKey, data);
     controller.enqueue(encodedFrame);
   }
 
@@ -80,7 +80,6 @@ export default () => {  // eslint-disable-line
   //   }
   // };
   onmessage = async (event) => {
-    postMessage('asdasdasdasdasd')
     if (event) {
       if (event.data.operation === 'encode' || event.data.operation === 'decode') {
         return await handleTransform(event.data.operation, event.data.readable, event.data.writable);

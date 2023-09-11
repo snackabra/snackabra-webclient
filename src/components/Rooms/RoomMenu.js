@@ -87,8 +87,6 @@ const RoomMenu = observer((props) => {
   }, [notify, sbContext])
 
   const startOrJoinCall = () => {
-    // const room = sbContext.channels[props.roomId]
-    // voipContext.openCallWindow(room.key, props.roomId)
     setOpenCallWindow(true)
   }
 
