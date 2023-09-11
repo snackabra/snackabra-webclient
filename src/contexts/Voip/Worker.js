@@ -1,5 +1,5 @@
-'use strict';
-export default () => {  // eslint-disable-line
+const workerJS = `
+  'use-strict';  // eslint-disable-line
   let scount = 0;
   let rcount = 0;
   let currentCryptoKey;
@@ -26,9 +26,9 @@ export default () => {  // eslint-disable-line
   }
 
   const encodeFunction = async (encodedFrame, controller) => {
-    if (scount++ < 30) { // dump the first 30 packets.
-      dump(encodedFrame, 'send');
-    }
+    // if (scount++ < 30) { // dump the first 30 packets.
+    //   dump(encodedFrame, 'send');
+    // }
     // let iv = crypto.getRandomValues(new Uint8Array(12));
     // const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, currentCryptoKey.encryptionKey, encodedFrame.data);
     // const data = new Blob([iv, encrypted]);
@@ -38,9 +38,9 @@ export default () => {  // eslint-disable-line
   }
 
   const decodeFunction = async (encodedFrame, controller) => {
-    if (rcount++ < 30) { // dump the first 30 packets
-      dump(encodedFrame, 'recv');
-    }
+    // if (rcount++ < 30) { // dump the first 30 packets
+    //   dump(encodedFrame, 'recv');
+    // }
     // const blob = new Blob([encodedFrame.data]);
     // const iv = await blob.slice(0, 12).arrayBuffer();
     // const data = await blob.slice(12, blob.size).arrayBuffer();
@@ -101,5 +101,6 @@ export default () => {  // eslint-disable-line
   }
 
   console.log('Worker loaded');
+`
 
-}
+export default workerJS

@@ -31,8 +31,8 @@ let webRTCconfig = {
   encodedInsertableStreams: true
 };
 
-const worker = WorkerE2EE.toString();
-const blob = new Blob([`(${worker})()`]);
+// const worker = WorkerE2EE.toString();
+const blob = new Blob([`${WorkerE2EE}`]);
 
 
 export class VoipProvider extends React.Component {
@@ -342,57 +342,62 @@ export class VoipProvider extends React.Component {
   }
 
   createPeerConnection = (_id) => {
-    this.pc = new RTCPeerConnection(webRTCconfig);
+    try {
 
-    this.pc.onnegotiationneeded = async () => {
-      try {
-        console.log('SLD due to negotiationneeded');
-        this.assert_equals(this.pc.signalingState, 'stable', 'negotiationneeded always fires in stable state');
-        this.assert_equals(this.makingOffer, false, 'negotiationneeded not already in progress');
-        this.makingOffer = true;
-        await this.pc.setLocalDescription();
-        this.assert_equals(this.pc.signalingState, 'have-local-offer', 'negotiationneeded not racing with onmessage');
-        this.assert_equals(this.pc.localDescription.type, 'offer', 'negotiationneeded SLD worked');
-        console.log('onnegotiationneeded', this.pc)
-        this.sendMessage({ description: this.pc.localDescription });
-      } catch (e) {
-        console.error(e)
-      } finally {
-        this.makingOffer = false;
-      }
-    };
-    this.makingOffer = false;
-    this.ignoreOffer = false;
-    this.srdAnswerPending = false;
-    this.pc.onicecandidate = e => {
-      const message = {
-        type: 'candidate',
-        candidate: null,
+      this.pc = new RTCPeerConnection(webRTCconfig);
+
+      this.pc.onnegotiationneeded = async () => {
+        try {
+          console.log('SLD due to negotiationneeded');
+          this.assert_equals(this.pc.signalingState, 'stable', 'negotiationneeded always fires in stable state');
+          this.assert_equals(this.makingOffer, false, 'negotiationneeded not already in progress');
+          this.makingOffer = true;
+          await this.pc.setLocalDescription();
+          this.assert_equals(this.pc.signalingState, 'have-local-offer', 'negotiationneeded not racing with onmessage');
+          this.assert_equals(this.pc.localDescription.type, 'offer', 'negotiationneeded SLD worked');
+          console.log('onnegotiationneeded', this.pc)
+          this.sendMessage({ description: this.pc.localDescription });
+        } catch (e) {
+          console.error(e)
+        } finally {
+          this.makingOffer = false;
+        }
       };
-      console.log('onicecandidate', e)
-      if (e.candidate) {
-        message.candidate = e.candidate.candidate;
-        message.sdpMid = e.candidate.sdpMid;
-        message.sdpMLineIndex = e.candidate.sdpMLineIndex;
-      }
-      console.log(e.candidate)
-      this.sendMessage({ candidate: e.candidate });
-    };
-    this.localStream.getTracks().forEach(track => this.pc.addTrack(track, this.localStream));
-    this.pc.getSenders().forEach(this.setupSenderTransform);
-    // console.trace('lskdafsdkfhalskdjbfaslkjf',_id)
-    this.pc.ontrack = e => {
-      this.setState({ connected: true })
+      this.makingOffer = false;
+      this.ignoreOffer = false;
+      this.srdAnswerPending = false;
+      this.pc.onicecandidate = e => {
+        const message = {
+          type: 'candidate',
+          candidate: null,
+        };
+        console.log('onicecandidate', e)
+        if (e.candidate) {
+          message.candidate = e.candidate.candidate;
+          message.sdpMid = e.candidate.sdpMid;
+          message.sdpMLineIndex = e.candidate.sdpMLineIndex;
+        }
+        console.log(e.candidate)
+        this.sendMessage({ candidate: e.candidate });
+      };
+      this.localStream.getTracks().forEach(track => this.pc.addTrack(track, this.localStream));
+      this.pc.getSenders().forEach(this.setupSenderTransform);
+      // console.trace('lskdafsdkfhalskdjbfaslkjf',_id)
+      this.pc.ontrack = e => {
+        this.setState({ connected: true })
 
-      this.setupReceiverTransform(e.receiver);
-      const updatedEvent = new CustomEvent('remoteJoin', {
-        detail: {
-          type: 'remoteJoin',
-          _id: _id,
-        },
-      });
-      document.dispatchEvent(updatedEvent);
-      this.remoteVideo.srcObject = e.streams[0]
+        this.setupReceiverTransform(e.receiver);
+        const updatedEvent = new CustomEvent('remoteJoin', {
+          detail: {
+            type: 'remoteJoin',
+            _id: _id,
+          },
+        });
+        document.dispatchEvent(updatedEvent);
+        this.remoteVideo.srcObject = e.streams[0]
+      }
+    } catch (e) {
+      console.error(e)
     }
   }
 
@@ -499,21 +504,32 @@ export class VoipProvider extends React.Component {
   }
 
   toggleMuteAudio = () => {
-    const audioTrack = this.localStream.getAudioTracks()[0];
-    if (audioTrack) {
-      audioTrack.enabled = !audioTrack.enabled;
+    try {
+      if (!this.localStream) return
+      const audioTrack = this.localStream.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = !audioTrack.enabled;
+      }
+      console.log(audioTrack.enabled)
+      return audioTrack.enabled;
+    } catch (e) {
+      console.error(e)
     }
-    console.log(audioTrack.enabled)
-    return audioTrack.enabled;
+
   }
 
   toggleMuteVideo = () => {
-    const videoTrack = this.localStream.getVideoTracks()[0];
-    if (videoTrack) {
-      videoTrack.enabled = !videoTrack.enabled;
+    try {
+      if (!this.localStream) return
+      const videoTrack = this.localStream.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.enabled = !videoTrack.enabled;
+      }
+      console.log(videoTrack.enabled)
+      return videoTrack.enabled;
+    } catch (e) {
+      console.error(e)
     }
-    console.log(videoTrack.enabled)
-    return videoTrack.enabled;
   }
 
   render = () => {
