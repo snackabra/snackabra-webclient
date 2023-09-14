@@ -1,7 +1,7 @@
 import * as React from 'react';
 import Snackbar from '@mui/material/Snackbar';
 import NotificationContext from "../contexts/NotificationContext";
-import Portal from '@mui/base/Portal';
+import { Portal } from '@mui/base/Portal';
 import { Alert } from "@mui/material";
 
 

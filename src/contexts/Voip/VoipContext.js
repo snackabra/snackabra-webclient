@@ -14,11 +14,8 @@ import MenuItem from '@mui/material/MenuItem';
 import MenuList from '@mui/material/MenuList';
 import ListItemText from '@mui/material/ListItemText';
 import { isMobile } from "react-device-detect";
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
+import CallIcon from '@mui/icons-material/Call';
 import CloseIcon from '@mui/icons-material/Close';
-import Button from '@mui/material/Button';
 
 import SnackabraContext from "../../contexts/SnackabraContext";
 
@@ -198,8 +195,8 @@ export class VoipProvider extends React.Component {
     console.log(this.pc, description, message)
     try {
       if (message?.type === 'bye') {
-        this.hangup();
-        this.setState({ connected: false })
+        // this.hangup();
+        // this.setState({ connected: false })
       }
       if (description) {
         // If we have a setRemoteDescription() answer operation pending, then
@@ -303,7 +300,7 @@ export class VoipProvider extends React.Component {
     setTimeout(() => {
       this.joinPeers().then(() => {
         console.log('joined peers')
-        this.makeCall();
+        // this.makeCall();
       }).catch((err) => {
         console.log(err)
       })
@@ -312,8 +309,14 @@ export class VoipProvider extends React.Component {
 
   hangup = (_id) => {
     if (this.pc) {
-      this.pc.close();
-      this.pc = null;
+      try {
+        this.pc.close();
+        this.pc = null;
+      } catch (e) {
+        console.log(e)
+        if (this.pc) this.pc = null
+      }
+
     }
     if (this.localStream) {
       this.localStream.getTracks().forEach(track => track.stop());
@@ -343,61 +346,82 @@ export class VoipProvider extends React.Component {
 
   createPeerConnection = (_id) => {
     try {
-
-      this.pc = new RTCPeerConnection(webRTCconfig);
-
-      this.pc.onnegotiationneeded = async () => {
-        try {
-          console.log('SLD due to negotiationneeded');
-          this.assert_equals(this.pc.signalingState, 'stable', 'negotiationneeded always fires in stable state');
-          this.assert_equals(this.makingOffer, false, 'negotiationneeded not already in progress');
-          this.makingOffer = true;
-          await this.pc.setLocalDescription();
-          this.assert_equals(this.pc.signalingState, 'have-local-offer', 'negotiationneeded not racing with onmessage');
-          this.assert_equals(this.pc.localDescription.type, 'offer', 'negotiationneeded SLD worked');
-          console.log('onnegotiationneeded', this.pc)
-          this.sendMessage({ description: this.pc.localDescription });
-        } catch (e) {
-          console.error(e)
-        } finally {
-          this.makingOffer = false;
-        }
-      };
-      this.makingOffer = false;
-      this.ignoreOffer = false;
-      this.srdAnswerPending = false;
-      this.pc.onicecandidate = e => {
-        const message = {
-          type: 'candidate',
-          candidate: null,
-        };
-        console.log('onicecandidate', e)
-        if (e.candidate) {
-          message.candidate = e.candidate.candidate;
-          message.sdpMid = e.candidate.sdpMid;
-          message.sdpMLineIndex = e.candidate.sdpMLineIndex;
-        }
-        console.log(e.candidate)
-        this.sendMessage({ candidate: e.candidate });
-      };
-      this.localStream.getTracks().forEach(track => this.pc.addTrack(track, this.localStream));
-      this.pc.getSenders().forEach(this.setupSenderTransform);
-      // console.trace('lskdafsdkfhalskdjbfaslkjf',_id)
-      this.pc.ontrack = e => {
-        this.setState({ connected: true })
-
-        this.setupReceiverTransform(e.receiver);
-        const updatedEvent = new CustomEvent('remoteJoin', {
-          detail: {
-            type: 'remoteJoin',
-            _id: _id,
-          },
-        });
-        document.dispatchEvent(updatedEvent);
-        this.remoteVideo.srcObject = e.streams[0]
+      if (this.pc) {
+        this.pc.close()
+        this.pc = null
       }
     } catch (e) {
-      console.error(e)
+      console.warn(e)
+      if (this.pc) this.pc = null
+    }
+
+
+    this.pc = new RTCPeerConnection(webRTCconfig);
+
+    this.pc.onnegotiationneeded = async () => {
+      try {
+        console.log('SLD due to negotiationneeded');
+        this.assert_equals(this.pc.signalingState, 'stable', 'negotiationneeded always fires in stable state');
+        this.assert_equals(this.makingOffer, false, 'negotiationneeded not already in progress');
+        this.makingOffer = true;
+        await this.pc.setLocalDescription();
+        this.assert_equals(this.pc.signalingState, 'have-local-offer', 'negotiationneeded not racing with onmessage');
+        this.assert_equals(this.pc.localDescription.type, 'offer', 'negotiationneeded SLD worked');
+        console.log('onnegotiationneeded', this.pc)
+        this.sendMessage({ description: this.pc.localDescription });
+      } catch (e) {
+        console.error(e)
+      } finally {
+        this.makingOffer = false;
+      }
+    };
+    this.makingOffer = false;
+    this.ignoreOffer = false;
+    this.srdAnswerPending = false;
+    this.pc.onicecandidate = e => {
+      const message = {
+        type: 'candidate',
+        candidate: null,
+      };
+      console.log('onicecandidate', e)
+      if (e.candidate) {
+        message.candidate = e.candidate.candidate;
+        message.sdpMid = e.candidate.sdpMid;
+        message.sdpMLineIndex = e.candidate.sdpMLineIndex;
+      }
+      console.log(e.candidate)
+      this.sendMessage({ candidate: e.candidate });
+    };
+    this.localStream.getTracks().forEach(track => this.pc.addTrack(track, this.localStream));
+    this.pc.getSenders().forEach(this.setupSenderTransform);
+    // console.trace('lskdafsdkfhalskdjbfaslkjf',_id)
+    this.pc.ontrack = e => {
+      this.setState({ connected: true })
+
+      this.setupReceiverTransform(e.receiver);
+      const updatedEvent = new CustomEvent('remoteJoin', {
+        detail: {
+          type: 'remoteJoin',
+          _id: _id,
+        },
+      });
+      document.dispatchEvent(updatedEvent);
+      this.remoteVideo.srcObject = e.streams[0]
+    }
+
+    this.pc.onconnectionstatechange = this.connStateCallback
+  }
+
+  connStateCallback = () => {
+    if (this.pc) {
+      const { connectionState } = this.pc;
+      console.log(`pc1 connection state change callback, state: ${connectionState}`);
+      if (connectionState === 'disconnected') {
+        if (!this.makingOffer) {
+          this.setState({ connected: false })
+          this.hangup()
+        }
+      }
     }
   }
 
@@ -671,6 +695,10 @@ export const VoipComponent = (props) => {
 
     voipContext.hangupClick()
     setMyVideoClassState('local-video')
+    const remoteVideo = document.getElementById('remoteVideo')
+    if (remoteVideo) {
+      remoteVideo.srcObject = null
+    }
     props.closeCallWindow()
   }
 
@@ -696,6 +724,10 @@ export const VoipComponent = (props) => {
     } else {
       console.log('no video')
     }
+  }
+
+  const startCall = () => {
+    voipContext.initVideoCallClick(voipContext.myKey, voipContext.channelId)
   }
   /*
   background-color: blue;
@@ -738,8 +770,8 @@ export const VoipComponent = (props) => {
         <video id="remoteVideo" style={{ maxHeight: 'calc(100vh - 132px)', width: "100%", backgroundColor: 'black', position: 'relative', height: isMobile ? 'calc(100vh - 172px)' : 'calc(100% - 47px)' }} playsInline autoPlay></video>
         <video className={myVideoClassState} style={{ zIndex: 999999 }} id="localVideo" playsInline autoPlay muted></video>
         <Grid id="video-control-container" style={{ width: '100%' }} container justifyContent={'center'}>
-          <IconButton id="call-end" onClick={endCall}>
-            <CallEndIcon />
+          <IconButton id="call-end" onClick={connected ? endCall : startCall}>
+            {connected ? <CallEndIcon /> : <CallIcon />}
           </IconButton>
           <IconButton id="mic-mute" onClick={toggleMuteAudio}>
             {audioMuted ? <MicIcon /> : <MicOffIcon />}

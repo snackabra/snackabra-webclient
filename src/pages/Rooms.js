@@ -28,7 +28,6 @@ import NavBarActionContext from "../contexts/NavBarActionContext";
 import { observer } from "mobx-react"
 import SnackabraContext from "../contexts/SnackabraContext";
 import { isMobile } from 'react-device-detect';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Dimensions } from "react-native";
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
@@ -308,7 +307,7 @@ const ResponsiveDrawer = observer((props) => {
   const container = window !== undefined ? () => window().document.body : undefined;
   const { height } = Dimensions.get('window')
   return (
-    <SafeAreaView sx={{ display: 'flex', p: 0 }}>
+    <div sx={{ display: 'flex', p: 0 }}>
       <CssBaseline />
       <DataOperationsDialog open={openDataOperations} onClose={() => {
         setOpenDataOperations(false)
@@ -415,7 +414,7 @@ const ResponsiveDrawer = observer((props) => {
           })}
         </SwipeableViews>
       </Box>
-    </SafeAreaView >
+    </div >
   );
 })
 

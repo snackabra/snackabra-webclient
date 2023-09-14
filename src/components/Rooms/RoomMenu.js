@@ -27,7 +27,6 @@ const ITEM_HEIGHT = 48;
 
 const RoomMenu = observer((props) => {
   let { room_id } = useParams();
-  const voipContext = React.useContext(VoipContext);
   const sbContext = React.useContext(SnackabraContext);
   const notify = React.useContext(NotificationContext);
   const roomState = React.useContext(SharedRoomStateContext);

@@ -20,7 +20,11 @@ const CallWindow = (props) => {
 
     const closeCallWindow = () => {
         if (voipContext.state.connected) {
-            voipContext.hangupClick()
+            voipContext.toggleMuteAudio()
+            voipContext.toggleMuteVideo()
+            setTimeout(() => {
+                voipContext.hangupClick()
+            }, 1000)
         }
         props.onClose()
     }

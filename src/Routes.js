@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { SafeAreaView } from 'react-native-safe-area-context';
 import Rooms from './pages/Rooms';
 import PageNotFound from './components/PageNotFound';
 import NavAppBar from "./components/NavAppBar";
@@ -10,7 +9,6 @@ import NavAppBar from "./components/NavAppBar";
 const AppRoutes = () => {
 
   return (
-    <SafeAreaView>
       <Router>
         <NavAppBar />
         <Routes>
@@ -22,7 +20,6 @@ const AppRoutes = () => {
           <Route path="*" element={<PageNotFound />} />
         </Routes>
       </Router>
-    </SafeAreaView>
   )
 }
 

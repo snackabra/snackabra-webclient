@@ -34,6 +34,11 @@ import { GiftedChat } from "react-native-gifted-chat";
 const ChatRoom = observer((props) => {
   const shardRoomContext = React.useContext(SharedRoomStateContext)
   const voipContext = React.useContext(VoipContext)
+  const giftedRef = React.useRef(null)
+  giftedRef.current?.scrollToOffset({
+    offset: 0,
+    animated: true
+  });
   // eslint-disable-next-line no-undef
   const FileHelper = window.SBFileHelper;
   const fileMetadata = new Map();
@@ -83,6 +88,13 @@ const ChatRoom = observer((props) => {
   const [inputErrored, setInputErrored] = React.useState(false);
   const [typing, setTyping] = React.useState(false);
   const [controlMessages, setControlMessages] = React.useState({});
+
+  React.useEffect(() => {
+    console.log(giftedRef)
+    setTimeout(() => {
+      giftedRef.current?.scrollToEnd();
+    }, 50);
+  })
 
   React.useEffect(() => {
     let resizeTimeout = null;
@@ -142,19 +154,10 @@ const ChatRoom = observer((props) => {
   }, []);
 
   React.useEffect(() => {
-    if (channel && channel.messages.size !== messages.size && messages.size > 0) {
-      console.log('channel changed', messages)
-      // channel.messages = messages
-    }
-  }, [channel, messages]);
-
-  React.useEffect(() => {
     if (props.openAdminDialog !== openAdminDialog) {
       setOpenAdminDialog(props.openAdminDialog)
     }
   }, [openAdminDialog, props.openAdminDialog])
-
-
 
   const init = () => {
     const keys = channel.key
@@ -300,7 +303,7 @@ const ChatRoom = observer((props) => {
           break;
         case messageTypes.IMAGE_MESSAGE:
           console.log('IMAGE_MESSAGE', m)
-          for(let x in m.fileMetadata) {
+          for (let x in m.fileMetadata) {
             fileMetadata.set(x, m.fileMetadata)
           }
           handleSimpleChatMessage(m);
@@ -321,7 +324,7 @@ const ChatRoom = observer((props) => {
   const handleSimpleChatMessage = (msg) => {
     setMessages(_messages => {
       const _n_messages = new Map(_messages).set(msg._id, msg)
-      if(msg.hasOwnProperty('sendingId')) {
+      if (msg.hasOwnProperty('sendingId')) {
         _n_messages.delete(msg.sendingId)
       }
       return _n_messages
@@ -487,6 +490,7 @@ const ChatRoom = observer((props) => {
       giftedMessage[0]._id = 'sending_' + giftedMessage[0]._id;
       const msg_id = giftedMessage[0]._id;
       giftedMessage[0].user = user
+      // giftedMessage[0].pending = true
       setMessages(_messages => new Map(_messages).set(giftedMessage[0]._id, giftedMessage[0]))
       let sbm = channel.newMessage(giftedMessage[0].text)
       sbm.contents.sendingId = msg_id;
@@ -605,8 +609,9 @@ const ChatRoom = observer((props) => {
         }} />
         <GiftedChat
           id={`sb_chat_${roomId}`}
+          messageContainerRef={giftedRef}
           isKeyboardInternallyHandled={false}
-          wrapInSafeArea={false}
+          wrapInSafeArea={true}
           className={'sb_chat_container'}
           style={{
             width: '100%'
