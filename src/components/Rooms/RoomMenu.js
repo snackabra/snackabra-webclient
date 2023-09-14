@@ -17,10 +17,8 @@ import ConnectionStatus from "./ConnectionStatus"
 import SharedRoomStateContext from "../../contexts/SharedRoomState";
 import { observer } from "mobx-react"
 import SnackabraContext from "../../contexts/SnackabraContext";
-import VoipContext from '../../contexts/Voip/VoipContext';
 import { downloadFile } from "../../utils/misc"
 import CallWindow from '../Modals/CallWindow';
-import { set } from 'core-js/core/dict';
 
 
 const ITEM_HEIGHT = 48;
@@ -94,9 +92,9 @@ const RoomMenu = observer((props) => {
   }
 
   return (
-    <div>
+    <div style={{position: 'relative'}}>
       <CallWindow open={openCallWindow} onClose={closeCallWindow} room={props.roomId} keys={sbContext.channels[props.roomId].key}/>
-      {room_id === props.roomId ?
+      {(room_id === props.roomId || (!room_id && props.roomId)) ?
         <>
           <IconButton
             aria-label="more"

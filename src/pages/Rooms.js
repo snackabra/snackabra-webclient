@@ -28,13 +28,13 @@ import NavBarActionContext from "../contexts/NavBarActionContext";
 import { observer } from "mobx-react"
 import SnackabraContext from "../contexts/SnackabraContext";
 import { isMobile } from 'react-device-detect';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Dimensions } from "react-native";
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import SwipeableViews from 'react-swipeable-views';
+import SharedRoomStateContext from "../contexts/SharedRoomState";
 
 
 function TabPanel(props) {
@@ -62,7 +62,9 @@ const ResponsiveDrawer = observer((props) => {
   const NavAppBarContext = React.useContext(NavBarActionContext)
   const sbContext = React.useContext(SnackabraContext);
   const Notifications = React.useContext(NotificationContext)
+  const roomState = React.useContext(SharedRoomStateContext)
   let { room_id } = useParams();
+
   const navigate = useNavigate()
   const { window } = props;
   const theme = useTheme();
@@ -85,6 +87,7 @@ const ResponsiveDrawer = observer((props) => {
     }
     if (room_id && room_id !== roomId) {
       setRoomId(room_id)
+      roomState.setActiveRoom(room_id)
       if (!sbContext.channels[room_id]) {
         setJoinRoomId(room_id)
         setOpenJoinDialog(true)

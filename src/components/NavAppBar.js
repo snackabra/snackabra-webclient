@@ -42,6 +42,8 @@ const NavAppBar = observer(() => {
   const updateName = (e) => {
     setUpdatedName(e.target.value)
   }
+
+  console.log('rendering nav', roomState.state.activeRoom)
   return (
     <Box sx={{ flexGrow: 1 }}>
       <WhisperUserDialog open={openWhisper} onClose={closeWhisper} />
@@ -59,7 +61,7 @@ const NavAppBar = observer(() => {
           </Grid>
           <Hidden smUp>
             <Grid xs={5} item>
-              {roomState.activeRoom && sbContext.channels[roomState.activeRoom] ?
+              {roomState.state.activeRoom && sbContext.channels[roomState.state.activeRoom] ?
                 <Grid
                   container
                   direction="row"
@@ -73,7 +75,7 @@ const NavAppBar = observer(() => {
                       onKeyDown={submitName}
                       inputProps={{ style: { color: "#fff" } }}
                       onFocus={() => {
-                        setUpdatedName(sbContext.channels[roomState.activeRoom].alias)
+                        setUpdatedName(sbContext.channels[roomState.state.activeRoom].alias)
                       }}
                       onChange={updateName}
                       variant="standard"
@@ -91,17 +93,17 @@ const NavAppBar = observer(() => {
                             </IconButton>
                           </InputAdornment>
                       }}
-                      autoFocus /> : <Typography noWrap>{sbContext.channels[roomState.activeRoom].alias}</Typography>
+                      autoFocus /> : <Typography noWrap>{sbContext.channels[roomState.state.activeRoom].alias}</Typography>
 
                   }
                   {!editingRoomId &&
                     <RoomMenu
                       socket={sbContext.socket}
                       sbContext={sbContext}
-                      selected={roomState.activeRoom}
-                      roomId={roomState.activeRoom}
+                      selected={roomState.state.activeRoom}
+                      roomId={roomState.state.activeRoom}
                       editRoom={() => {
-                        editRoom(roomState.activeRoom)
+                        editRoom(roomState.state.activeRoom)
                       }}
                     />
                   }
@@ -120,7 +122,7 @@ const NavAppBar = observer(() => {
               <Grid item>
                 <Typography variant='body2'>v{process.env.REACT_APP_CLIENT_VERSION}</Typography>
               </Grid>
-              {roomState.activeRoom && sbContext.channels[roomState.activeRoom].status === "OPEN" ?
+              {roomState.state.activeRoom && sbContext.channels[roomState.state.activeRoom].status === "OPEN" ?
                 <Avatar onClick={() => { setOpenWhisper(true) }} sx={{ width: 48, height: 48, bgcolor: 'transparent' }}>
                   <IconButton color="inherit" component="span">
                     <AccountCircleRoundedIcon />
