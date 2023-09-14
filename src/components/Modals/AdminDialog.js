@@ -64,7 +64,8 @@ const AdminDialog = observer((props) => {
   return (<ResponsiveDialog
     title={'Admin Controls'}
     onClose={props.onClose}
-    open={open}>
+    open={open}
+    showActions>
     <ConfirmLockDialog
       onClose={() => {
         setOpenLockDialog(false)
@@ -116,16 +117,6 @@ const AdminDialog = observer((props) => {
       <StyledButton variant={"contained"} sx={{ pb: 1, pt: 1 }} onClick={setCapacity}>
         <Typography variant={"button"}>Save Capacity</Typography>
       </StyledButton>
-
-      {/* 
-      <StyledButton variant={"contained"} onClick={openConfirm} sx={{ pb: 1, pt: 1 }}>
-        <Typography variant={"button"}>Restrict Room</Typography>
-      </StyledButton> */}
-      <Grid item xs={12} sx={{ pb: 1, pt: 1 }}>
-        <StyledButton variant={"contained"} onClick={props.onClose} sx={{ pb: 1, pt: 1 }}>
-          <Typography variant={"button"}>Cancel</Typography>
-        </StyledButton>
-      </Grid>
     </Grid>
   </ResponsiveDialog>
   );

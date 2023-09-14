@@ -28,6 +28,7 @@ import NavBarActionContext from "../contexts/NavBarActionContext";
 import { observer } from "mobx-react"
 import SnackabraContext from "../contexts/SnackabraContext";
 import { isMobile } from 'react-device-detect';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Dimensions } from "react-native";
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
@@ -318,8 +319,13 @@ const ResponsiveDrawer = observer((props) => {
       <CreateRoomDialog open={openCreateDialog} onClose={() => {
         setOpenCreateDialog(false)
       }} />
-      <JoinDialog open={openJoinDialog} joinRoomId={joinRoomId} onClose={() => {
+      <JoinDialog open={openJoinDialog} joinRoomId={joinRoomId} onClose={(to, index) => {
         setOpenJoinDialog(false)
+        if (typeof to === 'string' && index >= 0) {
+          navigate('/' + to)
+          setRoomId(to)
+          setValue(index);
+        }
       }} />
       <Box
         component="nav"

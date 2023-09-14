@@ -1,5 +1,3 @@
-/* Copyright (c) 2021 Magnusson Institute, All Rights Reserved */
-
 import * as React from 'react';
 import RenderBubble from "./RenderBubble";
 import RenderAvatar from "./RenderAvatar";
@@ -23,9 +21,7 @@ import Queue from "../../utils/Queue";
 import { observer } from "mobx-react"
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { isMobile } from 'react-device-detect';
-import { Navigate } from "react-router-dom";
 import SharedRoomStateContext from "../../contexts/SharedRoomState";
-import VoipContext from "../../contexts/Voip/VoipContext";
 import { GiftedChat } from "react-native-gifted-chat";
 
 
@@ -33,7 +29,6 @@ import { GiftedChat } from "react-native-gifted-chat";
 
 const ChatRoom = observer((props) => {
   const shardRoomContext = React.useContext(SharedRoomStateContext)
-  const voipContext = React.useContext(VoipContext)
   const giftedRef = React.useRef(null)
   giftedRef.current?.scrollToOffset({
     offset: 0,
@@ -60,7 +55,6 @@ const ChatRoom = observer((props) => {
   const sbContext = props.sbContext
   const channel = sbContext.channels[props.roomId];
   const sending = {}
-  // const knownShards = new Map()
   let toUpload = []
   let uploaded = []
 
@@ -83,8 +77,6 @@ const ChatRoom = observer((props) => {
   const [uploading, setUploading] = React.useState(false);
   const [replyTo, setReplyTo] = React.useState(null);
   const [dzRef, setDzRef] = React.useState(null);
-
-  const [to, setTo] = React.useState(null);
   const [inputErrored, setInputErrored] = React.useState(false);
   const [typing, setTyping] = React.useState(false);
   const [controlMessages, setControlMessages] = React.useState({});
@@ -149,7 +141,6 @@ const ChatRoom = observer((props) => {
       setHeight(0);
       setVisibility('visible');
       setReplyTo(null);
-      setTo(null);
     };
   }, []);
 

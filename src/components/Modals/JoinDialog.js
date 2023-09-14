@@ -16,6 +16,7 @@ const JoinDialog = observer((props) => {
   const [error, setErrored] = React.useState(false);
   const [roomName, setRoomName] = React.useState(`Room ${Object.keys(sbContext.channels).length + 1}`);
   const [userName, setUserName] = React.useState('');
+  const index = Object.keys(sbContext.channels).length
 
   React.useEffect(() => {
     setOpen(props.open)
@@ -45,7 +46,7 @@ const JoinDialog = observer((props) => {
       sbContext.createContact(user, channel.key)
       navigate("/" + roomId);
       setRoomId("");
-      props.onClose();
+      props.onClose(channel._id, index);
     })
   }
 
@@ -61,7 +62,6 @@ const JoinDialog = observer((props) => {
       }
 
     } else {
-      console.log(window.location.origin + "/" + roomId)
       if (roomId.length === 64) {
         join()
       } else {
@@ -78,7 +78,8 @@ const JoinDialog = observer((props) => {
     <ResponsiveDialog
       title={'Join Room'}
       onClose={onClose}
-      open={open}>
+      open={open}
+      showActions>
       <Grid container
         direction="row"
         justifyContent="flex-start"
@@ -107,7 +108,7 @@ const JoinDialog = observer((props) => {
             placeholder="Room ID or URL"
             fullWidth
             onChange={updateRoomId}
-            value={roomId}
+            value={roomId ? roomId : ''}
             onKeyUp={(e) => {
               if (e.keyCode === 13) {
                 connect()
