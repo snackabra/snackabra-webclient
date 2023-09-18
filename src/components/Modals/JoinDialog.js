@@ -12,7 +12,7 @@ const JoinDialog = observer((props) => {
   const Notifications = React.useContext(NotificationContext);
   const navigate = useNavigate();
   const [open, setOpen] = React.useState(props.open);
-  const [roomId, setRoomId] = React.useState(props.joinRoomId);
+  const [roomId, setRoomId] = React.useState("");
   const [error, setErrored] = React.useState(false);
   const [roomName, setRoomName] = React.useState(`Room ${Object.keys(sbContext.channels).length + 1}`);
   const [userName, setUserName] = React.useState('');
@@ -29,7 +29,12 @@ const JoinDialog = observer((props) => {
   }, [props.joinRoomId, roomId])
 
   const updateRoomId = (e) => {
-    setRoomId(e.target.value.trim())
+    try{
+      parseRoomId(e.target.value.trim())
+    }catch(err){
+      errorNotify(err.message)
+    }
+
   }
 
   const errorNotify = (message) => {
@@ -40,35 +45,42 @@ const JoinDialog = observer((props) => {
   }
 
   const join = () => {
-    sbContext.join(roomId, userName).then((channel) => {
-      sbContext.channels[channel._id].alias = roomName
-      const user = userName.length > 0 ? userName : 'Unamed'
-      sbContext.createContact(user, channel.key)
-      navigate("/" + roomId);
-      setRoomId("");
-      props.onClose(channel._id, index);
-    })
+    try{
+      parseRoomId(roomId)
+      sbContext.join(roomId, userName).then((channel) => {
+        sbContext.channels[channel._id].alias = roomName
+        const user = userName.length > 0 ? userName : 'Unamed'
+        sbContext.createContact(user, channel.key)
+        navigate("/" + roomId);
+        setRoomId("");
+        setErrored(false);
+        props.onClose(channel._id, index);
+      })
+    }catch(err){
+      errorNotify(err.message)
+    }
+
   }
 
-  const connect = () => {
-
-    if (roomId.match(/^http|^https/)) {
-      const uriParts = roomId.split('/')
+  const parseRoomId = (value) => {
+    if (value.match(/^http|^https/)) {
+      const uriParts = value.split('/')
       const pathname = uriParts[uriParts.length - 1]
       if (pathname.length === 64) {
-        join()
+        setRoomId(pathname)
       } else {
         errorNotify('The room id provided is not the correct format.')
       }
 
     } else {
-      if (roomId.length === 64) {
-        join()
+      if (value.length === 64) {
+        setRoomId(value)
       } else {
         errorNotify('The room id provided is not the correct format.')
       }
     }
   }
+
 
   const onClose = () => {
     props.onClose();
@@ -111,7 +123,7 @@ const JoinDialog = observer((props) => {
             value={roomId ? roomId : ''}
             onKeyUp={(e) => {
               if (e.keyCode === 13) {
-                connect()
+                join()
               }
             }}
           />
@@ -130,7 +142,7 @@ const JoinDialog = observer((props) => {
             value={roomName}
             onKeyUp={(e) => {
               if (e.keyCode === 13) {
-                connect()
+                join()
               }
             }}
           />
@@ -148,7 +160,7 @@ const JoinDialog = observer((props) => {
             value={userName}
             onKeyUp={(e) => {
               if (e.keyCode === 13) {
-                connect()
+                join()
               }
             }}
           />
@@ -159,7 +171,7 @@ const JoinDialog = observer((props) => {
         direction="row"
         justifyContent="space-between"
         alignItems="flex-start">
-        <StyledButton variant={'outlined'} onClick={connect}>Connect</StyledButton>
+        <StyledButton variant={'outlined'} onClick={join}>Connect</StyledButton>
         <StyledButton variant={'outlined'} onClick={props.onClose}>Cancel</StyledButton>
       </Grid>
     </ResponsiveDialog>
