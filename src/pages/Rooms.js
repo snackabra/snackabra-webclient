@@ -56,13 +56,14 @@ function TabPanel(props) {
     </div>
   );
 }
-
+const roomRefs = []
 const drawerWidth = 240;
 const ResponsiveDrawer = observer((props) => {
   const NavAppBarContext = React.useContext(NavBarActionContext)
   const sbContext = React.useContext(SnackabraContext);
   const Notifications = React.useContext(NotificationContext)
   const roomState = React.useContext(SharedRoomStateContext)
+
   let { room_id } = useParams();
 
   const navigate = useNavigate()
@@ -94,7 +95,7 @@ const ResponsiveDrawer = observer((props) => {
       }
     }
 
-  }, [navigate, roomId, room_id, sbContext.channels])
+  }, [navigate, roomId, room_id, sbContext.channels, roomState])
 
   React.useEffect(() => {
     const listenForMessages = (event) => {
@@ -175,6 +176,11 @@ const ResponsiveDrawer = observer((props) => {
     navigate('/' + to)
     setRoomId(to)
     setValue(index);
+    if(roomRefs[index]){
+      setTimeout(() => {
+      roomRefs[index].current.scrollToEnd()
+      }, 100);
+    }
   };
 
   const onCloseAdminDialog = () => {
@@ -296,6 +302,7 @@ const ResponsiveDrawer = observer((props) => {
                       editRoom={() => {
                         editRoom(room)
                       }}
+
                     />
                   </Grid>
                 </Grid>
@@ -413,6 +420,12 @@ const ResponsiveDrawer = observer((props) => {
                 <ChatRoom inhibitSwipe={(weighted) => {
                   inhibitSwipe(weighted)
                 }}
+                  messageContainerRef={(ref) => {
+                    console.log('setting ref')
+                    console.log(ref, index)
+                    roomRefs[index] = ref
+                    console.log(roomRefs)
+                  }}
                   roomId={item}
                   sbContext={sbContext}
                   Notifications={Notifications}

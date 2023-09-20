@@ -544,7 +544,7 @@ export class SBFileHelper {
                         else if (value.isFile === true) {
                             uniqueName += " [file]";
                         }
-                        if ((value.size !== undefined) && (value.isDirectory != true)) {
+                        if ((value.size !== undefined) && (value.isDirectory !== true)) {
                             uniqueName += ` [${value.size} bytes]`;
                         }
                         if (value.lastModified !== undefined) {

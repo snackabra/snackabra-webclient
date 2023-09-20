@@ -1,6 +1,6 @@
 import * as React from 'react';
 import TextField from '@mui/material/TextField';
-import { SBImage } from "../../utils/ImageProcessor";
+import { SBImage } from "../../utils/ImageProcessorSBFileHelper";
 import SnackabraContext from "../../contexts/SnackabraContext";
 import { observer } from "mobx-react"
 import { isDataURL } from '../../utils/misc';
@@ -9,6 +9,9 @@ import { isDataURL } from '../../utils/misc';
 let SB = require('snackabra')
 
 const RenderComposer = observer((props) => {
+  console.log(props)
+  // eslint-disable-next-line no-undef
+  const FileHelper = window.SBFileHelper;
   const sendElementId = `send-button-${props.roomId}`
   const elementId = `composer-${props.roomId}`
   const { filesAttached, onTextChanged, inputErrored } = props
@@ -88,69 +91,103 @@ const RenderComposer = observer((props) => {
     props.onTextChanged(e.target.value)
   }
 
-  const pasteEvent = async (e) => {
-    // console.log(e.nativeEvent.clipboardData.getData('text/plain'))
-    setError(true)
-    let _files = []
-    const files = Object.assign(e.nativeEvent.clipboardData.files)
-    console.log(files)
-    if (files.length > 0) {
-      setText('')
-    }
-    const text = e.nativeEvent.clipboardData.getData('text/plain');
-    if (isDataURL(text) && text.match(/data:image/)) {
-      setText('')
-      const base64 = e.nativeEvent.clipboardData.getData('text/plain').split(/data:image\/[a-zA-Z]{3,4};base64,/)[1]
-      const ab = SB.base64ToArrayBuffer(base64)
-      _files.push(await getSbImage(new Blob([ab]), props, sbContext))
-    }
 
+  const selectFiles = () => {
+    console.log(FileHelper.knownShards)
+    console.log(props)
+    props.showLoading(true)
+    try {
+      console.log('SBFileHelper.finalFileList')
 
-    for (let x in files) {
-      if (files[x] instanceof File) {
-        if (files[x].type.match(/^image/)) {
-          _files.push(await getSbImage(files[x], props, sbContext))
+      const FileMap = new Map(window.SBFileHelper.finalFileList)
+
+      for (const [key, value] of FileMap.entries()) {
+        console.log('asdfadsfjkbasdkjfaskjfb', key, value);
+        console.log(FileHelper.knownShards.get(value.uniqueShardId))
+
+        const original = window.SBFileHelper.finalFileList.get(key)
+        if (!FileHelper.knownShards.has(value.uniqueShardId)) {
+          original.knownShard = value.uniqueShardId
         }
-      }
-    }
-    if (_files.length > 0) {
-      props.setFiles(_files)
-      setText('')
-      // props.onSend({ text: '' }, true)
-      setTimeout(() => {
-        props.onTextChanged('')
-        setError(false)
-      }, 100)
+        const buffer = window.SBFileHelper.globalBufferMap.get(value.uniqueShardId)
+        // const preview = window.SBFileHelper.finalFileList.get(value.uniqueShardId)
+        if (buffer) {
+          console.log('buffer found', buffer)
+          const sbImage = new SBImage(buffer, value);
+          sbImage.processThumbnail()
+          sbImage.processImage()
+          original.sbImage = sbImage
+        } else {
+          console.error('Buffer not found')
+          throw new Error('Buffer not found')
+        }
 
+      };
+      props.showFiles()
+
+    } catch (e) {
+      console.log(e)
     }
   }
 
+  const pasteEvent = async (e) => {
+    console.log(e)
+
+    let mockEvent = {
+      preventDefault: () => { console.log('preventDefault') },
+      target: {
+        files: []
+      }
+    }
+    setError(true)
+    e.nativeEvent.dataTransfer = e.nativeEvent.clipboardData
+    const files = Object.assign(e.nativeEvent.clipboardData.files)
+    if (files.length > 0) {
+      setText('')
+    }
+    console.log(e.nativeEvent.dataTransfer)
+    for (let x in files) {
+      if (files[x] instanceof File) {
+        if (files[x].type.match(/^image/)) {
+          mockEvent.target.files.push(new File([files[x]], files[x].name, { type: files[x].type }))
+        }
+      }
+    }
+    console.log(mockEvent.target.files)
+    window.SBFileHelper.handleFileDrop(mockEvent, selectFiles);
+    // props.onSend({ text: '' }, true)
+    // setTimeout(() => {
+    //   props.onTextChanged('')
+    // }, 100)
+
+  }
+
   return (
-      <TextField
-        id={elementId}
-        label=""
-        value={text}
-        error={error}
-        // onFocus={props.onFocus}
-        onBlur={props.onBlur}
-        placeholder="Type a message..."
-        className="textinput-composer"
-        multiline
-        onPaste={pasteEvent}
-        onKeyUp={checkForSend}
-        onChange={handlChange}
-        readOnly={attachedFiles}
-        variant={'standard'}
-        InputProps={{
-          disableUnderline: true
-        }}
-        style={{
-          flexGrow: 1,
-          padding: 8,
-          maxHeight: '25vh',
-          overflowY: 'auto'
-        }}
-      />
+    <TextField
+      id={elementId}
+      label=""
+      value={text}
+      error={error}
+      // onFocus={props.onFocus}
+      onBlur={props.onBlur}
+      placeholder="Type a message..."
+      className="textinput-composer"
+      multiline
+      onPaste={pasteEvent}
+      onKeyUp={checkForSend}
+      onChange={handlChange}
+      readOnly={attachedFiles}
+      variant={'standard'}
+      InputProps={{
+        disableUnderline: true
+      }}
+      style={{
+        flexGrow: 1,
+        padding: 8,
+        maxHeight: '25vh',
+        overflowY: 'auto'
+      }}
+    />
   )
 })
 

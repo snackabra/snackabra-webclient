@@ -230,18 +230,20 @@ class SnackabraStore {
   }
 
 
-  create = async (secret, alias) => {
-    try {
-      const channel = new ChannelStore(this.SB, this.config);
-      await channel.create(secret);
-      this.channels[channel.id] = channel;
-      this.channels[channel.id].alias = alias;
-      this[save]();
-      return this.channels[channel.id];
-    } catch (e) {
-      console.error(e)
-      return false;
-    }
+  create = (secret, alias) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const channel = new ChannelStore(this.SB, this.config);
+        await channel.create(secret);
+        this.channels[channel.id] = channel;
+        this.channels[channel.id].alias = alias;
+        this[save]();
+        resolve(this.channels[channel.id]);
+      } catch (e) {
+        console.error(e)
+        reject(e)
+      }
+    });
   }
 
   importKeys = (importedData) => {
@@ -288,7 +290,7 @@ class ChannelStore {
   _messages = new Map();
   _ready = false;
   _owner = false;
-  _capacity = 0;
+  _capacity = 20;
   _motd = '';
   _messageCallback;
   _savingTimout = null;
@@ -560,18 +562,19 @@ class ChannelStore {
   };
 
   // MTG: this will be changed inthe future to work with budding
-  create = async (secret) => {
-    try {
-      const c = await this.SB.create(this.config, secret);
-      console.log("==== created channel:"); console.log(c);
-      this.id = c.channelId
-      this.key = c.key
-      return this;
-    } catch (e) {
-      console.error(e)
-      return false;
-    }
-
+  create = (secret) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const c = await this.SB.create(this.config, secret);
+        console.log("==== created channel:"); console.log(c);
+        this.id = c.channelId
+        this.key = c.key
+        resolve(this);
+      } catch (e) {
+        console.error(e)
+        reject(e)
+      }
+    })
   };
 
   connect = async (messageCallback) => {

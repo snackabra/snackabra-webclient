@@ -592,6 +592,82 @@ export const VoipComponent = (props) => {
     setAnchorEl(null);
   };
 
+  const handleAudioDeviceChange = (value) => {
+    console.log('change', value)
+    setAudioDevice(value)
+    voipContext.audioCFG = { audio: { deviceId: { exact: value } } };
+    const constraints = { audio: voipContext.audioCFG, video: voipContext.videoCFG };
+    navigator.mediaDevices.getUserMedia(constraints).then(function (stream) {
+      voipContext.localStream = stream;
+      voipContext.localVideo.srcObject = voipContext.localStream;
+      voipContext.reInit();
+    });
+  }
+
+  const handleVideoDeviceChange = (value) => {
+    console.log('change', value)
+    setVideoDevice(value)
+    voipContext.videoCFG = { deviceId: { exact: value } };
+    const constraints = { audio: voipContext.audioCFG, video: voipContext.videoCFG };
+    navigator.mediaDevices.getUserMedia(constraints).then(function (stream) {
+      voipContext.localStream = stream;
+      voipContext.localVideo.srcObject = voipContext.localStream;
+      voipContext.reInit();
+    });
+  }
+
+  const toggleMuteAudio = React.useCallback(() => {
+    setAudioMuted(!audioMuted)
+    voipContext.toggleMuteAudio()
+  },[audioMuted, voipContext])
+
+  const toggleMuteVideo = React.useCallback(() => {
+    setVideoMuted(!videoMuted)
+    voipContext.toggleMuteVideo()
+  },[videoMuted, voipContext])
+
+
+  const endCall = React.useCallback(() => {
+    if (!videoMuted) toggleMuteVideo()
+
+    if (!audioMuted) toggleMuteAudio()
+
+    voipContext.hangupClick()
+    setMyVideoClassState('local-video')
+    const remoteVideo = document.getElementById('remoteVideo')
+    if (remoteVideo) {
+      remoteVideo.srcObject = null
+    }
+    props.closeCallWindow()
+  }, [audioMuted, props, toggleMuteAudio, toggleMuteVideo, videoMuted, voipContext])
+
+
+  const toggleShareScreen = () => {
+    setScreenShared(!screenShared)
+    voipContext.shareScreenClick()
+  }
+
+  const setVideoSrcObject = (id, stream) => {
+    const video = document.getElementById(id)
+    if (video) {
+      video.srcObject = stream
+    } else {
+      console.log('no video')
+    }
+  }
+
+  const startCall = () => {
+    voipContext.initVideoCallClick(voipContext.myKey, voipContext.channelId)
+  }
+  /*
+  background-color: blue;
+    position: absolute;
+    width: 240px;
+    right: 0px;
+    bottom: 47px;
+    border: 1px solid;
+    */
+
   React.useEffect(() => {
     document.addEventListener('remoteJoin', (e) => {
       setMyVideoClassState('local-video minimized')
@@ -646,7 +722,7 @@ export const VoipComponent = (props) => {
       setRemoteVideoIds([...remoteVideoIds, e.detail])
       // voipContext.addRemoteVideo(e.detail._id)
     })
-  }, [])
+  }, [remoteVideoIds])
 
   React.useEffect(() => {
 
@@ -661,82 +737,7 @@ export const VoipComponent = (props) => {
       setConnected(true)
     }
 
-  }, [connected, voipContext, voipContext.state.connected])
-
-
-  const handleAudioDeviceChange = (value) => {
-    console.log('change', value)
-    setAudioDevice(value)
-    voipContext.audioCFG = { audio: { deviceId: { exact: value } } };
-    const constraints = { audio: voipContext.audioCFG, video: voipContext.videoCFG };
-    navigator.mediaDevices.getUserMedia(constraints).then(function (stream) {
-      voipContext.localStream = stream;
-      voipContext.localVideo.srcObject = voipContext.localStream;
-      voipContext.reInit();
-    });
-  }
-
-  const handleVideoDeviceChange = (value) => {
-    console.log('change', value)
-    setVideoDevice(value)
-    voipContext.videoCFG = { deviceId: { exact: value } };
-    const constraints = { audio: voipContext.audioCFG, video: voipContext.videoCFG };
-    navigator.mediaDevices.getUserMedia(constraints).then(function (stream) {
-      voipContext.localStream = stream;
-      voipContext.localVideo.srcObject = voipContext.localStream;
-      voipContext.reInit();
-    });
-  }
-
-  const endCall = () => {
-    if (!videoMuted) toggleMuteVideo()
-
-    if (!audioMuted) toggleMuteAudio()
-
-    voipContext.hangupClick()
-    setMyVideoClassState('local-video')
-    const remoteVideo = document.getElementById('remoteVideo')
-    if (remoteVideo) {
-      remoteVideo.srcObject = null
-    }
-    props.closeCallWindow()
-  }
-
-  const toggleMuteAudio = () => {
-    setAudioMuted(!audioMuted)
-    voipContext.toggleMuteAudio()
-  }
-
-  const toggleMuteVideo = () => {
-    setVideoMuted(!videoMuted)
-    voipContext.toggleMuteVideo()
-  }
-
-  const toggleShareScreen = () => {
-    setScreenShared(!screenShared)
-    voipContext.shareScreenClick()
-  }
-
-  const setVideoSrcObject = (id, stream) => {
-    const video = document.getElementById(id)
-    if (video) {
-      video.srcObject = stream
-    } else {
-      console.log('no video')
-    }
-  }
-
-  const startCall = () => {
-    voipContext.initVideoCallClick(voipContext.myKey, voipContext.channelId)
-  }
-  /*
-  background-color: blue;
-    position: absolute;
-    width: 240px;
-    right: 0px;
-    bottom: 47px;
-    border: 1px solid;
-    */
+  }, [connected, endCall, voipContext, voipContext.state.connected])
 
   return (
     <Grid container>

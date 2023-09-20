@@ -48,8 +48,8 @@ const CreateRoom = observer((props) => {
 
   }
 
-  const error = () => {
-    Notifications.setMessage('Error creating the room');
+  const error = (message = 'Error creating the room') => {
+    Notifications.setMessage(message);
     Notifications.setSeverity('error');
     Notifications.setOpen(true)
   }
@@ -65,7 +65,7 @@ const CreateRoom = observer((props) => {
       console.error(e)
       setCreating(false)
       setError(true)
-      error()
+      error(e.error || e.message)
     })
   }
 

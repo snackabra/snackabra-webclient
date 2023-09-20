@@ -23,6 +23,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { isMobile } from 'react-device-detect';
 import SharedRoomStateContext from "../../contexts/SharedRoomState";
 import { GiftedChat } from "react-native-gifted-chat";
+import { set } from 'core-js/core/dict';
 
 
 
@@ -82,11 +83,11 @@ const ChatRoom = observer((props) => {
   const [controlMessages, setControlMessages] = React.useState({});
 
   React.useEffect(() => {
-    console.log(giftedRef)
+    props.messageContainerRef(giftedRef)
     setTimeout(() => {
       giftedRef.current?.scrollToEnd();
     }, 50);
-  })
+  }, [props])
 
   React.useEffect(() => {
     let resizeTimeout = null;
@@ -95,6 +96,9 @@ const ChatRoom = observer((props) => {
       resizeTimeout = setTimeout(() => {
         const { height } = Dimensions.get('window');
         setHeight(height);
+        setTimeout(() => {
+          giftedRef.current?.scrollToEnd();
+        }, 50);
       }, 250);
     };
     window.addEventListener('resize', handleResize);
@@ -109,6 +113,9 @@ const ChatRoom = observer((props) => {
         props.sbContext.socket?.status !== 'OPEN'
       ) {
         connect();
+        setTimeout(() => {
+          giftedRef.current?.scrollToEnd();
+        }, 50);
       }
       setVisibility(document.visibilityState);
     });
@@ -142,6 +149,7 @@ const ChatRoom = observer((props) => {
       setVisibility('visible');
       setReplyTo(null);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   React.useEffect(() => {
@@ -257,12 +265,12 @@ const ChatRoom = observer((props) => {
   const receiveMessages = (m) => {
     try {
 
-      console.warn("Received message: ", m)
+      console.warn("Received message: ", JSON.parse(JSON.stringify(m)))
       const userId = `${m?.sender_pubKey?.x} ${m?.sender_pubKey?.y}`;
       m.user._id = userId;
       console.log(JSON.stringify(sbContext.getContact(userId)))
-      m.user.name = sbContext.getContact(userId).name;
-      m.sender_username = m.user.name;
+      m.user.name = sbContext.getContact(userId).name === 'Unamed' && m.sender_username ? m.sender_username : sbContext.getContact(userId).name ;
+      m.sender_username = m.sender_username ? m.sender_username : m.user.name;
 
       switch (m.messageType) {
         case messageTypes.SIMPLE_CHAT_MESSAGE:
@@ -418,6 +426,7 @@ const ChatRoom = observer((props) => {
           messageType: messageTypes.SIMPLE_CHAT_MESSAGE,
           image: value.sbImage.thumbnail,
           user: sbContext.getContact(channel.key),
+          sender_username: sbContext.getContact(channel.key).name,
           _id: 'sending_' + giftedMessage[0]._id + Date.now()
         }
         _r.enqueue(message)
@@ -484,6 +493,7 @@ const ChatRoom = observer((props) => {
       // giftedMessage[0].pending = true
       setMessages(_messages => new Map(_messages).set(giftedMessage[0]._id, giftedMessage[0]))
       let sbm = channel.newMessage(giftedMessage[0].text)
+      sbm.contents.sender_username = sbContext.getContact(channel.key).name;
       sbm.contents.sendingId = msg_id;
       sbm.contents.messageType = messageTypes.SIMPLE_CHAT_MESSAGE;
       channel.sendMessage(sbm)
@@ -527,21 +537,22 @@ const ChatRoom = observer((props) => {
   }
 
   const saveUsername = (newUsername, _id) => {
-    // sbContext.createContact(newUsername, _id)
-    // const _m = Object.assign(messages)
-    // _m.forEach((_message, i) => {
-    //   console.log(_message, i)
-    //   if (_message.user._id === _id) {
-    //     _message.user.name = newUsername;
-    //     _message.sender_username = newUsername;
-    //     _m[i] = _message;
-    //   }
-    // })
-    // setMessages(_m)
-    // setOpenChangeName(false)
-    // setChangeUserNameProps({})
-    // channel.messages = _m
-
+    if (newUsername && _id) {
+      sbContext.createContact(newUsername, _id)
+      const _m = Object.assign(messages)
+      _m.forEach((_message, i) => {
+        console.log(_message, i)
+        if (_message.user._id === _id) {
+          _message.user.name = newUsername;
+          _message.sender_username = newUsername;
+          _m[i] = _message;
+        }
+      })
+      setMessages(_m)
+      channel.messages = _m
+    }
+    setOpenChangeName(false)
+    setChangeUserNameProps({})
   }
 
   const setDropzoneRef = (ref) => {
@@ -591,7 +602,6 @@ const ChatRoom = observer((props) => {
           }} />
         <ChangeNameDialog {...changeUserNameProps} open={openChangeName} onClose={(userName, _id) => {
           saveUsername(userName, _id)
-          // setState({ openChangeName: false })
         }} />
         {/* <AttachMenu open={attachMenu} handleClose={handleClose} /> */}
         <FirstVisitDialog open={openFirstVisit} onClose={(username) => {
@@ -662,6 +672,9 @@ const ChatRoom = observer((props) => {
           }}
           renderComposer={(props) => {
             return <RenderComposer {...props}
+
+              showFiles={loadFiles}
+              showLoading={setLoading}
               roomId={roomId}
               inputErrored={(errored) => {
                 setInputErrored(errored)
@@ -674,7 +687,7 @@ const ChatRoom = observer((props) => {
               }}
               // setFiles={setFiles}
               filesAttached={files}
-              showLoading={loading} />
+            />
           }}
           onLongPress={() => false}
           keyboardShouldPersistTaps='always'

@@ -3,12 +3,9 @@ import ResponsiveDialog from "../ResponsiveDialog";
 import { Grid, OutlinedInput } from "@mui/material";
 import { StyledButton } from "../../styles/Buttons";
 import { useState, useEffect } from "react";
-import { observer } from "mobx-react"
-import SnackabraContext from "../../contexts/SnackabraContext";
 
 
-const ChangeNameDialog = observer((props) => {
-  const sbContext = React.useContext(SnackabraContext);
+const ChangeNameDialog = (props) => {
   const [open, setOpen] = useState(props.open);
   const [username, setUsername] = useState(props.name || "");
 
@@ -27,10 +24,15 @@ const ChangeNameDialog = observer((props) => {
     setUsername(e.target.value)
   }
 
+  const checkForEnter = (e) => {
+    if (e.keyCode === 13) {
+      saveUserName()
+    }
+  }
+
   const setMe = () => {
     setUsername('Me')
-    sbContext.username = 'Me'
-    props.onClose(sbContext.username, props._id)
+    props.onClose('Me', props._id)
   }
 
   const saveUserName = () => {
@@ -38,7 +40,7 @@ const ChangeNameDialog = observer((props) => {
   }
 
   const close = () => {
-    props.onClose(username, props._id)
+    props.onClose()
   }
   
   return (
@@ -50,6 +52,7 @@ const ChangeNameDialog = observer((props) => {
         <Grid item xs={12} sx={{ pb: 1 }}>
           <OutlinedInput placeholder="Please enter text"
             value={username}
+            onKeyUp={checkForEnter}
             onChange={updateUsername} fullWidth />
         </Grid>
         <StyledButton variant={'outlined'} onClick={saveUserName}>Save</StyledButton>
@@ -58,6 +61,6 @@ const ChangeNameDialog = observer((props) => {
     </ResponsiveDialog>
   )
 
-})
+}
 
 export default ChangeNameDialog

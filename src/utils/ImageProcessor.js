@@ -290,7 +290,7 @@ export class SBImage {
   constructor(image, SB) {
     this.SB = SB
     this.image = image; // file
-
+    console.log("SBImage() - image is:", image instanceof File);
     this.thumbnailReady = new Promise((resolve) => {
       // block on getting width and height...
       this.thumbnailResolve = resolve;

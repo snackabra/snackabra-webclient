@@ -178,7 +178,7 @@ const DropZone = (props) => {
 
   const getFilesFromFileSystemHandle = async (e) => {
     let files = []
-    let fakeEvent = {
+    let mockEvent = {
       preventDefault: () => { console.log('preventDefault') },
       target: {
         files: []
@@ -187,11 +187,11 @@ const DropZone = (props) => {
     for (let x in e) {
       const file = await e[x].getFile()
       files.push(file)
-      fakeEvent.target.files.push(file)
+      mockEvent.target.files.push(file)
     }
     console.log(files)
     // eslint-disable-next-line no-undef
-    window.SBFileHelper.handleFileDrop(fakeEvent, onDropCallback);
+    window.SBFileHelper.handleFileDrop(mockEvent, onDropCallback);
     return files
   }
 

@@ -75,7 +75,7 @@ const NavAppBar = observer(() => {
                       onKeyDown={submitName}
                       inputProps={{ style: { color: "#fff" } }}
                       onFocus={() => {
-                        setUpdatedName(sbContext.channels[roomState.state.activeRoom].alias)
+                        setUpdatedName(sbContext.channels[roomState.state.activeRoom]?.alias)
                       }}
                       onChange={updateName}
                       variant="standard"
@@ -122,7 +122,7 @@ const NavAppBar = observer(() => {
               <Grid item>
                 <Typography variant='body2'>v{process.env.REACT_APP_CLIENT_VERSION}</Typography>
               </Grid>
-              {roomState.state.activeRoom && sbContext.channels[roomState.state.activeRoom].status === "OPEN" ?
+              {roomState.state.activeRoom && sbContext.channels[roomState.state.activeRoom] && sbContext.channels[roomState.state.activeRoom].status === "OPEN" ?
                 <Avatar onClick={() => { setOpenWhisper(true) }} sx={{ width: 48, height: 48, bgcolor: 'transparent' }}>
                   <IconButton color="inherit" component="span">
                     <AccountCircleRoundedIcon />

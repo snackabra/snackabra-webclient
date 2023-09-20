@@ -10,7 +10,6 @@ const RenderBubble = (props) => {
   const isAdmin = currentMessage.user._id.startsWith(props.socket.keys.ownerPubKeyX)
 
   React.useEffect(() => {
-    console.log(currentMessage)
     const init = async () => {
       //TODO: this is breaking the server for some reason
       // const verified = await props.socket.api.postPubKey(current_user_key)
@@ -18,7 +17,7 @@ const RenderBubble = (props) => {
       // console.log(JSON.stringify(props.socket), current_user_key)
     }
     init();
-  }, [currentMessage.user._id, props.socket.admin, props.socket.api, /* PSM: props.socket.exportable_owner_pubKey, */ props.socket.exportable_pubKey])
+  }, [currentMessage, currentMessage.user._id, props.socket.admin, props.socket.api, props.socket.exportable_pubKey])
 
   const updateProps = React.useCallback(({ both, left, right }) => {
     both = both || {}
