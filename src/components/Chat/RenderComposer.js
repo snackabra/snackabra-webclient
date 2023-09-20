@@ -93,8 +93,6 @@ const RenderComposer = observer((props) => {
 
 
   const selectFiles = () => {
-    console.log(FileHelper.knownShards)
-    console.log(props)
     props.showLoading(true)
     try {
       console.log('SBFileHelper.finalFileList')

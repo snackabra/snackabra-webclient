@@ -83,6 +83,7 @@ const RenderChatFooter = (props) => {
   }
 
   const removeItem = (index, uniqueShardId) => {
+   
     for (const [key, value] of FileHelper.finalFileList.entries()) {
       if (value.uniqueShardId === uniqueShardId) {
         FileHelper.globalBufferMap.delete(value.sbImage.previewDetails.uniqueShardId)
@@ -93,11 +94,16 @@ const RenderChatFooter = (props) => {
         FileHelper.finalFileList.delete(key)
       }
     }
-    const newFiles = Object.assign(files)
-    console.log(newFiles.splice(index, 1))
-    console.log(newFiles)
+
+    const newFiles = files.filter(function (el) {
+      return el.uniqueShardId !== uniqueShardId;
+    });
+
     setFiles(newFiles)
     setIsShown('')
+    if (newFiles.length === 0) {
+      props.removeInputFiles()
+    }
   }
 
   const removeFiles = () => {
