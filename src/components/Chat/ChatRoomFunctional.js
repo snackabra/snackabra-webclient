@@ -23,6 +23,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { isMobile } from 'react-device-detect';
 import SharedRoomStateContext from "../../contexts/SharedRoomState";
 import { GiftedChat } from "react-native-gifted-chat";
+import { set } from 'core-js/core/dict';
 
 
 
@@ -59,6 +60,7 @@ const ChatRoom = observer((props) => {
   let uploaded = []
 
   const [messages, setMessages] = React.useState(new Map());
+  const [giftedMessages, setGiftedMessages] = React.useState([]);
   const [user, setUser] = React.useState({});
   const [height, setHeight] = React.useState(0);
   const [visibility, setVisibility] = React.useState('visible');
@@ -83,10 +85,29 @@ const ChatRoom = observer((props) => {
 
   React.useEffect(() => {
     props.messageContainerRef(giftedRef)
-    setTimeout(() => {
-      giftedRef.current?.scrollToEnd();
-    }, 50);
   }, [props])
+
+
+  const addMessage = React.useCallback((message) => {
+    let _m = []
+    setGiftedMessages(previousMessages => {
+      _m = GiftedChat.append(previousMessages, [message])
+      return _m
+    })
+    return _m
+  }, [])
+
+  const replaceMessage = React.useCallback((msg) => {
+    let _m = []
+    setGiftedMessages(previousMessages => {
+      const updatedMessages = previousMessages.map(message => {
+        return message._id === msg.sendingId ? msg : message
+      });
+      _m = updatedMessages
+      return _m
+    })
+    return _m
+  }, [])
 
   React.useEffect(() => {
     let resizeTimeout = null;
@@ -95,12 +116,6 @@ const ChatRoom = observer((props) => {
       resizeTimeout = setTimeout(() => {
         const { height } = Dimensions.get('window');
         setHeight(height);
-        if (!isMobile) {
-          setTimeout(() => {
-            giftedRef.current?.scrollToEnd();
-          }, 50);
-        }
-
       }, 250);
     };
     window.addEventListener('resize', handleResize);
@@ -115,9 +130,6 @@ const ChatRoom = observer((props) => {
         props.sbContext.socket?.status !== 'OPEN'
       ) {
         connect();
-        setTimeout(() => {
-          giftedRef.current?.scrollToEnd();
-        }, 50);
       }
       setVisibility(document.visibilityState);
     });
@@ -322,7 +334,21 @@ const ChatRoom = observer((props) => {
     }
   }
 
+  const getGiftedMessages = () => {
+    return giftedMessages;
+  }
+
   const handleSimpleChatMessage = (msg) => {
+
+    setGiftedMessages(previousMessages => {
+      if (previousMessages && msg.hasOwnProperty('sendingId') && previousMessages.some(message => message._id === msg.sendingId)) {
+        return replaceMessage(msg)
+      } else {
+        return addMessage(msg)
+      }
+    })
+
+
     setMessages(_messages => {
       const _n_messages = new Map(_messages).set(msg._id, msg)
       if (msg.hasOwnProperty('sendingId')) {
@@ -472,25 +498,34 @@ const ChatRoom = observer((props) => {
           const sbm = channel.newMessage(JSON.stringify(obj))
           sbm.contents.messageType = messageTypes.FILE_SHARD_METADATA;
           channel.sendMessage(sbm)
-          // removeFileFromSBFileHelper(fileHash)
+          removeFileFromSBFileHelper(fileHash)
         })
+      }
+    }
+    removeInputFiles()
+  }
+
+  const removeFileFromSBFileHelper = (uniqueShardId) => {
+    for (const [key, value] of FileHelper.finalFileList.entries()) {
+      if (value.uniqueShardId === uniqueShardId) {
+        try {
+          FileHelper.globalBufferMap.delete(value.sbImage.previewDetails.uniqueShardId)
+          FileHelper.globalBufferMap.delete(value.sbImage.thumbnailDetails.uniqueShardId)
+          FileHelper.globalBufferMap.delete(value.uniqueShardId)
+          FileHelper.finalFileList.delete(value.sbImage.previewDetails.fullName)
+          FileHelper.finalFileList.delete(value.sbImage.thumbnailDetails.fullName)
+          FileHelper.finalFileList.delete(key)
+          FileHelper.ignoreProcessing.delete(value.sbImage.previewDetails.uniqueShardId)
+          FileHelper.ignoreProcessing.delete(value.sbImage.thumbnailDetails.uniqueShardId)
+          decrementFiles()
+        } catch (e) {
+          console.warn(e)
+        }
+
       }
     }
 
   }
-
-  // const removeFileFromSBFileHelper = (uniqueShardId) => {
-  //   for (const [key, value] of FileHelper.finalFileList.entries()) {
-  //     if (value.uniqueShardId === uniqueShardId) {
-  //       FileHelper.globalBufferMap.delete(value.sbImage.previewDetails.uniqueShardId)
-  //       FileHelper.globalBufferMap.delete(value.sbImage.thumbnailDetails.uniqueShardId)
-  //       FileHelper.globalBufferMap.delete(value.uniqueShardId)
-  //       FileHelper.finalFileList.delete(value.sbImage.previewDetails.fullName)
-  //       FileHelper.finalFileList.delete(value.sbImage.thumbnailDetails.fullName)
-  //       FileHelper.finalFileList.delete(key)
-  //     }
-  //   }
-  // }
 
   const sendMessages = (giftedMessage) => {
     if (giftedMessage[0].text === "") {
@@ -502,6 +537,8 @@ const ChatRoom = observer((props) => {
       const msg_id = giftedMessage[0]._id;
       giftedMessage[0].user = user
       // giftedMessage[0].pending = true
+      console.log('giftedMessage', giftedMessages)
+      addMessage(giftedMessage[0])
       setMessages(_messages => new Map(_messages).set(giftedMessage[0]._id, giftedMessage[0]))
       let sbm = channel.newMessage(giftedMessage[0].text)
       sbm.contents.sender_username = sbContext.getContact(channel.key).name;
@@ -623,18 +660,18 @@ const ChatRoom = observer((props) => {
           id={`sb_chat_${roomId}`}
           messageContainerRef={giftedRef}
           isKeyboardInternallyHandled={false}
-          wrapInSafeArea={true}
+          // wrapInSafeArea={true}
           className={'sb_chat_container'}
           style={{
             width: '100%'
           }}
-          messages={Array.from(messages, ([name, value]) => (value))}
+          messages={giftedMessages}
           onSend={sendMessages}
 
           user={user}
-          inverted={false}
+          inverted={true}
           alwaysShowSend={true}
-          renderMessage={RenderMessage}
+          // renderMessage={RenderMessage}
           renderActions={(props) => {
             return <RenderAttachmentIcon
               {...props}
@@ -654,7 +691,7 @@ const ChatRoom = observer((props) => {
               notify={notify}
               sbContext={sbContext} />
           }}
-          renderMessageText={RenderMessageText}
+          // renderMessageText={RenderMessageText}
           scrollToBottom={true}
           showUserAvatar={true}
           onPressAvatar={promptUsername}

@@ -128,7 +128,7 @@ const ResponsiveDrawer = observer((props) => {
     return () => {
       navigator.serviceWorker.removeEventListener("message", listenForMessages);
     }
-  }, [sbContext.channels, navigate, roomId])
+  }, [sbContext.channels, navigate, roomId, roomState])
 
   React.useEffect(() => {
 

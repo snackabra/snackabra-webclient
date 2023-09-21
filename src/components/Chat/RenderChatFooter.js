@@ -47,7 +47,7 @@ const RenderChatFooter = (props) => {
       setFiles(_files)
     }
 
-  }, [FileHelper.finalFileList, files.length, incomingFiles])
+  }, [FileHelper, files.length, incomingFiles])
 
   React.useEffect(() => {
     setLoading(props.loading)
@@ -83,7 +83,7 @@ const RenderChatFooter = (props) => {
   }
 
   const removeItem = (index, uniqueShardId) => {
-    try{
+    try {
       for (const [key, value] of FileHelper.finalFileList.entries()) {
         if (value.uniqueShardId === uniqueShardId) {
           FileHelper.globalBufferMap.delete(value.sbImage.previewDetails.uniqueShardId)
@@ -96,13 +96,13 @@ const RenderChatFooter = (props) => {
           FileHelper.ignoreProcessing.delete(value.sbImage.thumbnailDetails.uniqueShardId)
         }
       }
-    }catch(e){
+    } catch (e) {
       console.log(e)
     }
 
 
 
-    setFiles((_files)=>{
+    setFiles((_files) => {
       let newFiles = {}
       delete _files[uniqueShardId]
       for (const [key, value] of Object.entries(_files)) {
@@ -120,7 +120,7 @@ const RenderChatFooter = (props) => {
   const removeFiles = () => {
     for (const [key, value] of FileHelper.finalFileList.entries()) {
       FileHelper.globalBufferMap.delete(value.sbImage.previewDetails.uniqueShardId)
-      .globalBufferMap.delete(value.sbImage.thumbnailDetails.uniqueShardId)
+      FileHelper.globalBufferMap.delete(value.sbImage.thumbnailDetails.uniqueShardId)
       FileHelper.globalBufferMap.delete(value.uniqueShardId)
       FileHelper.finalFileList.delete(value.sbImage.previewDetails.fullName)
       FileHelper.finalFileList.delete(value.sbImage.thumbnailDetails.fullName)
@@ -136,19 +136,19 @@ const RenderChatFooter = (props) => {
     props.removeInputFiles()
   }
 
-  if (loading) {
-    return (
-      <Grid sx={{ width: '100%', minHeight: "50px" }}
-        direction="row"
-        justifyContent="center"
-        alignItems="center"
-        container>
-        <Grid item>
-          <CircularProgress color="inherit" />
-        </Grid>
-      </Grid>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <Grid sx={{ width: '100%', minHeight: "50px" }}
+  //       direction="row"
+  //       justifyContent="center"
+  //       alignItems="center"
+  //       container>
+  //       <Grid item>
+  //         <CircularProgress color="inherit" />
+  //       </Grid>
+  //     </Grid>
+  //   );
+  // }
 
   if (uploading) {
     return (
@@ -166,89 +166,90 @@ const RenderChatFooter = (props) => {
     setToRemove({ index: i, shardId: shardId })
     setShowConfirm(true)
   }
-  if (Object.keys(files).length > 0) {
 
-    return (
-      <Grid item>
-        <ConfirmationDialog
-          text={'Are you sure you want to remove this image?'}
-          onConfirm={() => {
-            removeItem(toRemove.index, toRemove.shardId)
-            setToRemove({})
-            setShowConfirm(false)
-          }}
-          onCancel={() => {
-            setToRemove('')
-            setShowConfirm(false)
-          }}
-          open={showConfirm} />
-        <Paper
-          id={elementId}
-          style={{
-            flexGrow: '1',
-            maxHeight: 200,
-            overflow: 'hidden',
-            overflowY: "auto",
-            position: 'relative',
-            bottom: 0,
-            width: '100%',
-            paddingTop: 32
-          }}>
-          <IconButton sx={{ position: "absolute", right: 0, top: 0 }} size={'small'} onClick={removeFiles} aria-label="close">
-            <CloseIcon />
-          </IconButton>
-          <Grid className='gallery-container'>
-            {Object.keys(files).map((key, index) => {
-              const file = files[key]
-              if (file.sbImage.thumbnail) {
-                return (
-                  <Grid key={index + 'img'} style={{ position: "relative" }} onMouseEnter={() => setIsShown(index + 'img')} onMouseLeave={() => setIsShown('')}>
-                    <Fab onClick={() => { removeItem(index, file.uniqueShardId) }} sx={{ cursor: "pointer !important", position: 'absolute', top: 11, left: 11, opacity: isShown === index + 'img' && !isMobile ? 1 : 0 }} size="small" color="#AAA" aria-label="add">
-                      <DeleteForever />
-                    </Fab>
-                    <TouchableOpacity style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover"
-                    }} disabled={!isMobile} onPress={() => { onLongPress(index, file.uniqueShardId) }} accessibilityRole='image'>
-                      <img className='previewImage'
-                        src={`${file.sbImage.thumbnail}`}
-                        srcSet={`${file.sbImage.thumbnail}`}
-                        alt='Thumbnail Preview'
-                        loading="lazy"
-                      />
-                    </TouchableOpacity>
-                  </Grid>
-                )
-              } else {
-                console.log('file.sbImage', file.sbImage)
-                // we make sure the thumbnail is ready before we render it
-                waitForThumbnail(file)
-                return (<Grid key={index + 'grid'} className='previewImage' sx={{ width: containerHeight - 8, minHeight: containerHeight - 8, padding: 8 }}
-                  direction="row"
-                  justifyContent="center"
-                  alignItems="center"
-                  container>
-                  <Grid item>
-                    <CircularProgress color="inherit" />
-                  </Grid>
-                </Grid>)
-              }
-
-            })
-
-            }
-          </Grid>
-        </Paper>
-      </Grid>)
-  }
   return (
-    <Grid sx={{ width: '100%', minHeight: "5px" }}
-      direction="row"
-      justifyContent="center"
-      alignItems="center"
-      container />
-  );
+    <Grid item>
+      <ConfirmationDialog
+        text={'Are you sure you want to remove this image?'}
+        onConfirm={() => {
+          removeItem(toRemove.index, toRemove.shardId)
+          setToRemove({})
+          setShowConfirm(false)
+        }}
+        onCancel={() => {
+          setToRemove('')
+          setShowConfirm(false)
+        }}
+        open={showConfirm} />
+      <Paper
+        id={elementId}
+        style={{
+          flexGrow: '1',
+          maxHeight: uploading ? 15 : 200,
+          height: uploading ? 15 : 200,
+          display: Object.keys(files).length > 0 ? 'flex' : 'none',
+          overflow: 'hidden',
+          overflowY: "auto",
+          position: 'absolute',
+          bottom: 0,
+          width: '100%',
+          paddingTop: 32
+        }}>
+        {uploading ? <LinearProgress sx={{ width: '100%' }} color="success" />
+          : <>
+
+            <IconButton sx={{ position: "absolute", right: 0, top: 0 }} size={'small'} onClick={removeFiles} aria-label="close">
+              <CloseIcon />
+            </IconButton>
+            <Grid className='gallery-container'>
+              {Object.keys(files).map((key, index) => {
+                const file = files[key]
+                if (file.sbImage.thumbnail) {
+                  return (
+                    <Grid key={index + 'img'} style={{ position: "relative" }} onMouseEnter={() => setIsShown(index + 'img')} onMouseLeave={() => setIsShown('')}>
+                      <Fab onClick={() => { removeItem(index, file.uniqueShardId) }} sx={{ cursor: "pointer !important", position: 'absolute', top: 11, left: 11, opacity: isShown === index + 'img' && !isMobile ? 1 : 0 }} size="small" color="#AAA" aria-label="add">
+                        <DeleteForever />
+                      </Fab>
+                      <TouchableOpacity style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover"
+                      }} disabled={!isMobile} onPress={() => { onLongPress(index, file.uniqueShardId) }} accessibilityRole='image'>
+                        <img className='previewImage'
+                          src={`${file.sbImage.thumbnail}`}
+                          srcSet={`${file.sbImage.thumbnail}`}
+                          alt='Thumbnail Preview'
+                          loading="lazy"
+                        />
+                      </TouchableOpacity>
+                    </Grid>
+                  )
+                } else {
+                  console.log('file.sbImage', file.sbImage)
+                  // we make sure the thumbnail is ready before we render it
+                  waitForThumbnail(file)
+                  return (<Grid key={index + 'grid'} className='previewImage' sx={{ width: containerHeight - 8, minHeight: containerHeight - 8, padding: 8 }}
+                    direction="row"
+                    justifyContent="center"
+                    alignItems="center"
+                    container>
+                    <Grid item>
+                      <CircularProgress color="inherit" />
+                    </Grid>
+                  </Grid>)
+                }
+
+              })
+
+              }
+            </Grid>
+          </>
+
+        }
+
+      </Paper>
+    </Grid>)
+
 }
 
 export default RenderChatFooter
