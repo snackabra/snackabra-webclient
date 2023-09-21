@@ -23,7 +23,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { isMobile } from 'react-device-detect';
 import SharedRoomStateContext from "../../contexts/SharedRoomState";
 import { GiftedChat } from "react-native-gifted-chat";
-import { set } from 'core-js/core/dict';
 
 
 
@@ -466,6 +465,7 @@ const ChatRoom = observer((props) => {
           sender_username: sbContext.getContact(channel.key).name,
           _id: 'sending_' + giftedMessage[0]._id + Date.now()
         }
+        addMessage(message)
         _r.enqueue(message)
         value.sbImage.thumbnailReady.then(() => {
           let sbm = channel.newMessage('')
@@ -671,7 +671,7 @@ const ChatRoom = observer((props) => {
           user={user}
           inverted={true}
           alwaysShowSend={true}
-          // renderMessage={RenderMessage}
+          renderMessage={RenderMessage}
           renderActions={(props) => {
             return <RenderAttachmentIcon
               {...props}
@@ -691,7 +691,7 @@ const ChatRoom = observer((props) => {
               notify={notify}
               sbContext={sbContext} />
           }}
-          // renderMessageText={RenderMessageText}
+          renderMessageText={RenderMessageText}
           scrollToBottom={true}
           showUserAvatar={true}
           onPressAvatar={promptUsername}
