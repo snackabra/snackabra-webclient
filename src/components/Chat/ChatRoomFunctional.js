@@ -23,7 +23,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { isMobile } from 'react-device-detect';
 import SharedRoomStateContext from "../../contexts/SharedRoomState";
 import { GiftedChat } from "react-native-gifted-chat";
-import { set } from 'core-js/core/dict';
 
 
 
@@ -96,9 +95,12 @@ const ChatRoom = observer((props) => {
       resizeTimeout = setTimeout(() => {
         const { height } = Dimensions.get('window');
         setHeight(height);
-        setTimeout(() => {
-          giftedRef.current?.scrollToEnd();
-        }, 50);
+        if (!isMobile) {
+          setTimeout(() => {
+            giftedRef.current?.scrollToEnd();
+          }, 50);
+        }
+
       }, 250);
     };
     window.addEventListener('resize', handleResize);
