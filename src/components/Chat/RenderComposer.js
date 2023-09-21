@@ -1,21 +1,17 @@
 import * as React from 'react';
 import TextField from '@mui/material/TextField';
 import { SBImage } from "../../utils/ImageProcessorSBFileHelper";
-import SnackabraContext from "../../contexts/SnackabraContext";
 import { observer } from "mobx-react"
-import { isDataURL } from '../../utils/misc';
 
 // import { base64ToArrayBuffer } from "snackabra"
 let SB = require('snackabra')
 
 const RenderComposer = observer((props) => {
-  console.log(props)
   // eslint-disable-next-line no-undef
   const FileHelper = window.SBFileHelper;
   const sendElementId = `send-button-${props.roomId}`
   const elementId = `composer-${props.roomId}`
   const { filesAttached, onTextChanged, inputErrored } = props
-  const sbContext = React.useContext(SnackabraContext);
   const [text, setText] = React.useState('')
   const [error, setError] = React.useState(false)
   const [attachedFiles, setFilesAttached] = React.useState(filesAttached)
@@ -60,23 +56,6 @@ const RenderComposer = observer((props) => {
     }
   }, [attachedFiles, filesAttached, onTextChanged, setText])
 
-  const getSbImage = (file, props, sbContext) => {
-    return new Promise((resolve) => {
-      const sbImage = new SBImage(file, sbContext.SB);
-      sbImage.img.then((i) => {
-        sbImage.url = i.src
-        props.showLoading(false)
-        resolve(sbImage)
-        queueMicrotask(() => {
-          const SBImageCanvas = document.createElement('canvas');
-          sbImage.loadToCanvas(SBImageCanvas).then((c) => {
-            // SBImageCanvas.remove()
-          });
-        });
-      })
-    })
-  }
-
   const checkForSend = (e) => {
     if (e.keyCode === 13 && !e.ctrlKey && !e.shiftKey && !error) {
       document.getElementById(sendElementId).click()
@@ -93,23 +72,26 @@ const RenderComposer = observer((props) => {
 
 
   const selectFiles = () => {
-    props.showLoading(true)
+    // props.showLoading(true)
     try {
       console.log('SBFileHelper.finalFileList')
 
-      const FileMap = new Map(window.SBFileHelper.finalFileList)
-
+      const FileMap = new Map(FileHelper.finalFileList)
+      console.log('FileMap', FileMap)
       for (const [key, value] of FileMap.entries()) {
         console.log('asdfadsfjkbasdkjfaskjfb', key, value);
         console.log(FileHelper.knownShards.get(value.uniqueShardId))
 
-        const original = window.SBFileHelper.finalFileList.get(key)
+        const original = FileHelper.finalFileList.get(key)
         if (!FileHelper.knownShards.has(value.uniqueShardId)) {
           original.knownShard = value.uniqueShardId
         }
-        const buffer = window.SBFileHelper.globalBufferMap.get(value.uniqueShardId)
+        const buffer = FileHelper.globalBufferMap.get(value.uniqueShardId)
         // const preview = window.SBFileHelper.finalFileList.get(value.uniqueShardId)
-        if (buffer) {
+        console.log('buffer', buffer
+          , 'original.sbImage', original)
+        if (buffer && !original.sbImage && !FileHelper.ignoreProcessing.has(value.uniqueShardId)) {
+          props.incrementFiles()
           console.log('buffer found', buffer)
           const sbImage = new SBImage(buffer, value);
           sbImage.processThumbnail()
@@ -117,11 +99,11 @@ const RenderComposer = observer((props) => {
           original.sbImage = sbImage
         } else {
           console.error('Buffer not found')
-          throw new Error('Buffer not found')
+          // throw new Error('Buffer not found')
         }
 
       };
-      props.showFiles()
+      // props.showFiles()
 
     } catch (e) {
       console.log(e)
@@ -143,7 +125,6 @@ const RenderComposer = observer((props) => {
     if (files.length > 0) {
       setText('')
     }
-    console.log(e.nativeEvent.dataTransfer)
     for (let x in files) {
       if (files[x] instanceof File) {
         if (files[x].type.match(/^image/)) {
@@ -151,8 +132,7 @@ const RenderComposer = observer((props) => {
         }
       }
     }
-    console.log(mockEvent.target.files)
-    window.SBFileHelper.handleFileDrop(mockEvent, selectFiles);
+    FileHelper.handleFileDrop(mockEvent, selectFiles);
     // props.onSend({ text: '' }, true)
     // setTimeout(() => {
     //   props.onTextChanged('')

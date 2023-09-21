@@ -757,7 +757,7 @@ export class SBFileHelper {
                         let lastModifiedString = "";
                         if (value.lastModified) {
                             lastModifiedString = (new Date(value.lastModified)).toLocaleString();
-                            metaDataString += ` [${lastModifiedString}]`;
+                            // metaDataString += ` [${lastModifiedString}]`;
                         }
                         if (value.size) {
                             metaDataString += ` [${value.size} bytes]`;
@@ -805,18 +805,18 @@ export class SBFileHelper {
                         else {
                             const uniqueShortName = entry.name + entry.metaDataString;
                             if (entry.path !== "/") {
-                                const mapEntry = reverseBufferMap.get(entry.uniqueShardId).get(uniqueShortName);
+                                const mapEntry = reverseBufferMap?.get(entry.uniqueShardId)?.get(uniqueShortName);
                                 if (mapEntry) {
                                     if (mapEntry.path.length > entry.path.length) {
-                                        this.finalFileList.delete(key);
+                                        this.finalFileList?.delete(key);
                                     }
                                     else {
                                         this.finalFileList.delete(mapEntry.fullName);
-                                        reverseBufferMap.get(entry.uniqueShardId).set(uniqueShortName, entry);
+                                        reverseBufferMap?.get(entry.uniqueShardId).set(uniqueShortName, entry);
                                     }
                                 }
                                 else {
-                                    reverseBufferMap.get(entry.uniqueShardId).set(uniqueShortName, entry);
+                                    reverseBufferMap?.get(entry.uniqueShardId).set(uniqueShortName, entry);
                                 }
                             }
                         }
@@ -827,7 +827,7 @@ export class SBFileHelper {
                         let entry = this.finalFileList.get(key);
                         const uniqueShortName = entry.name + entry.metaDataString;
                         if (entry.path === "/") {
-                            const mapEntry = reverseBufferMap.get(entry.uniqueShardId).get(uniqueShortName);
+                            const mapEntry = reverseBufferMap?.get(entry.uniqueShardId)?.get(uniqueShortName);
                             if (mapEntry) {
                                 if (DEBUG2)
                                     console.log(`... removing ${key} from final list (duplicate short name)`);
@@ -867,7 +867,7 @@ export class SBFileHelper {
                 let tableContents = Array.from(this.finalFileList.values()).sort((a, b) => a.path.localeCompare(b.path) || a.name.localeCompare(b.name));
                 if (DEBUG) {
                     console.log("Table contents:");
-                    console.log(tableContents);
+                    console.log(this.finalFileList);
                 }
                 console.log("-------DONE with all file promises (clearing state) ---------");
                 this.globalItemNumber = createCounter();

@@ -426,6 +426,7 @@ export class SBImage {
                   uniqueShardId: r[i].uniqueShardId,
                   fullName: r[i].fullName,
                 }
+                window.SBFileHelper.ignoreProcessing.set(r[i].uniqueShardId, this.thumbnailDetails)
               }
             }
           });
@@ -460,6 +461,7 @@ export class SBImage {
                   uniqueShardId: r[i].uniqueShardId,
                   fullName: r[i].fullName,
                 }
+                window.SBFileHelper.ignoreProcessing.set(r[i].uniqueShardId, this.previewDetails)
               }
             }
           });

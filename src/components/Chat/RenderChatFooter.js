@@ -16,11 +16,11 @@ const RenderChatFooter = (props) => {
   const FileHelper = SBFileHelper;
   const elementId = `preview-${props.roomId}`
   const incomingFiles = props.files
-  const [files, setFiles] = React.useState([])
+  const [files, setFiles] = React.useState({})
   const [loading, setLoading] = React.useState(props.loading)
   const [uploading, setUploading] = React.useState(props.uploading)
   const [isShown, setIsShown] = React.useState('')
-  const [toRemove, setToRemove] = React.useState('')
+  const [toRemove, setToRemove] = React.useState({})
   const [showConfirm, setShowConfirm] = React.useState(false)
   const [thumbnailReadyPromises, setThumbnailReadyPromises] = React.useState([])
 
@@ -34,16 +34,16 @@ const RenderChatFooter = (props) => {
 
   React.useEffect(() => {
     if (incomingFiles) {
-      let _files = []
-
+      let _files = {}
+      console.log('FileHelper.finalFileList', FileHelper)
       for (const [key, value] of FileHelper.finalFileList.entries()) {
         if (value.sbImage) {
           console.warn('value.sbImage', value)
-          _files.push(value)
+          _files[value.uniqueShardId] = value
         }
 
       }
-      console.log('_files', _files)
+      console.log('_files', Object.keys(_files))
       setFiles(_files)
     }
 
@@ -83,25 +83,36 @@ const RenderChatFooter = (props) => {
   }
 
   const removeItem = (index, uniqueShardId) => {
-   
-    for (const [key, value] of FileHelper.finalFileList.entries()) {
-      if (value.uniqueShardId === uniqueShardId) {
-        FileHelper.globalBufferMap.delete(value.sbImage.previewDetails.uniqueShardId)
-        FileHelper.globalBufferMap.delete(value.sbImage.thumbnailDetails.uniqueShardId)
-        FileHelper.globalBufferMap.delete(value.uniqueShardId)
-        FileHelper.finalFileList.delete(value.sbImage.previewDetails.fullName)
-        FileHelper.finalFileList.delete(value.sbImage.thumbnailDetails.fullName)
-        FileHelper.finalFileList.delete(key)
+    try{
+      for (const [key, value] of FileHelper.finalFileList.entries()) {
+        if (value.uniqueShardId === uniqueShardId) {
+          FileHelper.globalBufferMap.delete(value.sbImage.previewDetails.uniqueShardId)
+          FileHelper.globalBufferMap.delete(value.sbImage.thumbnailDetails.uniqueShardId)
+          FileHelper.globalBufferMap.delete(value.uniqueShardId)
+          FileHelper.finalFileList.delete(value.sbImage.previewDetails.fullName)
+          FileHelper.finalFileList.delete(value.sbImage.thumbnailDetails.fullName)
+          FileHelper.finalFileList.delete(key)
+          FileHelper.ignoreProcessing.delete(value.sbImage.previewDetails.uniqueShardId)
+          FileHelper.ignoreProcessing.delete(value.sbImage.thumbnailDetails.uniqueShardId)
+        }
       }
+    }catch(e){
+      console.log(e)
     }
 
-    const newFiles = files.filter(function (el) {
-      return el.uniqueShardId !== uniqueShardId;
-    });
 
-    setFiles(newFiles)
+
+    setFiles((_files)=>{
+      let newFiles = {}
+      delete _files[uniqueShardId]
+      for (const [key, value] of Object.entries(_files)) {
+        newFiles[key] = value
+      }
+      return newFiles
+    })
+    props.decrementFiles()
     setIsShown('')
-    if (newFiles.length === 0) {
+    if (Object.keys(files).length === 0) {
       props.removeInputFiles()
     }
   }
@@ -109,13 +120,16 @@ const RenderChatFooter = (props) => {
   const removeFiles = () => {
     for (const [key, value] of FileHelper.finalFileList.entries()) {
       FileHelper.globalBufferMap.delete(value.sbImage.previewDetails.uniqueShardId)
-      FileHelper.globalBufferMap.delete(value.sbImage.thumbnailDetails.uniqueShardId)
+      .globalBufferMap.delete(value.sbImage.thumbnailDetails.uniqueShardId)
       FileHelper.globalBufferMap.delete(value.uniqueShardId)
       FileHelper.finalFileList.delete(value.sbImage.previewDetails.fullName)
       FileHelper.finalFileList.delete(value.sbImage.thumbnailDetails.fullName)
       FileHelper.finalFileList.delete(key)
+      FileHelper.ignoreProcessing.delete(value.sbImage.previewDetails.uniqueShardId)
+      FileHelper.ignoreProcessing.delete(value.sbImage.thumbnailDetails.uniqueShardId)
     }
     for (let x in files) {
+      props.decrementFiles()
       delete files[x]
     }
     setFiles([])
@@ -148,19 +162,19 @@ const RenderChatFooter = (props) => {
     );
   }
 
-  const onLongPress = (i) => {
-    setToRemove(i)
+  const onLongPress = (i, shardId) => {
+    setToRemove({ index: i, shardId: shardId })
     setShowConfirm(true)
   }
-  if (files.length > 0) {
+  if (Object.keys(files).length > 0) {
 
     return (
       <Grid item>
         <ConfirmationDialog
           text={'Are you sure you want to remove this image?'}
           onConfirm={() => {
-            removeItem(toRemove)
-            setToRemove('')
+            removeItem(toRemove.index, toRemove.shardId)
+            setToRemove({})
             setShowConfirm(false)
           }}
           onCancel={() => {
@@ -184,7 +198,8 @@ const RenderChatFooter = (props) => {
             <CloseIcon />
           </IconButton>
           <Grid className='gallery-container'>
-            {files.map((file, index) => {
+            {Object.keys(files).map((key, index) => {
+              const file = files[key]
               if (file.sbImage.thumbnail) {
                 return (
                   <Grid key={index + 'img'} style={{ position: "relative" }} onMouseEnter={() => setIsShown(index + 'img')} onMouseLeave={() => setIsShown('')}>
@@ -195,7 +210,7 @@ const RenderChatFooter = (props) => {
                       width: "100%",
                       height: "100%",
                       objectFit: "cover"
-                    }} disabled={!isMobile} onPress={() => { onLongPress(index) }} accessibilityRole='image'>
+                    }} disabled={!isMobile} onPress={() => { onLongPress(index, file.uniqueShardId) }} accessibilityRole='image'>
                       <img className='previewImage'
                         src={`${file.sbImage.thumbnail}`}
                         srcSet={`${file.sbImage.thumbnail}`}

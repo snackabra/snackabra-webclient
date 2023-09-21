@@ -20,7 +20,7 @@ export default function ImageViewer(props) {
         y: 0,
         scale: 1,
         rotateZ: 0,
-    }))
+    }), [])
 
     React.useEffect(() => {
         setImage(image.image)
@@ -38,7 +38,7 @@ export default function ImageViewer(props) {
                         setImageLoaded(true)
                     }
                 }).catch((error) => {
-                    console.error('openPreview() exception: ' + error.message);
+                    console.error(`openPreview()  exception: `,controlMessages[hash], error);
                     notify.warn('Could not load full size image')
                 })
             } else {

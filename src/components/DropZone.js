@@ -47,34 +47,38 @@ const DropZone = (props) => {
   let maxFiles = isMobile ? 5 : 10
 
   const selectFiles = () => {
-    console.log(FileHelper.knownShards)
-    props.showLoading(true)
+    // props.showLoading(true)
     try {
       console.log('SBFileHelper.finalFileList')
 
-      const FileMap = new Map(window.SBFileHelper.finalFileList)
-
+      const FileMap = new Map(FileHelper.finalFileList)
+      console.log('FileMap', FileMap)
       for (const [key, value] of FileMap.entries()) {
         console.log('asdfadsfjkbasdkjfaskjfb', key, value);
         console.log(FileHelper.knownShards.get(value.uniqueShardId))
 
-        const original = window.SBFileHelper.finalFileList.get(key)
+        const original = FileHelper.finalFileList.get(key)
         if (!FileHelper.knownShards.has(value.uniqueShardId)) {
           original.knownShard = value.uniqueShardId
         }
-        const buffer = window.SBFileHelper.globalBufferMap.get(value.uniqueShardId)
+        const buffer = FileHelper.globalBufferMap.get(value.uniqueShardId)
         // const preview = window.SBFileHelper.finalFileList.get(value.uniqueShardId)
-        if (buffer) {
+        console.log('buffer', buffer
+          , 'original.sbImage', original)
+        if (buffer && !original.sbImage && !FileHelper.ignoreProcessing.has(value.uniqueShardId)) {
+          props.incrementFiles()
+          console.log('buffer found', buffer)
           const sbImage = new SBImage(buffer, value);
           sbImage.processThumbnail()
           sbImage.processImage()
           original.sbImage = sbImage
         } else {
-          throw new Error('Buffer not found')
+          console.error('Buffer not found')
+          // throw new Error('Buffer not found')
         }
 
       };
-      props.showFiles()
+      // props.showFiles()
 
     } catch (e) {
       console.log(e)

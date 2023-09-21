@@ -72,7 +72,7 @@ const ChatRoom = observer((props) => {
   const [img, setImg] = React.useState('');
   const [imgLoaded, setImgLoaded] = React.useState(false);
   const [roomId, setRoomId] = React.useState(props.roomId || 'offline');
-  const [files, setFiles] = React.useState(false);
+  const [files, setFiles] = React.useState(0);
   const [images, setImages] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
   const [uploading, setUploading] = React.useState(false);
@@ -140,7 +140,7 @@ const ChatRoom = observer((props) => {
       setImg('');
       setImgLoaded(false);
       setRoomId(props.roomId || 'offline');
-      setFiles(false);
+      setFiles(0);
       setImages([]);
       setLoading(false);
       setUploading(false);
@@ -149,7 +149,7 @@ const ChatRoom = observer((props) => {
       setVisibility('visible');
       setReplyTo(null);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   React.useEffect(() => {
@@ -269,7 +269,7 @@ const ChatRoom = observer((props) => {
       const userId = `${m?.sender_pubKey?.x} ${m?.sender_pubKey?.y}`;
       m.user._id = userId;
       console.log(JSON.stringify(sbContext.getContact(userId)))
-      m.user.name = sbContext.getContact(userId).name === 'Unamed' && m.sender_username ? m.sender_username : sbContext.getContact(userId).name ;
+      m.user.name = sbContext.getContact(userId).name === 'Unamed' && m.sender_username ? m.sender_username : sbContext.getContact(userId).name;
       m.sender_username = m.sender_username ? m.sender_username : m.user.name;
 
       switch (m.messageType) {
@@ -411,9 +411,18 @@ const ChatRoom = observer((props) => {
     setLoading(false)
     setFiles(true)
   }
+
+  const incrementFiles = () => {
+    setFiles(files + 1)
+  }
+
+  const decrementFiles = () => {
+    setFiles(files - 1)
+  }
+
   const sendFiles = async (giftedMessage) => {
     // let toUpload = []
-    setFiles(false)
+    setFiles(0)
     setUploading(true)
     for (const [key, value] of FileHelper.finalFileList.entries()) {
 
@@ -483,7 +492,7 @@ const ChatRoom = observer((props) => {
 
   const sendMessages = (giftedMessage) => {
     if (giftedMessage[0].text === "") {
-      if (files) {
+      if (files > 0) {
         sendFiles(giftedMessage)
       }
     } else {
@@ -533,7 +542,7 @@ const ChatRoom = observer((props) => {
 
       document.getElementById('fileInput').value = '';
     }
-    setFiles(false)
+    setFiles(0)
   }
 
   const saveUsername = (newUsername, _id) => {
@@ -568,7 +577,7 @@ const ChatRoom = observer((props) => {
       width: '100%',
       paddingTop: 48
     }}>
-      <DropZone notify={notify} dzRef={setDropzoneRef} showFiles={loadFiles} showLoading={(bool) => { setLoading(bool) }} openPreview={openPreview} roomId={roomId}>
+      <DropZone notify={notify} dzRef={setDropzoneRef} showFiles={loadFiles} showLoading={(bool) => { setLoading(bool) }} openPreview={openPreview} roomId={roomId} incrementFiles={incrementFiles}>
         <AdminDialog
           roomId={roomId}
           motd={channel.motd}
@@ -655,6 +664,8 @@ const ChatRoom = observer((props) => {
               roomId={roomId}
               removeInputFiles={removeInputFiles}
               files={files}
+              incrementFiles={incrementFiles}
+              decrementFiles={decrementFiles}
               // setFiles={setFiles}
               uploading={uploading}
               loading={loading} />
@@ -685,6 +696,8 @@ const ChatRoom = observer((props) => {
               onBlur={() => {
                 setTyping(false)
               }}
+              incrementFiles={incrementFiles}
+              decrementFiles={decrementFiles}
               // setFiles={setFiles}
               filesAttached={files}
             />
