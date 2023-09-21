@@ -65,12 +65,12 @@ const ResponsiveDrawer = observer((props) => {
   const roomState = React.useContext(SharedRoomStateContext)
 
   let { room_id } = useParams();
-
+  console.log('room_id', room_id)
   const navigate = useNavigate()
   const { window } = props;
   const theme = useTheme();
   const [value, setValue] = React.useState(-1);
-  const [roomId, setRoomId] = React.useState(false);
+  const [roomId, setRoomId] = React.useState('');
   const [openImportDialog, setOpenImportDialog] = React.useState(false);
   const [openDataOperations, setOpenDataOperations] = React.useState(false);
   const [openCreateDialog, setOpenCreateDialog] = React.useState(false);
@@ -86,13 +86,18 @@ const ResponsiveDrawer = observer((props) => {
       navigate('/404')
       return;
     }
+    console.log(room_id && room_id !== roomId)
+    console.log(room_id, roomId)
     if (room_id && room_id !== roomId) {
-      setRoomId(room_id)
-      roomState.setActiveRoom(room_id)
+
+
       if (!sbContext.channels[room_id]) {
         setJoinRoomId(room_id)
         setOpenJoinDialog(true)
+      }else{
+        roomState.setActiveRoom(room_id)
       }
+      setRoomId(room_id)
     }
 
   }, [navigate, roomId, room_id, sbContext.channels, roomState])
@@ -104,11 +109,12 @@ const ResponsiveDrawer = observer((props) => {
         const index = Object.keys(sbContext.channels).findIndex((x) => x.id === to)
         navigate('/' + to)
         setRoomId(to)
+        roomState.setActiveRoom(to)
         setValue(index);
       }
 
       if (event.data && event.data.type === "notification") {
-        if (event.data.channel_id !== roomId && roomId !== false) {
+        if (event.data.channel_id !== roomId && roomId !== '') {
           navigator.serviceWorker.controller.postMessage({
             type: 'NOTIFICATION_RESPOND',
             channel_id: event.data.channel_id,
@@ -175,6 +181,7 @@ const ResponsiveDrawer = observer((props) => {
     const to = Object.keys(sbContext.channels)[index];
     navigate('/' + to)
     setRoomId(to)
+    roomState.setActiveRoom(to)
     setValue(index);
     if(roomRefs[index]){
       setTimeout(() => {
@@ -334,6 +341,7 @@ const ResponsiveDrawer = observer((props) => {
         if (typeof to === 'string' && index >= 0) {
           navigate('/' + to)
           setRoomId(to)
+          roomState.setActiveRoom(to)
           setValue(index);
         }
       }} />
