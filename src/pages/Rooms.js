@@ -183,11 +183,6 @@ const ResponsiveDrawer = observer((props) => {
     setRoomId(to)
     roomState.setActiveRoom(to)
     setValue(index);
-    if(roomRefs[index]){
-      setTimeout(() => {
-      roomRefs[index].current.scrollToEnd()
-      }, 100);
-    }
   };
 
   const onCloseAdminDialog = () => {
