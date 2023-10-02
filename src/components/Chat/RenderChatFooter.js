@@ -119,14 +119,19 @@ const RenderChatFooter = (props) => {
 
   const removeFiles = () => {
     for (const [key, value] of FileHelper.finalFileList.entries()) {
-      FileHelper.globalBufferMap.delete(value.sbImage.previewDetails.uniqueShardId)
-      FileHelper.globalBufferMap.delete(value.sbImage.thumbnailDetails.uniqueShardId)
-      FileHelper.globalBufferMap.delete(value.uniqueShardId)
-      FileHelper.finalFileList.delete(value.sbImage.previewDetails.fullName)
-      FileHelper.finalFileList.delete(value.sbImage.thumbnailDetails.fullName)
-      FileHelper.finalFileList.delete(key)
-      FileHelper.ignoreProcessing.delete(value.sbImage.previewDetails.uniqueShardId)
-      FileHelper.ignoreProcessing.delete(value.sbImage.thumbnailDetails.uniqueShardId)
+      try{
+        FileHelper.globalBufferMap.delete(value.sbImage.previewDetails.uniqueShardId)
+        FileHelper.globalBufferMap.delete(value.sbImage.thumbnailDetails.uniqueShardId)
+        FileHelper.globalBufferMap.delete(value.uniqueShardId)
+        FileHelper.finalFileList.delete(value.sbImage.previewDetails.fullName)
+        FileHelper.finalFileList.delete(value.sbImage.thumbnailDetails.fullName)
+        FileHelper.finalFileList.delete(key)
+        FileHelper.ignoreProcessing.delete(value.sbImage.previewDetails.uniqueShardId)
+        FileHelper.ignoreProcessing.delete(value.sbImage.thumbnailDetails.uniqueShardId)
+      }catch(e){
+        console.warn(e)
+      }
+
     }
     for (let x in files) {
       props.decrementFiles()

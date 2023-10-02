@@ -23,7 +23,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { isMobile } from 'react-device-detect';
 import SharedRoomStateContext from "../../contexts/SharedRoomState";
 import { GiftedChat } from "react-native-gifted-chat";
-
+import * as _ from 'lodash';
 
 
 
@@ -91,16 +91,10 @@ const ChatRoom = observer((props) => {
     let _m = []
     console.log('addMessage', message)
     setGiftedMessages(previousMessages => {
-      const exists = previousMessages.some(obj => obj._id === message._id);
-      if (!exists) {
-        console.log('Message does not exist, appending messages')
-        _m = GiftedChat.append(previousMessages, [message])
-        return _m
-      } else {
-        console.log('Message exists, returning messages')
-        _m = GiftedChat.append(previousMessages, [])
-        return _m
-      }
+      const resultArray = _.uniqBy([message, ...previousMessages], '_id')
+      _m = GiftedChat.append(resultArray, [])
+      return _m
+
     })
     return _m
   }, [])
