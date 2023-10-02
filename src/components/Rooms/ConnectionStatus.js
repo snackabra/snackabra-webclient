@@ -19,7 +19,8 @@ const ConnectionStatus = observer((props) => {
             clearInterval(iterator)
         }
         iterator = setInterval(() => {
-            setStatusMessage(channel.checkSocketStatus())
+            const status = typeof channel?.checkSocketStatus === 'function' ? channel.checkSocketStatus() : 'CLOSED'
+            setStatusMessage(status)
         }, 250)
     })
 

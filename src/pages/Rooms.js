@@ -429,6 +429,7 @@ const ResponsiveDrawer = observer((props) => {
                     roomRefs[index] = ref
                     console.log(roomRefs)
                   }}
+                  activeRoom={roomState.state.activeRoom}
                   roomId={item}
                   sbContext={sbContext}
                   Notifications={Notifications}

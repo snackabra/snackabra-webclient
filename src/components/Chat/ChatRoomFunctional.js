@@ -89,9 +89,18 @@ const ChatRoom = observer((props) => {
 
   const addMessage = React.useCallback((message) => {
     let _m = []
+    console.log('addMessage', message)
     setGiftedMessages(previousMessages => {
-      _m = GiftedChat.append(previousMessages, [message])
-      return _m
+      const exists = previousMessages.some(obj => obj._id === message._id);
+      if (!exists) {
+        console.log('Message does not exist, appending messages')
+        _m = GiftedChat.append(previousMessages, [message])
+        return _m
+      } else {
+        console.log('Message exists, returning messages')
+        _m = GiftedChat.append(previousMessages, [])
+        return _m
+      }
     })
     return _m
   }, [])
@@ -128,7 +137,9 @@ const ChatRoom = observer((props) => {
         document.visibilityState === 'visible' &&
         props.sbContext.socket?.status !== 'OPEN'
       ) {
-        connect();
+        if (props.activeRoom === props.roomId) {
+          connect();
+        }
       }
       setVisibility(document.visibilityState);
     });
@@ -171,6 +182,12 @@ const ChatRoom = observer((props) => {
     }
   }, [openAdminDialog, props.openAdminDialog])
 
+  React.useEffect(() => {
+    if (props.activeRoom === props.roomId) {
+      connect()
+    }
+  }, [props.roomId, props.activeRoom])
+
   const init = () => {
     const keys = channel.key
     const contact = sbContext.getContact(keys)
@@ -178,7 +195,9 @@ const ChatRoom = observer((props) => {
     if (!contact) {
       setOpenFirstVisit(true)
     } else {
-      connect();
+      if (props.activeRoom === props.roomId) {
+        connect();
+      }
     }
 
     processQueue()
@@ -607,6 +626,7 @@ const ChatRoom = observer((props) => {
     if (!ref || dzRef) return
     setDzRef(ref)
   }
+  console.log('activeRoom', props.activeRoom)
   return (
 
     <SafeAreaView id={'sb_chat_area'} style={{
