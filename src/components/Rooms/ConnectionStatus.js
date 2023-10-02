@@ -21,7 +21,12 @@ const ConnectionStatus = observer((props) => {
             const status = typeof channel?.checkSocketStatus === 'function' ? channel.checkSocketStatus() : 'CLOSED'
             setStatusMessage(status)
         }, 250)
-    })
+
+        document.addEventListener('visibilitychange', () => {
+            let socketStatus = channel.checkSocketStatus();
+            setStatusMessage(socketStatus)
+          });
+    }, [channel])
 
     React.useEffect(() => {
         switch (statusMessage) {

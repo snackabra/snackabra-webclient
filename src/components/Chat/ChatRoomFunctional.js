@@ -89,7 +89,6 @@ const ChatRoom = observer((props) => {
 
   const addMessage = React.useCallback((message) => {
     let _m = []
-    console.log('addMessage', message)
     setGiftedMessages(previousMessages => {
       const resultArray = _.uniqBy([message, ...previousMessages], '_id')
       _m = GiftedChat.append(resultArray, [])
@@ -126,10 +125,10 @@ const ChatRoom = observer((props) => {
     handleResize();
 
     document.addEventListener('visibilitychange', () => {
+      let socketStatus = channel.checkSocketStatus();
       if (
-        visibility === 'hidden' &&
         document.visibilityState === 'visible' &&
-        props.sbContext.socket?.status !== 'OPEN'
+        socketStatus !== 'OPEN'
       ) {
         if (props.activeRoom === props.roomId) {
           connect();

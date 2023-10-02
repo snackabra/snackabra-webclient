@@ -6,14 +6,11 @@ import Fab from '@mui/material/Fab';
 import { TouchableOpacity } from 'react-native';
 import ConfirmationDialog from '../Modals/ConfirmationDialog';
 import { isMobile } from 'react-device-detect';
-import { set } from 'mobx';
-import { _ } from 'core-js';
 
 
 
 const RenderChatFooter = (props) => {
-  // eslint-disable-next-line no-undef
-  const FileHelper = SBFileHelper;
+  const FileHelper = window.SBFileHelper;
   const elementId = `preview-${props.roomId}`
   const incomingFiles = props.files
   const [files, setFiles] = React.useState({})
