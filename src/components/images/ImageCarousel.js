@@ -42,7 +42,7 @@ export default function ImageCarousel(props) {
 
     }, [handleChangeIndex, images, img._id])
 
-    const slideRenderer = ({ key, index }) => {
+    const slideRenderer = React.useCallback(({ key, index }) => {
         return (<ImageViewer
             key={key}
             image={imageList[index]}
@@ -56,7 +56,7 @@ export default function ImageCarousel(props) {
                 props.onClose()
             }} />
         );
-    }
+    },[controlMessages, imageList, props, sbContext])
 
     const toggleShowControls = (visibility) => {
 
@@ -97,8 +97,9 @@ export default function ImageCarousel(props) {
                 slideRenderer={slideRenderer}
                 slideCount={imageList.length}
                 interval={30000}
-            >
-                {imageList.map((key, index) => {
+            />
+                {/* {imageList.map((key, index) => {
+                    // console.log(JSON.stringify(imageList[index]))
                     return (<ImageViewer
                         key={`image-${index}`}
                         image={imageList[index]}
@@ -116,7 +117,7 @@ export default function ImageCarousel(props) {
 
                 }
 
-            </EnhancedSwipeableViews>
+            </EnhancedSwipeableViews> */}
             <Grid
                 container
                 direction="row"

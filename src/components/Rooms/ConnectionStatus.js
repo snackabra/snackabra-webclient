@@ -2,7 +2,6 @@ import * as React from 'react';
 import Badge from '@mui/material/Badge';
 import Tooltip from '@mui/material/Tooltip';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import IconButton from '@mui/material/IconButton';
 import { observer } from 'mobx-react';
 import SnackabraContext from "../../contexts/SnackabraContext";
 

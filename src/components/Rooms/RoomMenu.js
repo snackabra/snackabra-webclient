@@ -92,36 +92,24 @@ const RoomMenu = observer((props) => {
   }
 
   return (
-    <div style={{position: 'relative'}}>
-      <CallWindow open={openCallWindow} onClose={closeCallWindow} room={props.roomId} keys={sbContext.channels[props.roomId].key}/>
-      {(room_id === props.roomId || (!room_id && props.roomId)) ?
-        <>
-          <IconButton
-            aria-label="more"
-            id="long-button"
-            aria-controls={open ? 'long-menu' : undefined}
-            aria-expanded={open ? 'true' : undefined}
-            aria-haspopup="true"
-            onClick={handleClick}
-          >
-            <ConnectionStatus roomId={props.roomId} >
-              <MoreVertIcon sx={{ color: props.selected ? '#fff' : 'inherit' }} />
-            </ConnectionStatus>
-          </IconButton>
+    <div style={{ position: 'relative' }}>
+      <CallWindow open={openCallWindow} onClose={closeCallWindow} room={props.roomId} keys={sbContext.channels[props.roomId].key} />
 
-        </> :
-        <IconButton
-          aria-label="more"
-          id="long-button"
-          aria-controls={open ? 'long-menu' : undefined}
-          aria-expanded={open ? 'true' : undefined}
-          aria-haspopup="true"
-          onClick={handleClick}
-        >
-          <MoreVertIcon sx={{ color: props.selected ? '#fff' : 'inherit' }} />
-        </IconButton>
-
-      }
+      <IconButton
+        aria-label="more"
+        id="long-button"
+        aria-controls={open ? 'long-menu' : undefined}
+        aria-expanded={open ? 'true' : undefined}
+        aria-haspopup="true"
+        onClick={handleClick}
+      >
+        {(room_id === props.roomId || (!room_id && props.roomId)) ?
+          <ConnectionStatus roomId={props.roomId} >
+            <MoreVertIcon sx={{ color: props.selected ? '#fff' : 'inherit' }} />
+          </ConnectionStatus>
+          : <MoreVertIcon sx={{ color: props.selected ? '#fff' : 'inherit' }} />
+        }
+      </IconButton>
 
       <Menu
         id="long-menu"

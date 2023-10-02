@@ -10,7 +10,7 @@ const useGesture = createUseGesture([dragAction, pinchAction])
 export default function ImageViewer(props) {
     const { image, controlMessages, sbContext, inhibitSwipe } = props
     const notify = React.useContext(NotificationContext)
-    const [img, setImage] = React.useState(image?.image);
+    const [img, setImage] = React.useState('');
     const [imgLoaded, setImageLoaded] = React.useState(true);
     const [closing, setClosing] = React.useState(false);
     const myRef = React.createRef();
@@ -23,11 +23,11 @@ export default function ImageViewer(props) {
     }), [])
 
     React.useEffect(() => {
-        setImage(image.image)
-        if (image?.image) {
 
+        if (image?.image) {
+            setImage(image.image)
             const hash = image.fileMetadata.previewHash ? image.fileMetadata.previewHash : image.fileMetadata.fullImageHash
-            if (hash) {
+            if (hash && controlMessages[hash]) {
                 sbContext.SB.storage.fetchData(controlMessages[hash]).then((data) => {
                     if (data.hasOwnProperty('error')) {
                         console.error(data['error'])
@@ -38,12 +38,12 @@ export default function ImageViewer(props) {
                         setImageLoaded(true)
                     }
                 }).catch((error) => {
-                    console.error(`openPreview()  exception: `,controlMessages[hash], error);
+                    console.error(`openPreview()  exception: `, controlMessages[hash], error);
                     notify.warn('Could not load full size image')
                 })
             } else {
                 setImageLoaded(true)
-                notify.warn('Could not load full size image')
+                notify.warn('Some full size images may not be available, we are working on loading them.')
             }
         }
     }, [controlMessages, image, notify, sbContext.SB.storage])
@@ -62,17 +62,6 @@ export default function ImageViewer(props) {
     }, [])
 
     let height = window.innerHeight - (window.innerHeight / 4)
-
-    React.useEffect(() => {
-        open({ canceled: true })
-        if (props.img !== img) {
-            setImage(props.img)
-            setClosing(false)
-        }
-
-        // Ignored this is not an exhaustive dependency list
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [props.img])
 
     React.useEffect(() => {
         setImageLoaded(props.imgLoaded)
