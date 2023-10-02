@@ -118,9 +118,9 @@ self.addEventListener('push', (event) => {
   console.log('Got push', data)
   const clients = self.clients;
   const channel_id = data.data.channel_id;
-  data.icon = "https://sn.ac/mstile-144x144.png"
-  data.title = "Snackabra"
-  data.body = "You have a new message"
+  data.icon = data.icon ? data.icon : "https://sn.ac/mstile-144x144.png"
+  data.title = data.title ? data.title : "Snackabra"
+  data.body = data.body ? data.body : "You have a new message"
   event.waitUntil(clients.matchAll({ includeUncontrolled: true }).then((clientList) => {
     if (clientList.length > 0) {
       for (const client of clientList) {

@@ -5,8 +5,10 @@ import { observer } from "mobx-react"
 import SnackabraContext from "../../contexts/SnackabraContext";
 import NotificationContext from "../../contexts/NotificationContext";
 import { downloadFile } from "../../utils/misc"
+const { toJS } = require('mobx')
 
 const DownloadRoomData = observer(() => {
+    const FileHelper = window.SBFileHelper
     const sbContext = React.useContext(SnackabraContext);
     const notify = React.useContext(NotificationContext);
     const [channelList, setChannelList] = React.useState([]);
@@ -31,8 +33,26 @@ const DownloadRoomData = observer(() => {
     const getRoomStorage = React.useCallback(async (roomId, onSuccess, onError) => {
         try {
             const room = sbContext.channels[roomId]
+            const storage = []
+            for (const [key, value] of room.messages) {
+                console.warn("Received message: ", JSON.parse(JSON.stringify(value)))
+                const message = JSON.parse(JSON.stringify(value))
+                if (message.messageType === 'ac9ce10755b647849d8596011979e018') {
+                    const content = JSON.parse(message.contents)
+                    console.log(content);
+                    if (content.hasOwnProperty('hash') && content.hasOwnProperty('handle')) {
+                        console.log(`Key: ${key}, Value: `, content);
+                        storage.push(content)
+                    }
+                }
+            }
             room.downloadData(roomId, room.key).then((data) => {
-                downloadFile(btoa(JSON.stringify(data.storage, null, 2)), room.alias + "_shards.txt", 'text/plain;charset=utf-8')
+                console.log("Room data: ", data)
+                const fileData = {
+                    target: data.storage.target,
+                    shards: storage
+                }
+                downloadFile(btoa(JSON.stringify(fileData, null, 2)), room.alias + "_shards.txt", 'text/plain;charset=utf-8')
                 onSuccess(roomId + 'shard')
             }).catch((e) => {
                 console.error(e)
@@ -41,6 +61,7 @@ const DownloadRoomData = observer(() => {
         } catch (e) {
             console.error(e)
             notify.error('Error downloading file')
+            onSuccess(roomId + 'shard')
         }
 
     }, [notify, sbContext])

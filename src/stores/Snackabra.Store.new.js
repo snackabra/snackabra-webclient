@@ -548,10 +548,10 @@ class ChannelStore {
     })
   };
 
-  // MTG: error in jslib here, needs to be fixed but waiting on commits from PSM
   downloadData = async () => {
     try {
       let data = await this._socket.api.downloadData()
+      console.log(data)
       delete data.channel.SERVER_SECRET
       data.storage.target = window.location.host
       return data
