@@ -38,7 +38,7 @@ const ChatRoom = observer((props) => {
   const FileHelper = window.SBFileHelper;
   const fileMetadata = new Map();
   const q = new Queue()
-  const _r = new Queue()
+  // const _r = new Queue()
   let SB = require('snackabra/dist/snackabra')
 
   let messageTypes = {
@@ -58,11 +58,10 @@ const ChatRoom = observer((props) => {
   let toUpload = []
   let uploaded = []
 
-  const [messages, setMessages] = React.useState(new Map());
+  // const [messages, setMessages] = React.useState(new Map());
   const [giftedMessages, setGiftedMessages] = React.useState([]);
   const [user, setUser] = React.useState({});
   const [height, setHeight] = React.useState(0);
-  const [visibility, setVisibility] = React.useState('visible');
   const [openAdminDialog, setOpenAdminDialog] = React.useState(props.openAdminDialog);
   const [openWhisper, setOpenWhisper] = React.useState(false);
   const [openPreview, setOpenPreview] = React.useState(false);
@@ -87,27 +86,32 @@ const ChatRoom = observer((props) => {
   }, [props])
 
 
-  const addMessage = React.useCallback((message) => {
+  const addMessage = React.useCallback((message, _previousMessages = null) => {
     let _m = []
+    if (_previousMessages) {
+      _m = GiftedChat.append(_previousMessages, [message])
+      return _m
+    }
     setGiftedMessages(previousMessages => {
       _m = GiftedChat.append(previousMessages, [message])
       return _m
-
     })
-    return _m
   }, [])
 
-  const replaceMessage = React.useCallback((msg) => {
-    let _m = []
+  const replaceMessage = React.useCallback((msg, _previousMessages = null) => {
+    if (_previousMessages) {
+      const updatedMessages = _previousMessages.map(message => {
+        return message._id === msg.sendingId ? msg : message
+      });
+      return updatedMessages
+    }
     console.log('replaceMessage', msg)
     setGiftedMessages(previousMessages => {
       const updatedMessages = previousMessages.map(message => {
         return message._id === msg.sendingId ? msg : message
       });
-      _m = updatedMessages
-      return _m
+      return updatedMessages
     })
-    return _m
   }, [])
 
   React.useEffect(() => {
@@ -123,20 +127,6 @@ const ChatRoom = observer((props) => {
     window.addEventListener('orientationchange', handleResize);
     window.addEventListener('touchmove', handleResize);
     handleResize();
-
-    // document.addEventListener('visibilitychange', () => {
-    //   let socketStatus = channel.checkSocketStatus();
-    //   if (
-    //     document.visibilityState === 'visible' &&
-    //     socketStatus !== 'OPEN'
-    //   ) {
-    //     if (props.activeRoom === props.roomId) {
-    //       connect();
-    //     }
-    //   }
-    //   setVisibility(document.visibilityState);
-    // });
-
     if (!channel) {
       const room = props.sbContext.join(props.roomId);
       if (!room) {
@@ -147,7 +137,7 @@ const ChatRoom = observer((props) => {
     init();
 
     return () => {
-      setMessages(new Map());
+      // setMessages(new Map());
       setOpenAdminDialog(false);
       setOpenWhisper(false);
       setOpenPreview(false);
@@ -163,7 +153,6 @@ const ChatRoom = observer((props) => {
       setUploading(false);
       setUser({});
       setHeight(0);
-      setVisibility('visible');
       setReplyTo(null);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -194,7 +183,7 @@ const ChatRoom = observer((props) => {
     }
 
     processQueue()
-    processSQueue()
+    // processSQueue()
     subscribeToNotifications()
   }
 
@@ -208,6 +197,15 @@ const ChatRoom = observer((props) => {
           console.log('pushManager not found in registration object...')
           return;
         }
+
+        if(await window.sw_registration.pushManager.getSubscription().then((subscription) => {
+          if (subscription) {
+            console.log('Already subscribed to push notifications', subscription)
+            return true
+          }
+          return false
+        })) return;
+
         console.dir(window.sw_registration)
 
         console.log('Registering push')
@@ -216,7 +214,7 @@ const ChatRoom = observer((props) => {
           applicationServerKey: SB.base64ToArrayBuffer(process.env.REACT_APP_PUBLIC_VAPID_KEY),
         })
 
-        await fetch(process.env.REACT_APP_NOTIFICATION_SERVER + '/subscription', {
+        fetch(process.env.REACT_APP_NOTIFICATION_SERVER + '/subscription', {
           method: 'POST',
           body: JSON.stringify({
             channel_id: props.roomId,
@@ -254,18 +252,18 @@ const ChatRoom = observer((props) => {
  * when sending multiple images gifted chat sees that as a single message
  * we need to add on to the message id to render the chat container properly
  */
-  const processSQueue = () => {
-    setInterval(() => {
-      while (!_r.isEmpty && !_r.isMaxed) {
-        _r.processing++
-        const msg = _r.dequeue()
-        msg._id = msg._id + Date.now()
-        sending[msg._id] = msg._id
-        setMessages(_messages => new Map(_messages).set(msg._id, msg))
-        _r.processing--
-      }
-    }, 25)
-  }
+  // const processSQueue = () => {
+  //   setInterval(() => {
+  //     while (!_r.isEmpty && !_r.isMaxed) {
+  //       _r.processing++
+  //       const msg = _r.dequeue()
+  //       msg._id = msg._id + Date.now()
+  //       sending[msg._id] = msg._id
+  //       // setMessages(_messages => new Map(_messages).set(msg._id, msg))
+  //       _r.processing--
+  //     }
+  //   }, 25)
+  // }
 
   const connect = async (username) => {
     try {
@@ -345,28 +343,17 @@ const ChatRoom = observer((props) => {
     }
   }
 
-  const getGiftedMessages = () => {
-    return giftedMessages;
-  }
 
   const handleSimpleChatMessage = (msg) => {
 
     setGiftedMessages(previousMessages => {
       if (previousMessages && msg.hasOwnProperty('sendingId') && previousMessages.some(message => message._id === msg.sendingId)) {
-        return replaceMessage(msg)
+        return replaceMessage(msg, previousMessages)
       } else {
-        return addMessage(msg)
+        return addMessage(msg, previousMessages)
       }
     })
 
-
-    setMessages(_messages => {
-      const _n_messages = new Map(_messages).set(msg._id, msg)
-      if (msg.hasOwnProperty('sendingId')) {
-        _n_messages.delete(msg.sendingId)
-      }
-      return _n_messages
-    })
   }
 
   // For backaward compatibility with older versions of the chat app
@@ -374,11 +361,11 @@ const ChatRoom = observer((props) => {
     if (msg) {
       console.log("==== here is the message: (ChatRoom.js)")
       if (!msg.control) {
-        [...messages.entries()].reduce((acc, curr) => {
+        [...channel.messages.entries()].reduce((acc, curr) => {
           const msg_id = curr._id.toString()
           if (!msg_id.match(/^sending/)) {
             acc.push(curr);
-            setMessages(_messages => new Map(_messages).set(msg_id, curr))
+            // setMessages(_messages => new Map(_messages).set(msg_id, curr))
           } else {
             delete sending[curr._id]
           }
@@ -388,7 +375,7 @@ const ChatRoom = observer((props) => {
         msg.user._id = userId;
         msg.user.name = sbContext.getContact(msg.user._id) !== undefined ? sbContext.contacts[userId] : msg.user.name;
         msg.sender_username = msg.user.name;
-        setMessages(_messages => new Map(_messages).set(msg._id, msg))
+        // setMessages(_messages => new Map(_messages).set(msg._id, msg))
       } else {
         setControlMessages(_controlMessages => {
           _controlMessages[msg.hash] = msg.handle
@@ -410,7 +397,7 @@ const ChatRoom = observer((props) => {
 
     props.inhibitSwipe(1)
     let _images = [];
-    for (const [key, value] of messages.entries()) {
+    for (const [key, value] of channel.messages.entries()) {
       console.log(`MESSAGES `, key, value)
       if (value.hasOwnProperty('image') && value.image.length > 0) {
         _images.push(value)
@@ -477,8 +464,8 @@ const ChatRoom = observer((props) => {
           sender_username: sbContext.getContact(channel.key).name,
           _id: 'sending_' + giftedMessage[0]._id + Date.now()
         }
-        // addMessage(message)
-        _r.enqueue(message)
+        addMessage(message)
+        // _r.enqueue(message)
         value.sbImage.thumbnailReady.then(() => {
           let sbm = channel.newMessage('')
           sbm.contents.image = value.sbImage.thumbnail
@@ -550,8 +537,8 @@ const ChatRoom = observer((props) => {
       giftedMessage[0].user = user
       // giftedMessage[0].pending = true
       console.log('giftedMessage', giftedMessages)
-      // addMessage(giftedMessage[0])
-      setMessages(_messages => new Map(_messages).set(giftedMessage[0]._id, giftedMessage[0]))
+      addMessage(giftedMessage[0])
+      // setMessages(_messages => new Map(_messages).set(giftedMessage[0]._id, giftedMessage[0]))
       let sbm = channel.newMessage(giftedMessage[0].text)
       sbm.contents.sender_username = sbContext.getContact(channel.key).name;
       sbm.contents.sendingId = msg_id;
@@ -562,7 +549,7 @@ const ChatRoom = observer((props) => {
 
   const sendSystemInfo = (msg_string, callback) => {
     const systemMessage = {
-      _id: `${messages.length}_${Date.now()}`,
+      _id: `${channel.messages.size}_${Date.now()}`,
       text: msg_string,
       createdAt: new Date(),
       user: { _id: 'system', name: 'System Message' },
@@ -571,7 +558,7 @@ const ChatRoom = observer((props) => {
       info: true
     }
 
-    setMessages(_messages => new Map(_messages).set(systemMessage._id, systemMessage))
+    // setMessages(_messages => new Map(_messages).set(systemMessage._id, systemMessage))
 
     if (callback) {
       callback(systemMessage)
@@ -580,12 +567,12 @@ const ChatRoom = observer((props) => {
   }
 
   const sendSystemMessage = (message) => {
-    setMessages(_messages => new Map(_messages).set(message._id, {
-      _id: `${messages.length}_${Date.now()}`,
-      user: { _id: 'system', name: 'System Message' },
-      createdAt: new Date(),
-      text: message + '\n\n Details in console'
-    }))
+    // setMessages(_messages => new Map(_messages).set(message._id, {
+    //   _id: `${messages.length}_${Date.now()}`,
+    //   user: { _id: 'system', name: 'System Message' },
+    //   createdAt: new Date(),
+    //   text: message + '\n\n Details in console'
+    // }))
   }
 
   const removeInputFiles = () => {
@@ -599,7 +586,7 @@ const ChatRoom = observer((props) => {
   const saveUsername = (newUsername, _id) => {
     if (newUsername && _id) {
       sbContext.createContact(newUsername, _id)
-      const _m = Object.assign(messages)
+      const _m = Object.assign(giftedMessages)
       _m.forEach((_message, i) => {
         console.log(_message, i)
         if (_message.user._id === _id) {
@@ -608,7 +595,8 @@ const ChatRoom = observer((props) => {
           _m[i] = _message;
         }
       })
-      setMessages(_m)
+      // setMessages(_m)
+      setGiftedMessages(_m)
       channel.messages = _m
     }
     setOpenChangeName(false)

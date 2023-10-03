@@ -77,37 +77,6 @@ self.addEventListener('message', (event) => {
   }
 });
 
-
-// Forces the tag to be respected since apple doesnt want to do that.
-// const cleanTagsStore = async () => {
-//   const tags = await db.getAll();
-//   const now = new Date().getTime();
-//   for (const tag of tags) {
-//     if (now - Number(tag.value) > 1000 * 60 * 5) {
-//       db.removeItem(tag.key)
-//     }
-//   }
-
-// }
-
-// const notify = async (data) => {
-//   console.log('notify', data)
-//   const tag = await db.getItem(data.tag);
-//   if (tag) {
-//     return;
-//   }
-//   await db.setItem(data.tag, new Date().getTime());
-//   self.registration.showNotification(data.title, {
-//     ...data
-//   })
-//   cleanTagsStore()
-// }
-// self.addEventListener('statechange', e => {
-//   if (e.target.state === 'activated') {
-//     window.location.reload();
-//   }
-// });
-
 const notify = (data) => {
   notificationsMap.set(data.tag, data)
   self.registration.showNotification(data.title, {
@@ -133,6 +102,9 @@ self.addEventListener('push', (event) => {
         console.log('client', client.url, channel_id)
         console.log(client.url.match(channel_id))
         if (client.url.match(channel_id)) {
+          inFocus = true;
+        }
+        if(client?.focused){
           inFocus = true;
         }
       }
