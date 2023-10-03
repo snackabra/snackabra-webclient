@@ -3,8 +3,6 @@ import TextField from '@mui/material/TextField';
 import { SBImage } from "../../utils/ImageProcessorSBFileHelper";
 import { observer } from "mobx-react"
 
-// import { base64ToArrayBuffer } from "snackabra"
-let SB = require('snackabra')
 
 const RenderComposer = observer((props) => {
   // eslint-disable-next-line no-undef

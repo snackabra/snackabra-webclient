@@ -39,7 +39,7 @@ const ChatRoom = observer((props) => {
   const fileMetadata = new Map();
   const q = new Queue()
   const _r = new Queue()
-  let SB = require('snackabra')
+  let SB = require('snackabra/dist/snackabra')
 
   let messageTypes = {
     SIMPLE_CHAT_MESSAGE: 'd341ca8645f94dc0adb1772865d973fc',
@@ -90,8 +90,7 @@ const ChatRoom = observer((props) => {
   const addMessage = React.useCallback((message) => {
     let _m = []
     setGiftedMessages(previousMessages => {
-      const resultArray = _.uniqBy([message, ...previousMessages], '_id')
-      _m = GiftedChat.append(resultArray, [])
+      _m = GiftedChat.append(previousMessages, [message])
       return _m
 
     })
@@ -100,6 +99,7 @@ const ChatRoom = observer((props) => {
 
   const replaceMessage = React.useCallback((msg) => {
     let _m = []
+    console.log('replaceMessage', msg)
     setGiftedMessages(previousMessages => {
       const updatedMessages = previousMessages.map(message => {
         return message._id === msg.sendingId ? msg : message
@@ -124,18 +124,18 @@ const ChatRoom = observer((props) => {
     window.addEventListener('touchmove', handleResize);
     handleResize();
 
-    document.addEventListener('visibilitychange', () => {
-      let socketStatus = channel.checkSocketStatus();
-      if (
-        document.visibilityState === 'visible' &&
-        socketStatus !== 'OPEN'
-      ) {
-        if (props.activeRoom === props.roomId) {
-          connect();
-        }
-      }
-      setVisibility(document.visibilityState);
-    });
+    // document.addEventListener('visibilitychange', () => {
+    //   let socketStatus = channel.checkSocketStatus();
+    //   if (
+    //     document.visibilityState === 'visible' &&
+    //     socketStatus !== 'OPEN'
+    //   ) {
+    //     if (props.activeRoom === props.roomId) {
+    //       connect();
+    //     }
+    //   }
+    //   setVisibility(document.visibilityState);
+    // });
 
     if (!channel) {
       const room = props.sbContext.join(props.roomId);
@@ -477,7 +477,7 @@ const ChatRoom = observer((props) => {
           sender_username: sbContext.getContact(channel.key).name,
           _id: 'sending_' + giftedMessage[0]._id + Date.now()
         }
-        addMessage(message)
+        // addMessage(message)
         _r.enqueue(message)
         value.sbImage.thumbnailReady.then(() => {
           let sbm = channel.newMessage('')
@@ -550,7 +550,7 @@ const ChatRoom = observer((props) => {
       giftedMessage[0].user = user
       // giftedMessage[0].pending = true
       console.log('giftedMessage', giftedMessages)
-      addMessage(giftedMessage[0])
+      // addMessage(giftedMessage[0])
       setMessages(_messages => new Map(_messages).set(giftedMessage[0]._id, giftedMessage[0]))
       let sbm = channel.newMessage(giftedMessage[0].text)
       sbm.contents.sender_username = sbContext.getContact(channel.key).name;
@@ -678,7 +678,7 @@ const ChatRoom = observer((props) => {
           style={{
             width: '100%'
           }}
-          messages={giftedMessages}
+          messages={_.uniqBy(giftedMessages, '_id')}
           onSend={sendMessages}
 
           user={user}

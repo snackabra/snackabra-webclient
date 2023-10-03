@@ -12,7 +12,9 @@ import { ExpirationPlugin } from 'workbox-expiration';
 import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
 import { StaleWhileRevalidate } from 'workbox-strategies';
-const base64ToArrayBuffer = require('snackabra').base64ToArrayBuffer
+const base64ToArrayBuffer = require('snackabra/dist/snackabra').base64ToArrayBuffer
+
+const notificationsMap = new Map();
 
 clientsClaim();
 
@@ -107,6 +109,7 @@ self.addEventListener('message', (event) => {
 // });
 
 const notify = (data) => {
+  notificationsMap.set(data.tag, data)
   self.registration.showNotification(data.title, {
     ...data
   })
@@ -118,18 +121,25 @@ self.addEventListener('push', (event) => {
   console.log('Got push', data)
   const clients = self.clients;
   const channel_id = data.data.channel_id;
-  data.icon = data.icon ? data.icon : "https://sn.ac/mstile-144x144.png"
+  data.icon = data.icon ? data.icon : "https://preview.384chat.pages.dev/android-chrome-192x192.png"
   data.title = data.title ? data.title : "Snackabra"
   data.body = data.body ? data.body : "You have a new message"
-  event.waitUntil(clients.matchAll({ includeUncontrolled: true }).then((clientList) => {
+  console.log(clients)
+  let inFocus = false;
+  event.waitUntil(clients.matchAll({ includeUncontrolled: true, type: 'all' }).then((clientList) => {
+    console.log('clientList', clientList)
     if (clientList.length > 0) {
       for (const client of clientList) {
-        client.postMessage({
-          type: 'notification',
-          channel_id: channel_id,
-          notification: data
-        })
+        console.log('client', client.url, channel_id)
+        console.log(client.url.match(channel_id))
+        if (client.url.match(channel_id)) {
+          inFocus = true;
+        }
       }
+      if (!inFocus && !notificationsMap.has(data.tag)) {
+        notify(data)
+      }
+
       return;
     } else {
       notify(data)

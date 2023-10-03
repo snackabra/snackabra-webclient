@@ -6,7 +6,7 @@ import App from './App';
 import { createRoot } from 'react-dom/client';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import IndexedKV from "./utils/IndexedKV";
-let SB = require('snackabra')
+let SB = require('snackabra/dist/snackabra')
 console.log(SB)
 window.SB = {
   Snackabra: SB.Snackabra,

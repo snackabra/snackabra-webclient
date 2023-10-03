@@ -3,7 +3,7 @@ import IndexedKV from "../utils/IndexedKV";
 
 
 console.log("=========== mobx-snackabra-store loading ===========")
-let SB = require(process.env.NODE_ENV === 'development' ? 'snackabra/dist/snackabra' : 'snackabra')
+let SB = require('snackabra/dist/snackabra')
 console.log(SB.version)
 let cacheDb;
 let Crypto = new SB.SBCrypto();
@@ -130,9 +130,9 @@ class SnackabraStore {
                 console.warn('Migrating channel', channel)
                 contacts = Object.assign(contacts, channel.contacts)
                 const id = channel.id || channel._id;
-                const newChannel = new ChannelStore(this.SB, this.config, id);
+                const newChannel = new ChannelStore(this.config, id);
                 console.warn(newChannel, id, x)
-                this._channels[x] = new ChannelStore(this.SB, this.config, id)
+                this._channels[x] = new ChannelStore(this.config, id)
                 console.warn(this._channels[x], id, x)
                 let alias = channel.name || channel.alias
                 this._channels[x].alias = alias
@@ -217,7 +217,7 @@ class SnackabraStore {
   join = (channelId) => {
     return new Promise(async (resolve, reject) => {
       try {
-        let channel = new ChannelStore(this.SB, this.config, channelId);
+        let channel = new ChannelStore(this.config, channelId);
         channel = await channel.connect(console.log)
         this._channels[channel.id] = channel;
         await this[save]();
@@ -233,7 +233,7 @@ class SnackabraStore {
   create = (secret, alias) => {
     return new Promise(async (resolve, reject) => {
       try {
-        const channel = new ChannelStore(this.SB, this.config);
+        const channel = new ChannelStore(this.config);
         await channel.create(secret);
         this.channels[channel.id] = channel;
         this.channels[channel.id].alias = alias;
@@ -253,7 +253,7 @@ class SnackabraStore {
         console.log(importedData)
         Object.keys(importedData.roomData).forEach((id) => {
           const importedChannel = importedData.roomData[id]
-          this._channels[id] = new ChannelStore(this.SB, this.config, id)
+          this._channels[id] = new ChannelStore(this.config, id)
           this._channels[id].alias = importedChannel.alias ? importedChannel.alias : importedChannel.name || `Room ${Object.keys(this._channels).length}`
           this._channels[id].key = importedChannel.key
         })
@@ -287,12 +287,14 @@ class ChannelStore {
   _status = 'CLOSED'
   _key;
   _socket;
+  _connectionAttempts = 0;
   _messages = new Map();
   _ready = false;
   _owner = false;
   _capacity = 20;
   _motd = '';
   _messageCallback;
+  _visible = true;
   _savingTimout = null;
   readyResolver;
   ChannelStoreReadyFlag = new Promise((resolve) => {
@@ -303,10 +305,36 @@ class ChannelStore {
   SB;
   config;
 
-  constructor(SB, config, channelId = null) {
-    this.SB = SB;
-    this.config = config;
+  constructor(config, channelId = null) {
 
+    this.config = config;
+    this.config.onClose = () => {
+      console.log('onClose hook called')
+      this.status = 'CLOSED'
+      if (this._visible) {
+        setTimeout(() => {
+          console.log('reconnecting')
+          this.connect(this._messageCallback)
+        }, 500);
+      }
+    }
+
+    this.config.onOpen = () => {
+      console.log('onOpen hook called')
+      this.status = 'OPEN'
+    }
+    this.config.onError = (e) => {
+      console.log('onError hook called')
+      this.status = 'ERROR'
+      console.error(e)
+      if (this._visible) {
+        console.log('reconnecting')
+        setTimeout(() => {
+          this.connect(this._messageCallback)
+        }, 500);
+      }
+    }
+    this.SB = new SB.Snackabra(this.config);
     this[save] = async () => {
       await this.ChannelStoreReadyFlag
       if (this._savingTimout) {
@@ -376,6 +404,22 @@ class ChannelStore {
     });
 
     onBecomeUnobserved(this, "messages", this[save]);
+
+    document.addEventListener('visibilitychange', (e) => {
+      if (document.visibilityState === 'hidden') {
+        this._visible = false;
+        this.status = 'UNFOCUSED'
+      }
+
+      if (document.visibilityState === 'visible') {
+        this._visible = true;
+        console.log(this.socket)
+        if (this.socket) {
+          console.log('setting status to', this.socket.status)
+          this.status = this.socket.status
+        }
+      }
+    });
 
     if (channelId) {
       this.id = channelId;
@@ -453,6 +497,7 @@ class ChannelStore {
       return
     }
     this._socket = socket;
+    this.status = this._socket.status
     this[save]();
   }
 
@@ -579,7 +624,7 @@ class ChannelStore {
 
   connect = async (messageCallback) => {
     this._messageCallback = messageCallback
-    if (this._socket) {
+    if (this._socket && this._socket.status === 'OPEN') {
       console.log("==== already connected to channel:" + this.id)
       console.log(this._socket)
       return true

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useParams } from "react-router-dom";
 import { AppBar, Avatar, Box, Grid, Hidden, IconButton, InputAdornment, TextField, Typography } from "@mui/material";
 import AccountCircleRoundedIcon from '@mui/icons-material/AccountCircleRounded';
 import WhisperUserDialog from "./Modals/WhisperUserDialog";
@@ -10,6 +11,7 @@ import SharedRoomStateContext from "../contexts/SharedRoomState";
 import RoomMenu from "../components/Rooms/RoomMenu";
 
 const NavAppBar = observer(() => {
+  let { room_id } = useParams();
   const NavAppBarContext = React.useContext(NavBarActionContext)
   const roomState = React.useContext(SharedRoomStateContext)
   const sbContext = React.useContext(SnackabraContext);

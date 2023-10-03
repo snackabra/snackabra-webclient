@@ -11,25 +11,20 @@ const ConnectionStatus = observer((props) => {
     const [status, setStatus] = React.useState('error')
     const [statusMessage, setStatusMessage] = React.useState('CLOSED')
 
-    // MTG: we can make this better by using callbacks in jslib
     React.useEffect(() => {
         let iterator
         if (iterator) {
             clearInterval(iterator)
         }
-        iterator = setInterval(() => {
-            const status = typeof channel?.checkSocketStatus === 'function' ? channel.checkSocketStatus() : 'CLOSED'
-            setStatusMessage(status)
-        }, 250)
 
         document.addEventListener('visibilitychange', () => {
-            let socketStatus = channel.checkSocketStatus();
-            setStatusMessage(socketStatus)
+            setStatusMessage(channel.status)
           });
-    }, [channel])
+    }, [channel.status])
 
     React.useEffect(() => {
-        switch (statusMessage) {
+        console.log('channel.status', channel.status)
+        switch (channel.status) {
             case 'CONNECTING':
                 setStatus('warning')
                 break;
@@ -44,7 +39,7 @@ const ConnectionStatus = observer((props) => {
                 break;
         }
 
-    }, [statusMessage])
+    }, [channel.status])
 
     const reload = (e) => {
         e.stopPropagation()

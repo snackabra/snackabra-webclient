@@ -90,7 +90,7 @@ const RoomMenu = observer((props) => {
   const closeCallWindow = () => {
     setOpenCallWindow(false)
   }
-
+  console.log(props.selected)
   return (
     <div style={{ position: 'relative' }}>
       <CallWindow open={openCallWindow} onClose={closeCallWindow} room={props.roomId} keys={sbContext.channels[props.roomId].key} />
@@ -103,7 +103,7 @@ const RoomMenu = observer((props) => {
         aria-haspopup="true"
         onClick={handleClick}
       >
-        {(room_id === props.roomId || (!room_id && props.roomId)) ?
+        {((room_id === props.roomId || (!room_id && props.roomId)) && props.selected) ?
           <ConnectionStatus roomId={props.roomId} >
             <MoreVertIcon sx={{ color: props.selected ? '#fff' : 'inherit' }} />
           </ConnectionStatus>
