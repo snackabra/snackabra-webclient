@@ -131,10 +131,6 @@ const RenderComposer = observer((props) => {
       }
     }
     FileHelper.handleFileDrop(mockEvent, selectFiles);
-    // props.onSend({ text: '' }, true)
-    // setTimeout(() => {
-    //   props.onTextChanged('')
-    // }, 100)
 
   }
 
@@ -154,6 +150,7 @@ const RenderComposer = observer((props) => {
       onChange={handlChange}
       readOnly={attachedFiles}
       variant={'standard'}
+      disabled={!props.connected}
       InputProps={{
         disableUnderline: true
       }}

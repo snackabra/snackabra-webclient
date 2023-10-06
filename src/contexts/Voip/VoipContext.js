@@ -756,17 +756,6 @@ export const VoipComponent = (props) => {
       >
         <CloseIcon />
       </IconButton>
-
-
-      {/* {remoteVideoIds.map((video, index) => {
-        setTimeout(() => {
-          setVideoSrcObject(video._id, video.stream)
-        }, 250)
-        return <Grid key={index} item xs={12}>
-          <video style={{ width: "100%", backgroundColor: 'black' }} id={video._id} playsInline autoPlay></video>
-        </Grid>
-      })
-      } */}
       <Grid style={{ width: '100%', position: 'relative' }} item>
         <video id="remoteVideo" style={{ maxHeight: 'calc(100vh - 132px)', width: "100%", backgroundColor: 'black', position: 'relative', height: isMobile ? 'calc(100vh - 172px)' : 'calc(100% - 47px)' }} playsInline autoPlay></video>
         <video className={myVideoClassState} style={{ zIndex: 999999 }} id="localVideo" playsInline autoPlay muted></video>

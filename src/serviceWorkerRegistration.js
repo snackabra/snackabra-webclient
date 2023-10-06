@@ -9,6 +9,10 @@
 
 // To learn more about the benefits of this model and instructions on how to
 // opt-in, read https://cra.link/PWA
+// if(process.env.NODE_ENV === 'development'){
+// const sw = await import('./service-worker');
+// console.log(sw)
+// }
 
 const isLocalhost = Boolean(
   window.location.hostname === 'localhost' ||
@@ -19,7 +23,7 @@ const isLocalhost = Boolean(
 );
 
 export function register(config) {
-  if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
+  if ((process.env.NODE_ENV === 'production' || isLocalhost) && 'serviceWorker' in navigator) {
     // The URL constructor is available in all browsers that support SW.
     const publicUrl = new URL(process.env.PUBLIC_URL, window.location.href);
     if (publicUrl.origin !== window.location.origin) {
@@ -34,6 +38,7 @@ export function register(config) {
       const swUrl = `${process.env.PUBLIC_URL}/service-worker.js`;
       console.log(swUrl)
       if (isLocalhost) {
+        console.log('is localhost')
         // This is running on localhost. Let's check if a service worker still exists or not.
         checkValidServiceWorker(swUrl, config);
 

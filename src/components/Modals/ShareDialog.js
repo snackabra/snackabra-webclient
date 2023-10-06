@@ -11,20 +11,20 @@ const ShareDialog = (props) => {
     setOpen(props.open)
   }, [props.open])
 
-  const copy = async () => {
+  const copy = () => {
     if ('clipboard' in navigator) {
-      await navigator.clipboard.writeText(props.roomId);
+      navigator.clipboard.writeText(props.roomId).then(() => {
+        props.onClose();
+      })
     } else {
       document.execCommand('copy', true, props.roomId);
-    }
-    setTimeout(() => {
       props.onClose();
-    }, 250)
+    }
 
   }
 
   const onClose = () => {
-      props.onClose();
+    props.onClose();
   }
 
   return (

@@ -3,12 +3,13 @@
   "author": "3384 Inc.",
   "email": "info@384.co",
   "description": "Snackabra web app (React Native)",
-  "version": "0.6.11-beta.36",
+  "version": "0.6.11-beta.61",
   "bugs": "https://github.com/snackabra/snackabra-webclient/issues",
   "homepage": "https://snackabra.io",
   "license": "GPL-3.0-only",
   "private": false,
   "scripts": {
+    "start:swdev": "NODE_ENV=production GENERATE_SOURCEMAP=true react-app-rewired start",
     "start": "GENERATE_SOURCEMAP=true react-app-rewired start",
     "bump": "VERSION=$(node -p \"require('./package.json').version\") &&  NEW_VERSION=$(echo $VERSION | awk -F'-' 'BEGIN{OFS=\"-\"} $2~/beta/{split($2, a, \".\"); a[2]++; $2=a[1]\".\"a[2]}1') && echo $NEW_VERSION && yarn version --new-version $NEW_VERSION",
     "deploy:staging": "yarn bump && yarn build && wrangler pages publish build --project-name 384chat --branch preview",
@@ -65,12 +66,7 @@
     "react-swipeable-views": "^0.14.0",
     "snackabra": "^1.1.25",
     "styled-components": "^5.3.5",
-    "ts-node": "^10.9.1",
-    "workbox-core": "^6.5.3",
-    "workbox-expiration": "^6.5.3",
-    "workbox-precaching": "^6.5.3",
-    "workbox-routing": "^6.5.3",
-    "workbox-strategies": "^6.5.3"
+    "ts-node": "^10.9.1"
   },
   "devDependencies": {
     "@babel/core": "7.19.6",
@@ -90,6 +86,12 @@
     "babel-plugin-macros": "^3.1.0",
     "eslint": "^8.23.0",
     "prop-types": "^15.8.1",
-    "typescript": "4.6.2"
+    "typescript": "4.6.2",
+    "workbox-core": "^6.5.3",
+    "workbox-expiration": "^6.5.3",
+    "workbox-precaching": "^6.5.3",
+    "workbox-routing": "^6.5.3",
+    "workbox-strategies": "^6.5.3",
+    "workbox-webpack-plugin": "^7.0.0"
   }
 }

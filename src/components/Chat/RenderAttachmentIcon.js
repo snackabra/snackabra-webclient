@@ -10,7 +10,7 @@ const RenderAttachmentIcon = observer((props) => {
   }
 
   return (
-    <IconButton component="label" id={elementId} aria-label="attach" size="large" onClick={openDropZone}>
+    <IconButton disabled={!props.connected} component="label" id={elementId} aria-label="attach" size="large" onClick={openDropZone}>
       <AttachmentIcon />
       {/* <input
         id="fileInput"

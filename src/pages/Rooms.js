@@ -106,11 +106,12 @@ const ResponsiveDrawer = observer((props) => {
     const listenForMessages = (event) => {
       if (event.data && event.data.type === "focus") {
         const to = event.data.channel_id
-        const index = Object.keys(sbContext.channels).findIndex((x) => x.id === to)
+        // const index = Object.keys(sbContext.channels).findIndex((x) => x.id === to)
+        // window.location.replace('/' + to)
         navigate('/' + to)
-        setRoomId(to)
-        roomState.setActiveRoom(to)
-        setValue(index);
+        // setRoomId(to)
+        // roomState.setActiveRoom(to)
+        // setValue(index);
       }
 
       if (event.data && event.data.type === "notification") {

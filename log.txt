@@ -1,0 +1,4 @@
+yarn run v1.22.19
+$ NODE_ENV=production GENERATE_SOURCEMAP=true react-app-rewired start
+Starting the development server...
+

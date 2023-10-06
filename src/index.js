@@ -38,9 +38,11 @@ Object.defineProperty(document, 'cacheDb', {
   value: localKV
 });
 
-if (process.env.NODE_ENV === 'production') {
+console.log(process.env.NODE_ENV)
 
-  console.log(process.env.NODE_ENV + ' registering service worker')
+// if (process.env.NODE_ENV === 'production') {
+
+  // console.log(process.env.NODE_ENV + ' registering service worker')
 
   const updateServiceWorker = (registration) => {
     registration.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -51,5 +53,5 @@ if (process.env.NODE_ENV === 'production') {
   serviceWorkerRegistration.register({
     onUpdate: reg => updateServiceWorker(reg),
   });
-}
+// }
 

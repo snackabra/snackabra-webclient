@@ -15,7 +15,6 @@ const AppRoutes = () => {
           <Route path="/404" element={<PageNotFound />} />
           <Route path="/" element={<Rooms />}>
             <Route path=":room_id" element={<Rooms />} />
-            {/* <Route path=":room_id/admin" element={<Rooms />} /> */}
           </Route>
           <Route path="*" element={<PageNotFound />} />
         </Routes>

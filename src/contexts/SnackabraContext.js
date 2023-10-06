@@ -1,5 +1,5 @@
 import * as React from "react"
-import SnackabraStore from "../stores/Snackabra.Store.new"
+import SnackabraStore from "../stores/Snackabra.Store"
 import { SBFileHelper } from '../utils/SBFileHelper';
 
 // React context for the SB object

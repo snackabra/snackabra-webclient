@@ -45,7 +45,6 @@ const NavAppBar = observer(() => {
     setUpdatedName(e.target.value)
   }
 
-  console.log('rendering nav', roomState.state.activeRoom)
   return (
     <Box sx={{ flexGrow: 1 }}>
       <WhisperUserDialog open={openWhisper} onClose={closeWhisper} />

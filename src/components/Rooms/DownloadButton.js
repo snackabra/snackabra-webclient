@@ -77,11 +77,6 @@ export default function DownloadButton(props) {
         if (!loading) {
             setLoading(true)
             action(id, onSuccess, onError)
-            // handleClick()
-            // timer.current = window.setTimeout(() => {
-            //     setSuccess(true);
-            //     setLoading(false);
-            // }, 20000);
         }
     };
 

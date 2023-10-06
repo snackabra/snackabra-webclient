@@ -7,7 +7,7 @@ const RenderBubble = (props) => {
   const { currentMessage, previousMessage } = props
   const [isVerifiedGuest, setVerifiedGuest] = React.useState(false)
   const [newProps, setNewProps] = React.useState({})
-  const isAdmin = currentMessage.user._id.startsWith(props.socket.keys.ownerPubKeyX)
+  const isAdmin = currentMessage.user._id.startsWith(props.keys.ownerPubKeyX)
 
   React.useEffect(() => {
     const init = async () => {
@@ -17,7 +17,7 @@ const RenderBubble = (props) => {
       // console.log(JSON.stringify(props.socket), current_user_key)
     }
     init();
-  }, [currentMessage, currentMessage.user._id, props.socket.admin, props.socket.api, props.socket.exportable_pubKey])
+  }, [currentMessage, currentMessage.user._id, props.keys])
 
   const updateProps = React.useCallback(({ both, left, right }) => {
     both = both || {}

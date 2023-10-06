@@ -27,18 +27,8 @@ clientsClaim();
 // Their URLs are injected into the manifest variable below.
 // This variable must be present somewhere in your service worker file,
 // even if you decide not to use precaching. See https://cra.link/PWA
-precacheAndRoute(self.__WB_MANIFEST);
-
-const HOSTNAME_WHITELIST = [
-  self.location.hostname,
-  new URL(process.env.REACT_APP_NOTIFICATION_SERVER).hostname,
-  // new URL(process.env.REACT_APP_CHANNEL_SERVER).hostname,
-  new URL(process.env.REACT_APP_SHARD_SERVER).hostname,
-  new URL(process.env.REACT_APP_STORAGE_SERVER).hostname,
-  'fonts.gstatic.com',
-  'fonts.googleapis.com',
-  'cdn.jsdelivr.net'
-]
+console.log(self)
+precacheAndRoute(self.__WB_MANIFEST || []);
 
 // Set up App Shell-style routing, so that all navigation requests
 // are fulfilled with your index.html shell. Learn more at
@@ -204,7 +194,6 @@ function getNotifications() {
 
 }
 
-
 self.addEventListener("periodicsync", (event) => {
   console.log('test', event)
   if (event.tag === "get-notifications") {
@@ -213,9 +202,9 @@ self.addEventListener("periodicsync", (event) => {
 });
 
 self.addEventListener('error', function (event) {
-  console.error(event)
 });
 
+// The Util Function to hack URLs of intercepted requests
 const getFixedUrl = (req) => {
   var now = Date.now()
   var url = new URL(req.url)
@@ -238,37 +227,48 @@ const getFixedUrl = (req) => {
 }
 
 self.addEventListener('fetch', function (event) {
-  if (event.request.method === 'GET') {
-    if (HOSTNAME_WHITELIST.indexOf(new URL(event.request.url).hostname) > -1) {
-      console.log('Handling fetch event for', event.request.url)
-      // Stale-while-revalidate
-      // similar to HTTP's stale-while-revalidate: https://www.mnot.net/blog/2007/12/12/stale
-      // Upgrade from Jake's to Surma's: https://gist.github.com/surma/eb441223daaedf880801ad80006389f1
-      const cached = caches.match(event.request)
-      // const fixedUrl = getFixedUrl(event.request)
-      // event.request.url = fixedUrl
-      const fetched = fetch(event.request)
-      const fetchedCopy = fetched.then(resp => resp.clone())
+  // Stale-while-revalidate
+  // similar to HTTP's stale-while-revalidate: https://www.mnot.net/blog/2007/12/12/stale
+  // Upgrade from Jake's to Surma's: https://gist.github.com/surma/eb441223daaedf880801ad80006389f1
+  const cached = caches.match(event.request)
+  const fixedUrl = getFixedUrl(event.request)
+  const fetched = fetch(fixedUrl, { cache: 'no-store' })
+  const fetchedCopy = fetched.then(resp => resp.clone())
 
-      // Call respondWith() with whatever we get first.
-      // If the fetch fails (e.g disconnected), wait for the cache.
-      // If there’s nothing in cache, wait for the fetch.
-      // If neither yields a response, return offline pages.
-      event.respondWith(
-        Promise.race([fetched.catch(_ => cached), cached])
-          .then(resp => resp || fetched)
-          .catch(_ => { /* eat any errors */ })
-      )
+  // Call respondWith() with whatever we get first.
+  // If the fetch fails (e.g disconnected), wait for the cache.
+  // If there’s nothing in cache, wait for the fetch.
+  // If neither yields a response, return offline pages.
+  event.respondWith(
+    Promise.race([fetched.catch(_ => cached), cached])
+      .then(resp => resp || fetched)
+      .catch(_ => { /* eat any errors */ })
+  )
 
-      // Update the cache with the version we fetched (only for ok status)
-      event.waitUntil(
-        Promise.all([fetchedCopy, caches.open("pwa-cache")])
-          .then(([response, cache]) => response.ok && cache.put(event.request, response))
-          .catch(_ => { /* eat any errors */ })
-      )
-    }
-  } else {
-    // Handle other types of requests (e.g., PUT, POST) without caching
-    event.respondWith(fetch(event.request));
-  }
+  // Update the cache with the version we fetched (only for ok status)
+  event.waitUntil(
+    Promise.all([fetchedCopy, caches.open("pwa-cache")])
+      .then(([response, cache]) => response.ok && cache.put(event.request, response))
+      .catch(_ => { /* eat any errors */ })
+  )
 });
+
+function cacheThenNetwork(request) {
+    return caches.open('dynamic-cache').then(function(cache) {
+      return cache.match(request).then(function(cachedResponse) {
+        var fetchPromise = fetch(request).then(function(networkResponse) {
+          // Clone the network response to store it in the cache
+          var responseToCache = networkResponse.clone();
+          cache.put(request, responseToCache); // Update the cache
+          return networkResponse; // Return the network response
+        });
+  
+        if (request.headers.get('bypass-cache')) {
+          return fetchPromise; // Force bypass of cache
+        }
+  
+        // Return the cached response first (if available) and update with network response
+        return cachedResponse || fetchPromise;
+      });
+    });
+  }
