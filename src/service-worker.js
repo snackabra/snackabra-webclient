@@ -12,7 +12,7 @@ import { ExpirationPlugin } from 'workbox-expiration';
 import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
 import { StaleWhileRevalidate } from 'workbox-strategies';
-const base64ToArrayBuffer = require('snackabra/dist/snackabra').base64ToArrayBuffer
+import { base64ToArrayBuffer } from 'snackabra/dist/snackabra.js'
 
 let notificationsMap = new Map();
 
