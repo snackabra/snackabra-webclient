@@ -15,6 +15,7 @@ let Crypto = new SB.SBCrypto();
 const save = Symbol("save");
 const getChannel = Symbol("getChannel");
 const migrate = Symbol("migrate");
+const makeVisible = Symbol("makeVisible");
 
 configure({
   useProxies: "always",
@@ -310,7 +311,7 @@ class ChannelStore {
       console.log('onClose hook called')
       this.status = 'CLOSED'
       if (this._visible) {
-        // this[makeVisible]()
+        this[makeVisible]()
       }
     }
 
@@ -324,7 +325,7 @@ class ChannelStore {
       console.error(e)
       if (this._visible) {
         console.log('reconnecting')
-        // this[makeVisible]()
+        this[makeVisible]()
       }
     }
     this.SB = new SB.Snackabra(this.config);
@@ -412,14 +413,24 @@ class ChannelStore {
         if (this.socket) {
           console.log('visbility change: setting status to', this.socket.status)
           this.status = this.socket.status
-          // this.status = 'LOADING'
-          // this[makeVisible]()
-          // if(this.socket.status !== 'OPEN') {
-          //   this[makeVisible]()
-          // }
+          this.status = 'LOADING'
+          this[makeVisible]()
+          if(this.socket.status !== 'OPEN') {
+            this[makeVisible]()
+          }
         }
       }
     });
+
+    this[makeVisible] = () =>{
+        this.connect().then((result)=>{
+          if(result){
+            this._visible = true;
+            this.status = this._socket.status
+          }
+        })
+
+    }
 
     if (channelId) {
       this.id = channelId;
