@@ -1,17 +1,14 @@
 import * as React from 'react';
-import { useParams } from "react-router-dom";
 import { AppBar, Avatar, Box, Grid, Hidden, IconButton, InputAdornment, TextField, Typography } from "@mui/material";
-import AccountCircleRoundedIcon from '@mui/icons-material/AccountCircleRounded';
-import WhisperUserDialog from "./Modals/WhisperUserDialog";
+import {AccountCircleRounded, Menu, Close } from '@mui/icons-material';
 import { observer } from "mobx-react"
-import SnackabraContext from "../contexts/SnackabraContext";
-import { Menu, Close } from '@mui/icons-material';
-import NavBarActionContext from "../contexts/NavBarActionContext";
-import SharedRoomStateContext from "../contexts/SharedRoomState";
-import RoomMenu from "../components/Rooms/RoomMenu";
+import WhisperUserDialog from "./Modals/WhisperUserDialog.js";
+import SnackabraContext from "../contexts/SnackabraContext.js";
+import NavBarActionContext from "../contexts/NavBarActionContext.js";
+import SharedRoomStateContext from "../contexts/SharedRoomState.js";
+import RoomMenu from "../components/Rooms/RoomMenu.js";
 
 const NavAppBar = observer(() => {
-  let { room_id } = useParams();
   const NavAppBarContext = React.useContext(NavBarActionContext)
   const roomState = React.useContext(SharedRoomStateContext)
   const sbContext = React.useContext(SnackabraContext);
@@ -126,7 +123,7 @@ const NavAppBar = observer(() => {
               {roomState.state.activeRoom && sbContext.channels[roomState.state.activeRoom] && sbContext.channels[roomState.state.activeRoom].status === "OPEN" ?
                 <Avatar onClick={() => { setOpenWhisper(true) }} sx={{ width: 48, height: 48, bgcolor: 'transparent' }}>
                   <IconButton color="inherit" component="span">
-                    <AccountCircleRoundedIcon />
+                    <AccountCircleRounded />
                   </IconButton>
                 </Avatar>
                 :

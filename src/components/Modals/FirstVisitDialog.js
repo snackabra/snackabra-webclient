@@ -1,14 +1,13 @@
-import * as React from "react"
-import ResponsiveDialog from "../ResponsiveDialog";
-import { Grid, TextField, Typography } from "@mui/material";
-import { StyledButton } from "../../styles/Buttons";
-import { useState } from "react";
+import React from "react"
 import { Trans } from "@lingui/macro";
 import { observer } from "mobx-react"
+import ResponsiveDialog from "../ResponsiveDialog.js";
+import { Grid, TextField, Typography, Button } from "@mui/material";
+
 
 const FirstVisitDialog = observer((props) => {
-  const [open, setOpen] = useState(props.open);
-  const [text, setText] = useState('');
+  const [open, setOpen] = React.useState(props.open);
+  const [text, setText] = React.useState('');
 
   React.useEffect(() => {
     setOpen(props.open)
@@ -56,7 +55,7 @@ const FirstVisitDialog = observer((props) => {
             onChange={updateText}
           />
         </Grid>
-        <StyledButton variant={'outlined'} onClick={submit}><Trans id='ok button text'>Ok</Trans></StyledButton>
+        <Button variant={'outlined'} onClick={submit}><Trans id='ok button text'>Ok</Trans></Button>
       </Grid>
     </ResponsiveDialog>
   )

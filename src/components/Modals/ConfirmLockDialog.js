@@ -1,12 +1,12 @@
 /* Copyright (c) 2021 Magnusson Institute, All Rights Reserved */
 
-import React, { useState } from 'react';
-import ResponsiveDialog from "../ResponsiveDialog";
-import { Grid, Typography } from "@mui/material";
-import { StyledButton } from "../../styles/Buttons";
+import React from 'react';
+import { Grid, Typography, Button } from "@mui/material";
+import ResponsiveDialog from "../ResponsiveDialog.js";
+
 
 const ConfirmLockDialog = (props) => {
-  const [open, setOpen] = useState(props.open);
+  const [open, setOpen] = React.useState(props.open);
 
   React.useEffect(() => {
     setOpen(props.open)
@@ -27,12 +27,12 @@ const ConfirmLockDialog = (props) => {
             not send or receive messages from anybody else.
           </Typography>
         </Grid>
-        <StyledButton variant={"contained"} sx={{ pb: 1, pt: 1 }} onClick={props.lockRoom}>
+        <Button variant={"contained"} sx={{ pb: 1, pt: 1 }} onClick={props.lockRoom}>
           <Typography variant={"button"}>Confirm</Typography>
-        </StyledButton>
-        <StyledButton variant={"contained"} onClick={props.cancelLock} sx={{ pb: 1, pt: 1 }}>
+        </Button>
+        <Button variant={"contained"} onClick={props.cancelLock} sx={{ pb: 1, pt: 1 }}>
           <Typography variant={"button"}>Cancel</Typography>
-        </StyledButton>
+        </Button>
 
 
       </Grid>

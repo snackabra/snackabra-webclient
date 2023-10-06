@@ -1,21 +1,22 @@
 /* Copyright (c) 2021 Magnusson Institute, All Rights Reserved */
 
 import React from 'react'
+import { ThemeProvider } from "@mui/material";
 import { SafeAreaProvider } from "react-native-safe-area-context"
 import { i18n } from '@lingui/core'
 import { I18nProvider } from '@lingui/react'
-import { messages } from './locales/en/messages'
+import { messages } from './locales/en/messages.js'
 import { en } from 'make-plural/plurals'
-import AppRoutes from "./Routes";
-import theme from "./theme";
-import { ThemeProvider } from "@mui/material";
-import { NotificationProvider } from "./contexts/NotificationContext";
-import { NavBarActionProvider } from "./contexts/NavBarActionContext";
-import { SharedRoomStateProvider } from "./contexts/SharedRoomState";
-import { LogProvider } from "./contexts/LogContext";
-import { SnackabraProvider } from "./contexts/SnackabraContext";
-import NotificationBar from "./components/NotificationBar";
-import { VoipProvider } from './contexts/Voip/VoipContext'
+import AppRoutes from "./Routes.js";
+import theme from "./theme.js";
+import { NotificationProvider } from "./contexts/NotificationContext.js";
+import { NavBarActionProvider } from "./contexts/NavBarActionContext.js";
+import { SharedRoomStateProvider } from "./contexts/SharedRoomState.js";
+import { SnackabraProvider } from "./contexts/SnackabraContext.js";
+import NotificationBar from "./components/NotificationBar.js";
+import { VoipProvider } from './contexts/Voip/VoipContext.js'
+// import { LogProvider } from "./contexts/LogContext";
+
 
 
 i18n.loadLocaleData({

@@ -1,10 +1,7 @@
-import * as React from 'react';
-import Box from '@mui/material/Box';
-import CircularProgress from '@mui/material/CircularProgress';
-import { green, red } from '@mui/material/colors';
-import Fab from '@mui/material/Fab';
-import CheckIcon from '@mui/icons-material/Check';
-import ClearIcon from '@mui/icons-material/Clear';
+import React from 'react';
+import { Box, CircularProgress, Fab } from '@mui/material';
+import { green, red } from '@mui/material/colors/index.js';
+import { Check as CheckIcon, Clear as ClearIcon } from '@mui/icons-material';
 
 export default function DownloadButton(props) {
     const { ButtonComponent, action, id } = props

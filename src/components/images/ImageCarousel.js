@@ -1,16 +1,11 @@
-import * as React from 'react';
-import Grid from '@mui/material/Grid';
-import IconButton from '@mui/material/IconButton';
-import Stop from '@mui/icons-material/Stop';
-import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import SkipNextIcon from '@mui/icons-material/SkipNext';
-import SwipeableViews from 'react-swipeable-views';
-import ImageViewer from './ImageViewer';
-import Slide from '@mui/material/Slide';
-import Paper from '@mui/material/Paper';
+import React from 'react';
 import { isMobile } from 'react-device-detect';
+import SwipeableViews from 'react-swipeable-views/src/SwipeableViews.js';
 import { autoPlay, virtualize, bindKeyboard } from 'react-swipeable-views-utils';
+import { Grid, IconButton, Slide, Paper } from '@mui/material';
+import { Stop, SkipPrevious as SkipPreviousIcon, PlayArrow as PlayArrowIcon, SkipNext as SkipNextIcon } from '@mui/icons-material';
+import ImageViewer from './ImageViewer.js';
+
 
 const EnhancedSwipeableViews = bindKeyboard(autoPlay(virtualize(SwipeableViews)));
 
@@ -56,7 +51,7 @@ export default function ImageCarousel(props) {
                 props.onClose()
             }} />
         );
-    },[controlMessages, imageList, props, sbContext])
+    }, [controlMessages, imageList, props, sbContext])
 
     const toggleShowControls = (visibility) => {
 
@@ -98,7 +93,7 @@ export default function ImageCarousel(props) {
                 slideCount={imageList.length}
                 interval={30000}
             />
-                {/* {imageList.map((key, index) => {
+            {/* {imageList.map((key, index) => {
                     // console.log(JSON.stringify(imageList[index]))
                     return (<ImageViewer
                         key={`image-${index}`}

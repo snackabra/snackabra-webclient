@@ -1,10 +1,6 @@
-import * as React from "react";
-import ResponsiveDialog from "../ResponsiveDialog";
-
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import { StyledButton } from "../../styles/Buttons";
-import { Typography } from "@mui/material";
+import React from "react";
+import { Typography, DialogActions, DialogContent, Button } from "@mui/material";
+import ResponsiveDialog from "../ResponsiveDialog.js";
 
 
 export default function ConfirmationDialog(props) {
@@ -20,10 +16,10 @@ export default function ConfirmationDialog(props) {
         <Typography variant="body1">{props.text}</Typography>
       </DialogContent>
       <DialogActions>
-        <StyledButton variant="outlined" autoFocus onClick={props.onCancel}>
+        <Button variant="outlined" autoFocus onClick={props.onCancel}>
           Cancel
-        </StyledButton>
-        <StyledButton variant="contained" onClick={props.onConfirm}>Ok</StyledButton>
+        </Button>
+        <Button variant="contained" onClick={props.onConfirm}>Ok</Button>
       </DialogActions>
     </ResponsiveDialog>
   )

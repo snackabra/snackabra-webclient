@@ -1,13 +1,13 @@
-import * as React from 'react';
-import NotificationContext from "../../contexts/NotificationContext";
+import React from 'react';
 import { Image } from 'mui-image'
 import { createUseGesture, dragAction, pinchAction } from '@use-gesture/react'
 import { a, useSpring, config } from '@react-spring/web'
-let SB = require('snackabra/dist/snackabra')
+import NotificationContext from "../../contexts/NotificationContext.js";
 
 const useGesture = createUseGesture([dragAction, pinchAction])
 
 export default function ImageViewer(props) {
+    let SB = window.SB
     const { image, controlMessages, sbContext, inhibitSwipe } = props
     const notify = React.useContext(NotificationContext)
     const [img, setImage] = React.useState('');

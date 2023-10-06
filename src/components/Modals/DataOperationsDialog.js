@@ -1,17 +1,11 @@
-import * as React from "react";
-import ResponsiveDialog from "../ResponsiveDialog";
+import React from "react";
 import PropTypes from 'prop-types';
-import SwipeableViews from 'react-swipeable-views';
-import { useTheme } from '@mui/material/styles';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import Divider from '@mui/material/Divider';
-import ImportRoomKeys from "../Rooms/ImportRoomKeys";
-import ExportRoomKeys from "../Rooms/ExportRoomKeys";
-import DownloadRoomData from "../Rooms/DownloadRoomData";
-
+import SwipeableViews from 'react-swipeable-views/src/SwipeableViews.js';
+import { useTheme, Tabs, Tab, Typography, Box, Divider} from '@mui/material';
+import ImportRoomKeys from "../Rooms/ImportRoomKeys.js";
+import ExportRoomKeys from "../Rooms/ExportRoomKeys.js";
+import DownloadRoomData from "../Rooms/DownloadRoomData.js";
+import ResponsiveDialog from "../ResponsiveDialog.js";
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
 

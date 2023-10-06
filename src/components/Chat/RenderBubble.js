@@ -1,7 +1,7 @@
 import React from 'react'
 import { Grid, Typography } from "@mui/material";
 import { isSameUser, isSameDay, Bubble } from "react-native-gifted-chat";
-import { getColorFromId } from "../../utils/misc"
+import { getColorFromId } from "../../utils/misc.js"
 
 const RenderBubble = (props) => {
   const { currentMessage, previousMessage } = props

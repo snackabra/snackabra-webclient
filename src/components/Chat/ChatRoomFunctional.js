@@ -1,31 +1,30 @@
 import * as React from 'react';
-import RenderBubble from "./RenderBubble";
-import RenderAvatar from "./RenderAvatar";
-import RenderAttachmentIcon from "./RenderAttachmentIcon";
-import ImageOverlay from "../Modals/ImageOverlay";
-import ImageGallery from "../Modals/ImageGallery";
-import RenderImage from "./RenderImage";
-import ChangeNameDialog from "../Modals/ChangeNameDialog";
-import RenderChatFooter from "./RenderChatFooter";
-import RenderMessage from "./RenderMessage";
-import RenderMessageText from "./RenderMessageText";
-import RenderTime from "./RenderTime";
 import { Dimensions } from "react-native";
-import AdminDialog from "../Modals/AdminDialog";
-import FirstVisitDialog from "../Modals/FirstVisitDialog";
-import RenderSend from "./RenderSend";
-import WhisperUserDialog from "../Modals/WhisperUserDialog";
-import RenderComposer from "./RenderComposer";
-import DropZone from "../DropZone";
-import Queue from "../../utils/Queue";
 import { toJS } from "mobx";
 import { observer } from "mobx-react"
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { isMobile } from 'react-device-detect';
-import SharedRoomStateContext from "../../contexts/SharedRoomState";
 import { GiftedChat } from "react-native-gifted-chat";
 import {uniqBy} from 'lodash';
-
+import RenderBubble from "./RenderBubble.js";
+import RenderAvatar from "./RenderAvatar.js";
+import RenderAttachmentIcon from "./RenderAttachmentIcon.js";
+import ImageOverlay from "../Modals/ImageOverlay.js";
+import ImageGallery from "../Modals/ImageGallery.js";
+import RenderImage from "./RenderImage.js";
+import ChangeNameDialog from "../Modals/ChangeNameDialog.js";
+import RenderChatFooter from "./RenderChatFooter.js";
+import RenderMessage from "./RenderMessage.js";
+import RenderMessageText from "./RenderMessageText.js";
+import RenderTime from "./RenderTime.js";
+import AdminDialog from "../Modals/AdminDialog.js";
+import FirstVisitDialog from "../Modals/FirstVisitDialog.js";
+import RenderSend from "./RenderSend.js";
+import WhisperUserDialog from "../Modals/WhisperUserDialog.js";
+import RenderComposer from "./RenderComposer.js";
+import DropZone from "../DropZone.js";
+import Queue from "../../utils/Queue.js";
+import SharedRoomStateContext from "../../contexts/SharedRoomState.js";
 
 
 const ChatRoom = observer((props) => {
@@ -40,7 +39,7 @@ const ChatRoom = observer((props) => {
   const fileMetadata = new Map();
   const q = new Queue()
   // const _r = new Queue()
-  let SB = require('snackabra/dist/snackabra')
+  let SB = window.SB;
 
   let messageTypes = {
     SIMPLE_CHAT_MESSAGE: 'd341ca8645f94dc0adb1772865d973fc',

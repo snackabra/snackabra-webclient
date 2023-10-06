@@ -1,13 +1,9 @@
 import React from 'react'
-import { Grid, CircularProgress, Paper, IconButton, LinearProgress } from "@mui/material";
-import CloseIcon from '@mui/icons-material/Close';
-import DeleteForever from '@mui/icons-material/DeleteForever';
-import Fab from '@mui/material/Fab';
 import { TouchableOpacity } from 'react-native';
-import ConfirmationDialog from '../Modals/ConfirmationDialog';
 import { isMobile } from 'react-device-detect';
-
-
+import { Grid, CircularProgress, Paper, IconButton, LinearProgress, Fab } from "@mui/material";
+import {Close as CloseIcon, DeleteForever} from '@mui/icons-material';
+import ConfirmationDialog from '../Modals/ConfirmationDialog.js';
 
 const RenderChatFooter = (props) => {
   const FileHelper = window.SBFileHelper;

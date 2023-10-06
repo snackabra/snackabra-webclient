@@ -2,9 +2,9 @@
 
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Rooms from './pages/Rooms';
-import PageNotFound from './components/PageNotFound';
-import NavAppBar from "./components/NavAppBar";
+import Rooms from './pages/Rooms.js';
+import PageNotFound from './components/PageNotFound.js';
+import NavAppBar from "./components/NavAppBar.js";
 
 const AppRoutes = () => {
 

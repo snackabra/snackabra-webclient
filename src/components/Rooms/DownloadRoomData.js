@@ -1,14 +1,13 @@
-import * as React from "react"
-import Grid from '@mui/material/Grid';
-import RoomDataTable from "./RoomDataTable"
+import React from "react"
 import { observer } from "mobx-react"
-import SnackabraContext from "../../contexts/SnackabraContext";
-import NotificationContext from "../../contexts/NotificationContext";
-import { downloadFile } from "../../utils/misc"
-const { toJS } = require('mobx')
+import {Grid} from '@mui/material';
+import RoomDataTable from "./RoomDataTable.js"
+import SnackabraContext from "../../contexts/SnackabraContext.js";
+import NotificationContext from "../../contexts/NotificationContext.js";
+import { downloadFile } from "../../utils/misc.js"
+
 
 const DownloadRoomData = observer(() => {
-    const FileHelper = window.SBFileHelper
     const sbContext = React.useContext(SnackabraContext);
     const notify = React.useContext(NotificationContext);
     const [channelList, setChannelList] = React.useState([]);

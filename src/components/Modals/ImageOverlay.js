@@ -1,14 +1,8 @@
-import * as React from 'react';
-import Dialog from '@mui/material/Dialog';
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-import IconButton from '@mui/material/IconButton';
-import CloseIcon from '@mui/icons-material/Close';
-import Slide from '@mui/material/Slide';
-import DialogContent from "@mui/material/DialogContent";
+import React from 'react';
+import {Dialog, AppBar, Toolbar, IconButton, Slide, DialogContent} from '@mui/material';
+import {Close} from '@mui/icons-material';
 import { isMobile } from 'react-device-detect';
-import ImageCarousel from '../Images/ImageCarousel';
-// import ImageCarousel from '../Images/ImageCarouselVirtualized';
+import ImageCarousel from '../Images/ImageCarousel.js';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -36,7 +30,7 @@ export default function ImageOverlay(props) {
               onClick={props.onClose}
               aria-label="close"
             >
-              <CloseIcon />
+              <Close />
             </IconButton>
           </Toolbar>
         </AppBar> : null

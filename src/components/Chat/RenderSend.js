@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { IconButton } from "@mui/material";
-import SendIcon from '@mui/icons-material/Send';
+import {Send as SendIcon} from '@mui/icons-material';
 
 
 function RenderSend(props) {

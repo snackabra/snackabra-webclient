@@ -1,13 +1,13 @@
-import { makeAutoObservable, makeObservable, onBecomeUnobserved, configure, toJS, observable, computed, action, autorun } from "mobx";
-import IndexedKV from "../utils/IndexedKV";
-import MessageWorker from "../workers/MessageWorker";
-import {orderBy} from 'lodash';
+import { makeAutoObservable, onBecomeUnobserved, configure, toJS, computed, action, autorun } from "mobx";
+import { orderBy } from 'lodash';
+import IndexedKV from "../utils/IndexedKV.js";
+import MessageWorker from "../workers/MessageWorker.js";
+import { SB } from "snackabra/dist/snackabra.js";
 const blob = new Blob([`(${MessageWorker})()`]);
 
 
 console.log("=========== mobx-snackabra-store loading ===========")
-let SB = require('snackabra/dist/snackabra')
-console.log(SB.version)
+
 let cacheDb;
 let Crypto = new SB.SBCrypto();
 
@@ -695,7 +695,7 @@ class ChannelStore {
 
   receiveMessage = (m, updateState = false) => {
     console.log("==== received this message:", m)
-    if(updateState) {
+    if (updateState) {
       this.messages = [...this._messages, m]
     }
     this.worker.postMessage({ method: 'addMessage', message: m, args: { updateState: updateState } })

@@ -1,18 +1,16 @@
-import * as React from "react"
+import React from "react"
+import { observer } from "mobx-react"
 import { Trans } from "@lingui/macro";
 import { FormControl, Grid, IconButton, InputAdornment, InputLabel, OutlinedInput, Typography } from "@mui/material";
-import DownloadIcon from '@mui/icons-material/Download';
-import ContentCopy from '@mui/icons-material/ContentCopy';
-import { useState } from "react"
-import { observer } from "mobx-react"
-import SnackabraContext from "../../contexts/SnackabraContext";
-import NotificationContext from "../../contexts/NotificationContext";
+import {Download as DownloadIcon, ContentCopy} from '@mui/icons-material';
+import SnackabraContext from "../../contexts/SnackabraContext.js";
+import NotificationContext from "../../contexts/NotificationContext.js";
 
 const ExportRoomKeys = observer((props) => {
   const sbContext = React.useContext(SnackabraContext);
   const Notifications = React.useContext(NotificationContext)
-  const [fileName, setFilename] = useState('SnackabraData');
-  const [data, setData] = useState(JSON.stringify({}));
+  const [fileName, setFilename] = React.useState('SnackabraData');
+  const [data, setData] = React.useState(JSON.stringify({}));
 
   React.useEffect(() => {
     const parseData = async () => {

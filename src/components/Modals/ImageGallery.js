@@ -1,12 +1,9 @@
 import * as React from 'react';
-import ImageViewer from '../Images/ImageViewer';
-import Dialog from '@mui/material/Dialog';
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-import IconButton from '@mui/material/IconButton';
-import CloseIcon from '@mui/icons-material/Close';
-import DialogContent from "@mui/material/DialogContent";
-import { Grid } from '@mui/material';
+import { Grid, DialogContent, Toolbar, AppBar, Dialog, IconButton } from '@mui/material';
+import ImageViewer from '../Images/ImageViewer.js';
+import { Close } from '@mui/icons-material';
+
+
 
 export default function ImageGallery(props) {
     const { images, sbContext, controlMessages } = props
@@ -28,7 +25,7 @@ export default function ImageGallery(props) {
                         }}
                         aria-label="close"
                     >
-                        <CloseIcon />
+                        <Close />
                     </IconButton>
                 </Toolbar>
             </AppBar>

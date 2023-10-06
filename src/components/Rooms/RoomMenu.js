@@ -1,24 +1,14 @@
 import * as React from 'react';
 import { useParams } from "react-router-dom";
-import IconButton from '@mui/material/IconButton';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import CallIcon from '@mui/icons-material/Call';
-import MenuList from '@mui/material/MenuList';
-import ListItemText from '@mui/material/ListItemText';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-import CollectionsIcon from '@mui/icons-material/Collections';
-import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
-import IosShareOutlinedIcon from '@mui/icons-material/IosShareOutlined';
-import NotificationContext from "../../contexts/NotificationContext";
-import ConnectionStatus from "./ConnectionStatus"
-import SharedRoomStateContext from "../../contexts/SharedRoomState";
 import { observer } from "mobx-react"
-import SnackabraContext from "../../contexts/SnackabraContext";
-import { downloadFile } from "../../utils/misc"
-import CallWindow from '../Modals/CallWindow';
+import {IconButton, Menu, MenuItem, MenuList, ListItemText, ListItemIcon} from '@mui/material';
+import {IosShareOutlined as IosShareOutlinedIcon, FileDownloadOutlined as FileDownloadOutlinedIcon,  MoreVert as MoreVertIcon, Call as CallIcon, EditOutlined as EditOutlinedIcon, Collections as CollectionsIcon} from '@mui/icons-material';
+import NotificationContext from "../../contexts/NotificationContext.js";
+import ConnectionStatus from "./ConnectionStatus.js"
+import SharedRoomStateContext from "../../contexts/SharedRoomState.js";
+import SnackabraContext from "../../contexts/SnackabraContext.js";
+import { downloadFile } from "../../utils/misc.js"
+import CallWindow from '../Modals/CallWindow.js';
 
 
 const ITEM_HEIGHT = 48;

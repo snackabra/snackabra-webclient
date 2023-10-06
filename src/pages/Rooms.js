@@ -1,40 +1,31 @@
 import * as React from 'react';
-import Box from '@mui/material/Box';
-import CssBaseline from '@mui/material/CssBaseline';
-import Divider from '@mui/material/Divider';
-import Drawer from '@mui/material/Drawer';
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import AddCommentIcon from '@mui/icons-material/AddComment';
-import FileUploadIcon from '@mui/icons-material/Folder';
-import AddCircleOutlinedIcon from '@mui/icons-material/AddCircleOutlined';
-import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
-import InputAdornment from '@mui/material/InputAdornment';
-import CloseIcon from '@mui/icons-material/Close';
-import Toolbar from '@mui/material/Toolbar';
-import { useParams } from "react-router-dom";
-import { Grid, IconButton, TextField, Typography } from "@mui/material";
-import ChatRoom from "../components/Chat/ChatRoomFunctional";
-import CreateRoomDialog from "../components/Modals/CreateRoomDialog";
-import JoinDialog from "../components/Modals/JoinDialog";
-import NotificationContext from "../contexts/NotificationContext";
-import ImportDialog from "../components/Modals/ImportDialog";
-import DataOperationsDialog from "../components/Modals/DataOperationsDialog";
-import RoomMenu from "../components/Rooms/RoomMenu"
-import NavBarActionContext from "../contexts/NavBarActionContext";
+import { useParams, useNavigate } from "react-router-dom";
 import { observer } from "mobx-react"
-import SnackabraContext from "../contexts/SnackabraContext";
-import { isMobile } from 'react-device-detect';
 import { Dimensions } from "react-native";
-import { useNavigate } from 'react-router-dom';
-import { useTheme } from '@mui/material/styles';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
-import SwipeableViews from 'react-swipeable-views';
-import SharedRoomStateContext from "../contexts/SharedRoomState";
+import { isMobile } from 'react-device-detect';
+import {
+  Box, Grid, useTheme, Tabs, Tab, IconButton, TextField, Typography,
+  CssBaseline, Divider, Drawer, List, ListItem, ListItemButton, ListItemIcon,
+  ListItemText, InputAdornment, Toolbar
+} from '@mui/material';
+import SwipeableViews from 'react-swipeable-views/src/SwipeableViews.js';
+import {
+  AddComment as AddCommentIcon,
+  Folder as FileUploadIcon,
+  AddCircleOutlined as AddCircleOutlinedIcon,
+  AdminPanelSettings as AdminPanelSettingsIcon,
+  Close as CloseIcon,
+} from '@mui/icons-material';
+import ChatRoom from "../components/Chat/ChatRoomFunctional.js";
+import CreateRoomDialog from "../components/Modals/CreateRoomDialog.js";
+import JoinDialog from "../components/Modals/JoinDialog.js";
+import NotificationContext from "../contexts/NotificationContext.js";
+import ImportDialog from "../components/Modals/ImportDialog.js";
+import DataOperationsDialog from "../components/Modals/DataOperationsDialog.js";
+import RoomMenu from "../components/Rooms/RoomMenu.js"
+import NavBarActionContext from "../contexts/NavBarActionContext.js";
+import SnackabraContext from "../contexts/SnackabraContext.js";
+import SharedRoomStateContext from "../contexts/SharedRoomState.js";
 
 
 function TabPanel(props) {
@@ -94,7 +85,7 @@ const ResponsiveDrawer = observer((props) => {
       if (!sbContext.channels[room_id]) {
         setJoinRoomId(room_id)
         setOpenJoinDialog(true)
-      }else{
+      } else {
         roomState.setActiveRoom(room_id)
       }
       setRoomId(room_id)

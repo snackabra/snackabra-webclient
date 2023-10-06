@@ -1,6 +1,5 @@
 import React from 'react'
-import { Typography } from "@mui/material";
-import CircularProgress from '@mui/material/CircularProgress';
+import { Typography, CircularProgress } from "@mui/material";
 
 const RenderTime = (props) => {
 

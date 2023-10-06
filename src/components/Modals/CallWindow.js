@@ -1,9 +1,8 @@
 import * as React from "react"
-import ResponsiveDialog from "../ResponsiveDialog";
 import { Grid } from "@mui/material";
-import VoipContext, { VoipComponent } from '../../contexts/Voip/VoipContext';
-import SnackabraContext from "../../contexts/SnackabraContext";
-
+import VoipContext, { VoipComponent } from '../../contexts/Voip/VoipContext.js';
+import SnackabraContext from "../../contexts/SnackabraContext.js";
+import ResponsiveDialog from "../ResponsiveDialog.js";
 const CallWindow = (props) => {
 
     const voipContext = React.useContext(VoipContext)

@@ -1,13 +1,12 @@
 import * as React from "react"
-import ResponsiveDialog from "../ResponsiveDialog";
-import { Grid, TextField } from "@mui/material";
-import { StyledButton } from "../../styles/Buttons";
+import { Grid, TextField, Button } from "@mui/material";
 import { useState, useEffect } from "react";
 import { observer } from "mobx-react"
-import SnackabraContext from "../../contexts/SnackabraContext";
-let SB = require('snackabra/dist/snackabra')
+import SnackabraContext from "../../contexts/SnackabraContext.js";
+import ResponsiveDialog from "../ResponsiveDialog.js";
 
 const WhisperUserDialog = observer((props) => {
+  const SB = window.SB
   const sbContext = React.useContext(SnackabraContext);
   const [open, setOpen] = useState(props.open);
 
@@ -71,8 +70,8 @@ const WhisperUserDialog = observer((props) => {
             value={text}
           />
         </Grid>
-        <StyledButton variant={'contained'} onClick={sendWhisper}>Send</StyledButton>
-        <StyledButton variant={'contained'} onClick={props.onClose}>Cancel</StyledButton>
+        <Button variant={'contained'} onClick={sendWhisper}>Send</Button>
+        <Button variant={'contained'} onClick={props.onClose}>Cancel</Button>
       </Grid>
     </ResponsiveDialog>
   )

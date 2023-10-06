@@ -1,19 +1,17 @@
 /* Copyright (c) 2021 Magnusson Institute, All Rights Reserved */
 
 import React from 'react';
-import './index.css';
-import App from './App';
 import { createRoot } from 'react-dom/client';
-import * as serviceWorkerRegistration from './serviceWorkerRegistration';
-import IndexedKV from "./utils/IndexedKV";
-let SB = require('snackabra/dist/snackabra')
-console.log(SB)
+import './index.css';
+import App from './App.js';
+import { register } from './serviceWorkerRegistration.js';
+import IndexedKV from "./utils/IndexedKV.js";
+import { SB } from 'snackabra/dist/snackabra.js'
 window.SB = {
-  Snackabra: SB.Snackabra,
-  SBCrypto: SB.SBCrypto,
-  SBMessage: SB.SBMessage,
+  ...SB
 }
 
+console.log(window.SB)
 
 const container = document.getElementById('root');
 const root = createRoot(container);
@@ -40,18 +38,14 @@ Object.defineProperty(document, 'cacheDb', {
 
 console.log(process.env.NODE_ENV)
 
-// if (process.env.NODE_ENV === 'production') {
+const updateServiceWorker = (registration) => {
+  registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+  registration.update();
 
-  // console.log(process.env.NODE_ENV + ' registering service worker')
+};
 
-  const updateServiceWorker = (registration) => {
-    registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-    registration.update();
-
-  };
-
-  serviceWorkerRegistration.register({
-    onUpdate: reg => updateServiceWorker(reg),
-  });
+register({
+  onUpdate: reg => updateServiceWorker(reg),
+});
 // }
 

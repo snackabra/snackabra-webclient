@@ -1,11 +1,11 @@
-import * as React from "react"
-import ResponsiveDialog from "../ResponsiveDialog";
-import { Grid, TextField, Typography } from "@mui/material";
-import { StyledButton } from "../../styles/Buttons";
-import NotificationContext from "../../contexts/NotificationContext";
+import React from "react"
 import { useNavigate } from "react-router-dom";
 import { observer } from "mobx-react";
-import SnackabraContext from "../../contexts/SnackabraContext";
+import { Grid, TextField, Typography, Button } from "@mui/material";
+import NotificationContext from "../../contexts/NotificationContext.js";
+import SnackabraContext from "../../contexts/SnackabraContext.js";
+import ResponsiveDialog from "../ResponsiveDialog.js";
+
 
 const JoinDialog = observer((props) => {
   const sbContext = React.useContext(SnackabraContext);
@@ -171,8 +171,8 @@ const JoinDialog = observer((props) => {
         direction="row"
         justifyContent="space-between"
         alignItems="flex-start">
-        <StyledButton variant={'outlined'} onClick={join}>Connect</StyledButton>
-        <StyledButton variant={'outlined'} onClick={props.onClose}>Cancel</StyledButton>
+        <Button variant={'outlined'} onClick={join}>Connect</Button>
+        <Button variant={'outlined'} onClick={props.onClose}>Cancel</Button>
       </Grid>
     </ResponsiveDialog>
   )

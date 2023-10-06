@@ -1,21 +1,19 @@
-import * as React from "react"
-import { Trans } from "@lingui/macro";
-import { TextField, Grid, IconButton, InputAdornment, Checkbox, OutlinedInput, Typography } from "@mui/material";
-import { StyledButton } from "../../styles/Buttons";
-import { useState, useContext } from "react"
-import NotificationContext from "../../contexts/NotificationContext";
+import React from "react"
 import { observer } from "mobx-react"
-import SnackabraContext from "../../contexts/SnackabraContext";
+import { Trans } from "@lingui/macro";
+import { TextField, Grid, IconButton, InputAdornment, Checkbox, OutlinedInput, Typography, Button } from "@mui/material";
+import NotificationContext from "../../contexts/NotificationContext.js";
+import SnackabraContext from "../../contexts/SnackabraContext.js";
 
 const ImportRoomKeys = observer((props) => {
   const sbContext = React.useContext(SnackabraContext);
-  const Notifications = useContext(NotificationContext)
-  const [key, setKey] = useState('');
-  const [data, setData] = useState(false);
-  const [existing, setExisting] = useState({});
-  const [toSave, setToSave] = useState({ roomData: {}, contacts: {}, roomMetadata: {} });
-  const [toMerge, setToMerge] = useState({});
-  const [selected, setSelected] = useState([]);
+  const Notifications = React.useContext(NotificationContext)
+  const [key, setKey] = React.useState('');
+  const [data, setData] = React.useState(false);
+  const [existing, setExisting] = React.useState({});
+  const [toSave, setToSave] = React.useState({ roomData: {}, contacts: {}, roomMetadata: {} });
+  const [toMerge, setToMerge] = React.useState({});
+  const [selected, setSelected] = React.useState([]);
 
   React.useEffect(() => {
     if (data) {
@@ -198,7 +196,7 @@ const ImportRoomKeys = observer((props) => {
         <>
 
           <Grid xs={12} item>
-            <StyledButton
+            <Button
               variant="contained"
               component="label"
             >
@@ -208,7 +206,7 @@ const ImportRoomKeys = observer((props) => {
                 type="file"
                 hidden
               />
-            </StyledButton>
+            </Button>
           </Grid>
           <Grid xs={12} item>
             <Typography variant={'body1'} gutterBottom><Trans id='key import paste message'>Or paste the keys you want to import</Trans></Typography>
@@ -235,7 +233,7 @@ const ImportRoomKeys = observer((props) => {
             />
           </Grid>
           <Grid xs={12} item>
-            <StyledButton variant="contained" onClick={() => { importKeys() }}><Trans id='key import header'>Import Keys</Trans></StyledButton>
+            <Button variant="contained" onClick={() => { importKeys() }}><Trans id='key import header'>Import Keys</Trans></Button>
           </Grid>
 
         </> :
@@ -326,7 +324,7 @@ const ImportRoomKeys = observer((props) => {
 
           }
           <Grid xs={12} sx={{ pt: 1 }} item>
-            <StyledButton variant="contained" onClick={() => { saveConflicts() }}>Submit</StyledButton>
+            <Button variant="contained" onClick={() => { saveConflicts() }}>Submit</Button>
           </Grid>
         </Grid>
       }

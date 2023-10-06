@@ -1,23 +1,9 @@
 import * as React from "react"
-import WorkerE2EE from "./Worker";
-import { Divider, FormControl, Grid, IconButton, InputLabel, Select } from "@mui/material";
-import StopScreenShareIcon from '@mui/icons-material/StopScreenShare';
-import ScreenShareIcon from '@mui/icons-material/ScreenShare';
-import VideocamOffIcon from '@mui/icons-material/VideocamOff';
-import VideocamIcon from '@mui/icons-material/Videocam';
-import MicIcon from '@mui/icons-material/Mic';
-import MicOffIcon from '@mui/icons-material/MicOff';
-import CallEndIcon from '@mui/icons-material/CallEnd';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import MenuList from '@mui/material/MenuList';
-import ListItemText from '@mui/material/ListItemText';
 import { isMobile } from "react-device-detect";
-import CallIcon from '@mui/icons-material/Call';
-import CloseIcon from '@mui/icons-material/Close';
-
-import SnackabraContext from "../../contexts/SnackabraContext";
+import { Divider, FormControl, Grid, IconButton, InputLabel, Select, Menu, MenuItem, MenuList, ListItemText } from "@mui/material";
+import { StopScreenShare, ScreenShare, Videocam, VideocamOff, Mic, MicOff, CallEnd, MoreVert, Call, Close } from '@mui/icons-material/';
+import WorkerE2EE from "./Worker.js";
+import SnackabraContext from "../../contexts/SnackabraContext.js";
 
 const VoipContext = React.createContext(undefined);
 
@@ -619,12 +605,12 @@ export const VoipComponent = (props) => {
   const toggleMuteAudio = React.useCallback(() => {
     setAudioMuted(!audioMuted)
     voipContext.toggleMuteAudio()
-  },[audioMuted, voipContext])
+  }, [audioMuted, voipContext])
 
   const toggleMuteVideo = React.useCallback(() => {
     setVideoMuted(!videoMuted)
     voipContext.toggleMuteVideo()
-  },[videoMuted, voipContext])
+  }, [videoMuted, voipContext])
 
 
   const endCall = React.useCallback(() => {
@@ -754,23 +740,23 @@ export const VoipComponent = (props) => {
           }
         }
       >
-        <CloseIcon />
+        <Close />
       </IconButton>
       <Grid style={{ width: '100%', position: 'relative' }} item>
         <video id="remoteVideo" style={{ maxHeight: 'calc(100vh - 132px)', width: "100%", backgroundColor: 'black', position: 'relative', height: isMobile ? 'calc(100vh - 172px)' : 'calc(100% - 47px)' }} playsInline autoPlay></video>
         <video className={myVideoClassState} style={{ zIndex: 999999 }} id="localVideo" playsInline autoPlay muted></video>
         <Grid id="video-control-container" style={{ width: '100%' }} container justifyContent={'center'}>
           <IconButton id="call-end" onClick={connected ? endCall : startCall}>
-            {connected ? <CallEndIcon /> : <CallIcon />}
+            {connected ? <CallEnd /> : <Call />}
           </IconButton>
           <IconButton id="mic-mute" onClick={toggleMuteAudio}>
-            {audioMuted ? <MicIcon /> : <MicOffIcon />}
+            {audioMuted ? <Mic /> : <MicOff />}
           </IconButton>
           <IconButton id="camera-mute" onClick={toggleMuteVideo}>
-            {videoMuted ? <VideocamIcon /> : <VideocamOffIcon />}
+            {videoMuted ? <Videocam /> : <VideocamOff />}
           </IconButton>
           <IconButton id="share-screen">
-            {screenShared ? <StopScreenShareIcon /> : <ScreenShareIcon />}
+            {screenShared ? <StopScreenShare /> : <ScreenShare />}
           </IconButton>
           <IconButton
             aria-label="more"
@@ -780,7 +766,7 @@ export const VoipComponent = (props) => {
             aria-haspopup="true"
             onClick={handleClick}
           >
-            <MoreVertIcon />
+            <MoreVert />
           </IconButton>
           <Menu
             id="long-menu"

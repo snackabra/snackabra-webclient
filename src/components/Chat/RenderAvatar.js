@@ -1,9 +1,9 @@
 import React from 'react';
-import { StyleSheet, View, } from 'react-native';
-import { getColorFromId } from "../../utils/misc"
-import { isSameUser, isSameDay, GiftedAvatar } from 'react-native-gifted-chat';
 import { observer } from "mobx-react"
-import SnackabraContext from "../../contexts/SnackabraContext";
+import { StyleSheet, View, } from 'react-native';
+import { getColorFromId } from "../../utils/misc.js"
+import { isSameUser, isSameDay, GiftedAvatar } from 'react-native-gifted-chat';
+
 const styles = {
   left: StyleSheet.create({
     container: {

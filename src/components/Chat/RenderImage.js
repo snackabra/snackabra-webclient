@@ -1,10 +1,8 @@
 import React from 'react';
 import { CircularProgress, Grid, IconButton } from "@mui/material";
-import InputIcon from '@mui/icons-material/Download';
-import CheckIcon from '@mui/icons-material/Check';
+import {Download as InputIcon, Check as CheckIcon} from '@mui/icons-material';
 import { isSameUser } from "react-native-gifted-chat";
-import { downloadFile } from '../../utils/misc'
-let SB = require('snackabra/dist/snackabra')
+import { downloadFile } from '../../utils/misc.js'
 
 const styles = {
   left: {
@@ -25,6 +23,7 @@ const imageStyleSameUser = {
 }
 
 const RenderImage = (props) => {
+  const SB = window.SB;
   const [isDling, setIsDownloading] = React.useState(false)
   const [downloaded, setDownloaded] = React.useState(false)
   const downloadImage = (message) => {

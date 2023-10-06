@@ -1,7 +1,8 @@
 import * as React from 'react';
-import TextField from '@mui/material/TextField';
-import { SBImage } from "../../utils/ImageProcessorSBFileHelper";
 import { observer } from "mobx-react"
+import { TextField } from '@mui/material';
+import { SBImage } from "../../utils/ImageProcessorSBFileHelper.js";
+
 
 
 const RenderComposer = observer((props) => {

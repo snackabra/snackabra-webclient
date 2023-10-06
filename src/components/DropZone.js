@@ -1,7 +1,7 @@
 import React from 'react'
-import { SBImage } from "../utils/ImageProcessorSBFileHelper";
-import Dropzone from 'react-dropzone/dist/es/index'
-import * as DropUtils from 'react-dropzone/dist/es/utils'
+import { SBImage } from "../utils/ImageProcessorSBFileHelper.js";
+import Dropzone from 'react-dropzone/dist/es/index.js'
+import {isEvtWithFiles, allFilesAccepted, acceptPropAsAcceptAttr} from 'react-dropzone/dist/es/utils/index.js'
 import { Grid } from "@mui/material";
 import { isMobile } from 'react-device-detect';
 import { fromEvent } from "file-selector";
@@ -138,13 +138,13 @@ const DropZone = (props) => {
 
   const onDragEnter = (event) => {
 
-    if (DropUtils.isEvtWithFiles(event)) {
+    if (isEvtWithFiles(event)) {
       Promise.resolve(fromEvent(event)).then(function (files) {
 
         var fileCount = files.length;
-        var isDragAccept = fileCount > 0 && DropUtils.allFilesAccepted({
+        var isDragAccept = fileCount > 0 && allFilesAccepted({
           files: files,
-          accept: DropUtils.acceptPropAsAcceptAttr({ 'image/*': [] }),
+          accept: acceptPropAsAcceptAttr({ 'image/*': [] }),
           minSize: 0,
           maxSize: Infinity,
           multiple: true,

@@ -1,13 +1,12 @@
 /* Copyright (c) 2021 Magnusson Institute, All Rights Reserved */
 
 import React, { useState } from 'react';
-import ResponsiveDialog from "../ResponsiveDialog";
-import { Grid, TextField, Typography } from "@mui/material";
-import { StyledButton } from "../../styles/Buttons";
-import ConfirmLockDialog from "./ConfirmLockDialog";
-import NotificationContext from "../../contexts/NotificationContext";
 import { observer } from "mobx-react"
-import SnackabraContext from "../../contexts/SnackabraContext";
+import { Grid, TextField, Typography, Button } from "@mui/material";
+import ConfirmLockDialog from "./ConfirmLockDialog.js";
+import NotificationContext from "../../contexts/NotificationContext.js";
+import ResponsiveDialog from "../ResponsiveDialog.js";
+import SnackabraContext from "../../contexts/SnackabraContext.js";
 
 function isNumeric(v) {
   return !isNaN(v) &&
@@ -90,7 +89,7 @@ const AdminDialog = observer((props) => {
           fullWidth
           sx={{ pb: 1, pt: 1 }}
         />
-        <StyledButton variant={"contained"} onClick={() => {
+        <Button variant={"contained"} onClick={() => {
           channel.motd = motd
           if (motd !== '') {
             sendMotdMessage()
@@ -98,7 +97,7 @@ const AdminDialog = observer((props) => {
           props.onClose()
         }}>
           <Typography variant={"button"}>Save MOTD</Typography>
-        </StyledButton>
+        </Button>
       </Grid>
       <Grid item xs={12}>
         <TextField
@@ -114,9 +113,9 @@ const AdminDialog = observer((props) => {
         />
       </Grid>
 
-      <StyledButton variant={"contained"} sx={{ pb: 1, pt: 1 }} onClick={setCapacity}>
+      <Button variant={"contained"} sx={{ pb: 1, pt: 1 }} onClick={setCapacity}>
         <Typography variant={"button"}>Save Capacity</Typography>
-      </StyledButton>
+      </Button>
     </Grid>
   </ResponsiveDialog>
   );
