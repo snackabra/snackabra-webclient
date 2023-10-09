@@ -197,18 +197,18 @@ export default () => {
                 for (let i = 0; i < messages.length; i++) {
                     _messageValues.push(messages[i].value);
                 }
-                postMessage({ error: false, status: 'ok', data: mergeMessages([], _messageValues), method: 'getMessages' });
+                postMessage({ error: false, status: 'ok', data: mergeMessages([], _messageValues), method: 'getMessages', channel_id: channel_id });
             })
         } catch (e) {
             throw new Error(`Message Worker: Error(getMessages(${channel_id}) ): ${e.message}`)
         }
     }
 
-    const addMessage = (message, args) => {
+    const addMessage = (message, args, channel_id) => {
         try {
             message.createdAt = getDateTimeFromTimestampPrefix(message.timestampPrefix);
             add(message._id, message)
-            postMessage({ error: false, status: 'ok', data: message, method: 'addMessage', args: args });
+            postMessage({ error: false, status: 'ok', data: message, method: 'addMessage', args: args, channel_id: channel_id });
         } catch (e) {
             throw new Error(`Message Worker: Error(addMessage() ): ${e.message}`)
         }
@@ -223,7 +223,7 @@ export default () => {
                 getMessages(digest.channel_id);
                 break;
             case 'addMessage':
-                addMessage(digest.message, digest.args);
+                addMessage(digest.message, digest.args, digest.channel_id);
                 break;
             default:
                 throw new Error(`No such message worker method (${digest.method})`);

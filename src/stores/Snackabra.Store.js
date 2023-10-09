@@ -4,7 +4,7 @@ import IndexedKV from "../utils/IndexedKV.js";
 import MessageWorker from "../workers/MessageWorker.js";
 import { SB } from "snackabra/dist/snackabra.js";
 const blob = new Blob([`(${MessageWorker})()`]);
-
+const worker = new Worker(URL.createObjectURL(blob), { name: '384 Message Worker', writable: true, readable: true });
 
 console.log("=========== mobx-snackabra-store loading ===========")
 
@@ -305,7 +305,7 @@ class ChannelStore {
   config;
 
   constructor(config, channelId = null) {
-    this.worker = new Worker(URL.createObjectURL(blob), { name: '384 Message worker ' + channelId, writable: true, readable: true });
+
     this.config = config;
     this.config.onClose = () => {
       console.log('onClose hook called')
@@ -415,20 +415,20 @@ class ChannelStore {
           this.status = this.socket.status
           this.status = 'LOADING'
           this[makeVisible]()
-          if(this.socket.status !== 'OPEN') {
+          if (this.socket.status !== 'OPEN') {
             this[makeVisible]()
           }
         }
       }
     });
 
-    this[makeVisible] = () =>{
-        this.connect().then((result)=>{
-          if(result){
-            this._visible = true;
-            this.status = this._socket.status
-          }
-        })
+    this[makeVisible] = () => {
+      this.connect().then((result) => {
+        if (result) {
+          this._visible = true;
+          this.status = this._socket.status
+        }
+      })
 
     }
 
@@ -437,10 +437,13 @@ class ChannelStore {
       this[getChannel](this.id);
     }
 
-    this.worker.onmessage = (e) => {
+    worker.onmessage = (e) => {
       let data;
       if (!e.error) {
-
+        if (e.data.channel_id !== this._id) {
+          console.log('message not for this channel', e.data.channel_id, this._id)
+          return
+        }
         switch (e.data.method) {
           case 'addMessage':
             console.log('adding message', e)
@@ -462,7 +465,7 @@ class ChannelStore {
   }
 
   getChannelMessages = async () => {
-    this.worker.postMessage({ method: 'getMessages', channel_id: this._id })
+    worker.postMessage({ method: 'getMessages', channel_id: this._id })
   }
 
   get id() {
@@ -709,7 +712,7 @@ class ChannelStore {
     if (updateState) {
       this.messages = [...this._messages, m]
     }
-    this.worker.postMessage({ method: 'addMessage', message: m, args: { updateState: updateState } })
+    worker.postMessage({ method: 'addMessage', channel_id: this._id, message: m, args: { updateState: updateState } })
   };
 
 }
