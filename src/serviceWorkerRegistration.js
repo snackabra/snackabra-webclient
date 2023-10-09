@@ -123,6 +123,7 @@ function checkValidServiceWorker(swUrl, config) {
         (contentType != null && contentType.indexOf('javascript') === -1)
       ) {
         // No service worker found. Probably a different app. Reload the page.
+        console.warn('Service worker NOT found')
         navigator.serviceWorker.ready.then((registration) => {
           registration.unregister().then(() => {
             window.location.reload();

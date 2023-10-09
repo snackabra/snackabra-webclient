@@ -4,7 +4,6 @@ import IndexedKV from "../utils/IndexedKV.js";
 import MessageWorker from "../workers/MessageWorker.js";
 import { SB } from "snackabra/dist/snackabra.js";
 const blob = new Blob([`(${MessageWorker})()`]);
-const worker = new Worker(URL.createObjectURL(blob), { name: '384 Message Worker', writable: true, readable: true });
 
 console.log("=========== mobx-snackabra-store loading ===========")
 
@@ -305,7 +304,7 @@ class ChannelStore {
   config;
 
   constructor(config, channelId = null) {
-
+    this.worker = new Worker(URL.createObjectURL(blob), { name: '384 Message Worker', writable: true, readable: true });
     this.config = config;
     this.config.onClose = () => {
       console.log('onClose hook called')
@@ -409,17 +408,23 @@ class ChannelStore {
 
       if (document.visibilityState === 'visible') {
         this._visible = true;
-        console.log(this.socket)
         if (this.socket) {
           console.log('visbility change: setting status to', this.socket.status)
-          this.status = this.socket.status
           this.status = 'LOADING'
           this[makeVisible]()
-          if (this.socket.status !== 'OPEN') {
-            this[makeVisible]()
-          }
         }
       }
+    });
+
+    window.addEventListener("offline", (e) => {
+      console.log("browser has gone offline");
+      this.status = 'CLOSED'
+      console.log('settings stateus status to', this.status)
+    });
+
+    window.addEventListener("online", (e) => {
+      console.log("browser is now online");
+      this[makeVisible]()
     });
 
     this[makeVisible] = () => {
@@ -427,6 +432,7 @@ class ChannelStore {
         if (result) {
           this._visible = true;
           this.status = this._socket.status
+          this.getOldMessages(0)
         }
       })
 
@@ -437,13 +443,14 @@ class ChannelStore {
       this[getChannel](this.id);
     }
 
-    worker.onmessage = (e) => {
+    this.worker.onmessage = (e) => {
       let data;
       if (!e.error) {
         if (e.data.channel_id !== this._id) {
-          console.log('message not for this channel', e.data.channel_id, this._id)
+          console.log('message not for this channel', e.data, this._id)
           return
         }
+        console.log('message processed by worker', e.data.channel_id, this._id)
         switch (e.data.method) {
           case 'addMessage':
             console.log('adding message', e)
@@ -465,7 +472,7 @@ class ChannelStore {
   }
 
   getChannelMessages = async () => {
-    worker.postMessage({ method: 'getMessages', channel_id: this._id })
+    this.worker.postMessage({ method: 'getMessages', channel_id: this._id })
   }
 
   get id() {
@@ -702,7 +709,8 @@ class ChannelStore {
         return false
       }
     } catch (e) {
-      throw e
+      console.error(e)
+      return false
     }
 
   };
@@ -712,7 +720,7 @@ class ChannelStore {
     if (updateState) {
       this.messages = [...this._messages, m]
     }
-    worker.postMessage({ method: 'addMessage', channel_id: this._id, message: m, args: { updateState: updateState } })
+    this.worker.postMessage({ method: 'addMessage', channel_id: this._id, message: m, args: { updateState: updateState } })
   };
 
 }

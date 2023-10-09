@@ -28,6 +28,7 @@ export default function ImageViewer(props) {
             setImage(image.image)
             const hash = image.fileMetadata.previewHash ? image.fileMetadata.previewHash : image.fileMetadata.fullImageHash
             if (hash && controlMessages[hash]) {
+                console.log('loading full size image', controlMessages[hash])
                 sbContext.SB.storage.fetchData(controlMessages[hash]).then((data) => {
                     if (data.hasOwnProperty('error')) {
                         console.error(data['error'])
@@ -46,7 +47,7 @@ export default function ImageViewer(props) {
                 notify.warn('Some full size images may not be available, we are working on loading them.')
             }
         }
-    }, [controlMessages, image, notify, sbContext.SB.storage])
+    }, [SB, controlMessages, image, notify, sbContext.SB.storage])
 
 
     React.useEffect(() => {

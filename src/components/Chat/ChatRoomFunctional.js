@@ -270,7 +270,7 @@ const ChatRoom = observer((props) => {
 
       console.dir(window.sw_registration)
 
-      console.log('Registering push')
+      console.log('Registering push', SB)
       window.sw_registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: SB.base64ToArrayBuffer(process.env.REACT_APP_PUBLIC_VAPID_KEY),
@@ -349,7 +349,6 @@ const ChatRoom = observer((props) => {
 
   const openImageOverlay = (message) => {
 
-    props.inhibitSwipe(1)
     let _images = [];
     for (const [key, value] of channel.messages.entries()) {
       console.log(`MESSAGES `, key, value)
@@ -363,7 +362,6 @@ const ChatRoom = observer((props) => {
   }
 
   const imageOverlayClosed = () => {
-    props.inhibitSwipe(0)
     setOpenPreview(false)
     setImgLoaded(false)
   }
@@ -549,7 +547,6 @@ const ChatRoom = observer((props) => {
           _m[i] = _message;
         }
       })
-      // setMessages(_m)
       setGiftedMessages(_m)
       channel.messages = _m
     }
@@ -606,7 +603,6 @@ const ChatRoom = observer((props) => {
         <ChangeNameDialog {...changeUserNameProps} open={openChangeName} onClose={(userName, _id) => {
           saveUsername(userName, _id)
         }} />
-        {/* <AttachMenu open={attachMenu} handleClose={handleClose} /> */}
         <FirstVisitDialog open={openFirstVisit} onClose={(username) => {
           setOpenFirstVisit(false)
           connect(username)
@@ -615,7 +611,6 @@ const ChatRoom = observer((props) => {
           id={`sb_chat_${roomId}`}
           messageContainerRef={giftedRef}
           isKeyboardInternallyHandled={false}
-          // wrapInSafeArea={true}
           className={'sb_chat_container'}
           style={{
             width: '100%'
@@ -672,12 +667,10 @@ const ChatRoom = observer((props) => {
               files={files}
               incrementFiles={incrementFiles}
               decrementFiles={decrementFiles}
-              // setFiles={setFiles}
               uploading={uploading}
               loading={loading} />
           }}
           renderBubble={(props) => {
-            // PSM TODO: what does this need channel keys for?
             return <RenderBubble {...props}
               keys={channel.keys}
               SB={SB} />
@@ -706,7 +699,6 @@ const ChatRoom = observer((props) => {
               }}
               incrementFiles={incrementFiles}
               decrementFiles={decrementFiles}
-              // setFiles={setFiles}
               filesAttached={files}
             />
           }}

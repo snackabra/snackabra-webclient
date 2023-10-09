@@ -1,3 +1,6 @@
+const { InjectManifest } = require('workbox-webpack-plugin');
+const path = require("path");
+
 module.exports = {
     // ...
     babel: {
@@ -11,5 +14,17 @@ module.exports = {
             ["@babel/plugin-transform-private-methods", { "loose": true }],
             ["@babel/plugin-proposal-class-properties", { "loose": true }],
         ],
+    },
+    webpack: {
+        configure: (config, { env, paths }) => {
+            config.entry['service-worker'] = './src/service-worker.js';
+            config.plugins.push(
+                new InjectManifest({
+                    swSrc: './src/service-worker.js',
+                    swDest: 'service-worker.js',
+                })
+            );
+            return config;
+        },
     },
 };

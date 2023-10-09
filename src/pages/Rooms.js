@@ -8,7 +8,6 @@ import {
   CssBaseline, Divider, Drawer, List, ListItem, ListItemButton, ListItemIcon,
   ListItemText, InputAdornment, Toolbar
 } from '@mui/material';
-import SwipeableViews from 'react-swipeable-views/src/SwipeableViews.js';
 import {
   AddComment as AddCommentIcon,
   Folder as FileUploadIcon,
@@ -30,7 +29,7 @@ import SharedRoomStateContext from "../contexts/SharedRoomState.js";
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
-
+  console.log('tab panel', value, index)
   return (
     <div
       role="tabpanel"
@@ -236,21 +235,15 @@ const ResponsiveDrawer = observer((props) => {
 
 
         <Divider />
-        <Tabs
-          value={value}
-          onChange={handleChange}
-          indicatorColor='#ff5c42'
-          textColor='primary'
-          variant="scrollable"
-          orientation="vertical"
-          aria-label="room tabs"
-        >
-          {Object.keys(sbContext.channels).map((_d, index) => {
-            const room = _d
-            const bgColor = room === roomId ? '#ff5c42' : 'inherit';
-            const color = room === roomId ? '#fff' : 'inherit';
-            return (
-              <Tab component={'div'} disableRipple disableTouchRipple key={index} {...a11yProps(index)} sx={{ backgroundColor: bgColor, color: color, textAlign: "left" }} label={
+        {Object.keys(sbContext.channels).map((_d, index) => {
+          const room = _d
+          const bgColor = room === roomId ? '#ff5c42' : 'inherit';
+          const color = room === roomId ? '#fff' : 'inherit';
+          return (
+            <ListItem key={index}  disablePadding sx={{ backgroundColor: bgColor, color: color, textAlign: "left" }}>
+              <ListItemButton onClick={()=>{
+                handleChangeIndex(index)
+              }}>
                 <Grid container
                   direction="row"
                   justifyContent={'flex-start'}
@@ -300,11 +293,10 @@ const ResponsiveDrawer = observer((props) => {
                     />
                   </Grid>
                 </Grid>
-              } />
-
-            )
-          })}
-        </Tabs>
+              </ListItemButton>
+            </ListItem>
+          )
+        })}
       </List>
     </div>
   );
@@ -395,42 +387,33 @@ const ResponsiveDrawer = observer((props) => {
           <Typography textAlign={'center'} variant={'h6'}>Select a room or create a new one to get started.</Typography>
         </Grid>)
         }
-        <SwipeableViews
-          axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
-          index={value}
-          onChangeIndex={handleChangeIndex}
-          style={{ padding: 0 }}
-          disabled={!!swipeInhibiter}
-        >
-          {Object.keys(sbContext.channels).map((item, index) => {
-            if (!sbContext.channels[item].key) return (<div key={`${item}-tab-panel`}></div>)
-            return (
-              <TabPanel
-                key={`${item}-tab-panel`}
-                value={value}
-                index={value}
-                component={'div'}
-                dir={theme.direction}
-                className="RoomSwipable">
-                <ChatRoom inhibitSwipe={(weighted) => {
-                  inhibitSwipe(weighted)
+
+        {Object.keys(sbContext.channels).map((item, index) => {
+          if (!sbContext.channels[item].key) return (<div key={`${item}-tab-panel`}></div>)
+          return (
+            <TabPanel
+              key={`${item}-tab-panel`}
+              value={value}
+              index={index}
+              component={'div'}
+              dir={theme.direction}
+              className="RoomSwipable">
+              <ChatRoom 
+                messageContainerRef={(ref) => {
+                  console.log('setting ref')
+                  console.log(ref, index)
+                  roomRefs[index] = ref
+                  console.log(roomRefs)
                 }}
-                  messageContainerRef={(ref) => {
-                    console.log('setting ref')
-                    console.log(ref, index)
-                    roomRefs[index] = ref
-                    console.log(roomRefs)
-                  }}
-                  activeRoom={roomState.state.activeRoom}
-                  roomId={item}
-                  sbContext={sbContext}
-                  Notifications={Notifications}
-                  openAdminDialog={openAdminDialog}
-                  onCloseAdminDialog={onCloseAdminDialog} />
-              </TabPanel>
-            )
-          })}
-        </SwipeableViews>
+                activeRoom={roomState.state.activeRoom}
+                roomId={item}
+                sbContext={sbContext}
+                Notifications={Notifications}
+                openAdminDialog={openAdminDialog}
+                onCloseAdminDialog={onCloseAdminDialog} />
+            </TabPanel>
+          )
+        })}
       </Box>
     </div >
   );

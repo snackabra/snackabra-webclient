@@ -6,7 +6,8 @@ import './index.css';
 import App from './App.js';
 import { register } from './serviceWorkerRegistration.js';
 import IndexedKV from "./utils/IndexedKV.js";
-import { SB } from 'snackabra/dist/snackabra.js'
+import * as SB from 'snackabra/dist/snackabra.js'
+console.log(SB)
 window.SB = {
   ...SB
 }
