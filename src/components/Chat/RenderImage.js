@@ -30,12 +30,6 @@ const RenderImage = (props) => {
     setIsDownloading(true)
     //  mtg: In scenarios where the preview and full size image are the same file because the full image is below 4MB
     const type = message.imageMetaData.imageId === message.imageMetaData.previewId ? 'p' : 'f'
-    // props.sbContext.SB.storage.retrieveImage(
-    //   message.imageMetaData,
-    //   props.controlMessages,
-    //   message.imageMetaData.imageId,
-    //   message.imageMetaData.imageKey,
-    //   type).then((data) => {
     props.sbContext.SB.storage.fetchData(props.controlMessages[message.fileMetadata.fullImageHash]).then((data) => {
       if (data.hasOwnProperty('error')) {
         setTimeout(() => {

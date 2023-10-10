@@ -2,16 +2,19 @@ import React from 'react';
 import { Image } from 'mui-image'
 import { createUseGesture, dragAction, pinchAction } from '@use-gesture/react'
 import { a, useSpring, config } from '@react-spring/web'
+import IndexedKV from "../../utils/IndexedKV.js";
 import NotificationContext from "../../contexts/NotificationContext.js";
 
 const useGesture = createUseGesture([dragAction, pinchAction])
 
-export default function ImageViewer(props) {
-    let SB = window.SB
-    const { image, controlMessages, sbContext, inhibitSwipe } = props
+const ImageViewer = React.memo(function ImageViewer(props) {
+    const { image, inhibitSwipe, sbContext, controlMessages, focused } = props
     const notify = React.useContext(NotificationContext)
-    const [img, setImage] = React.useState('');
-    const [imgLoaded, setImageLoaded] = React.useState(true);
+    const cacheDb = React.useRef(new IndexedKV({
+        db: 'sb_data_cache',
+        table: 'images'
+    }));
+    const [fullSizeImage, setFullSizeImage] = React.useState(null);
     const [closing, setClosing] = React.useState(false);
     const myRef = React.createRef();
 
@@ -22,32 +25,61 @@ export default function ImageViewer(props) {
         rotateZ: 0,
     }), [])
 
-    React.useEffect(() => {
-
-        if (image?.image) {
-            setImage(image.image)
-            const hash = image.fileMetadata.previewHash ? image.fileMetadata.previewHash : image.fileMetadata.fullImageHash
-            if (hash && controlMessages[hash]) {
-                console.log('loading full size image', controlMessages[hash])
-                sbContext.SB.storage.fetchData(controlMessages[hash]).then((data) => {
-                    if (data.hasOwnProperty('error')) {
-                        console.error(data['error'])
-                        notify.warn('Could not load full size image')
+    const getFullSizeImage = (message) => {
+        return new Promise((resolve) => {
+            const hash = message.fileMetadata.previewHash ? message.fileMetadata.previewHash : message.fileMetadata.fullImageHash
+            const imageAb = sbContext.SB.storage.fetchData(controlMessages[hash])
+            Promise.race([imageAb, cacheDb.current.getItem(hash)])
+                .then(res => {
+                    if (!res) {
+                        imageAb.then((data) => {
+                            if (data.hasOwnProperty('error')) {
+                                console.error(data['error'])
+                            } else {
+                                cacheDb.current.setItem(hash, data)
+                                resolve(data)
+                            }
+                        })
                     } else {
-                        console.log('loaded full size image', data)
-                        setImage('data:image/jpeg;base64,' + SB.arrayBufferToBase64(data, 'b64'))
-                        setImageLoaded(true)
+                        resolve(res)
                     }
-                }).catch((error) => {
-                    console.error(`openPreview()  exception: `, controlMessages[hash], error);
-                    notify.warn('Could not load full size image')
+                    console.log('got full size image', res)
                 })
-            } else {
-                setImageLoaded(true)
-                notify.warn('Some full size images may not be available, we are working on loading them.')
-            }
+                .catch(_ => { /* eat any errors */ })
+        })
+    }
+
+    React.useEffect(() => {
+        console.log(focused)
+        if (!image) return
+
+        if (focused) {
+            getFullSizeImage(image).then((data) => {
+                if (data.hasOwnProperty('error')) {
+                    console.error(data['error'])
+                    notify.error('Could not load full size image')
+                } else {
+                    console.log('loaded full size image', data)
+                    setFullSizeImage('data:image/jpeg;base64,' + window.SB.arrayBufferToBase64(data, 'b64'))
+                }
+            })
         }
-    }, [SB, controlMessages, image, notify, sbContext.SB.storage])
+    }, [image, focused])
+
+    // React.useEffect(() => {
+    //     fullSizeImagePromise.then((data) => {
+    //         if (data.hasOwnProperty('error')) {
+    //             console.error(data['error'])
+    //             notify.error('Could not load full size image')
+    //         } else {
+    //             console.log('loaded full size image', data)
+    //             setFullSizeImage('data:image/jpeg;base64,' + window.SB.arrayBufferToBase64(data, 'b64'))
+    //         }
+    //     }).catch((err) => {
+    //         console.error(err)
+    //         notify.error('Could not load full size image')
+    //     })
+    // }, [fullSizeImagePromise, notify])
 
 
     React.useEffect(() => {
@@ -63,12 +95,6 @@ export default function ImageViewer(props) {
     }, [])
 
     let height = window.innerHeight - (window.innerHeight / 4)
-
-    React.useEffect(() => {
-        setImageLoaded(props.imgLoaded)
-    }, [props.imgLoaded])
-
-
 
     const open = ({ canceled }) => {
         if (canceled)
@@ -161,23 +187,25 @@ export default function ImageViewer(props) {
     )
     return (
         <a.div ref={myRef} style={{ touchAction: 'none', ...style }} className={`flex fill center`} >
-            {img && <Image
+            <Image
                 style={{
                     display: closing ? 'none' : 'inherit'
                 }}
-                src={img}
+                src={fullSizeImage ? fullSizeImage : image.image}
                 width="100%"
                 fit="contain"
-                duration={imgLoaded ? 0 : 1000}
+                duration={500}
                 easing="cubic-bezier(0.7, 0, 0.6, 1)"
                 showLoading={true}
                 errorIcon={true}
                 shift={null}
                 distance="100px "
-                shiftDuration={imgLoaded ? 0 : 1000}
+                shiftDuration={500}
                 bgColor="inherit"
             />
-            }
+
         </a.div>
     );
-}
+})
+
+export default ImageViewer;

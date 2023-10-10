@@ -10,9 +10,10 @@ import ImageViewer from './ImageViewer.js';
 const EnhancedSwipeableViews = bindKeyboard(autoPlay(virtualize(SwipeableViews)));
 
 export default function ImageCarousel(props) {
+    console.log('rendering image carousel')
     let mouseMoveTimeout;
-    const { img, images, sbContext, controlMessages } = props
-    let imageList = images;
+    const { img, sbContext, controlMessages } = props
+    const [images, setImages] = React.useState(props.images)
     const [autoplay, setAutoplay] = React.useState(false);
     const [showControls, setShowControls] = React.useState(false);
     const [value, setValue] = React.useState(null);
@@ -21,10 +22,9 @@ export default function ImageCarousel(props) {
     const containerRef = React.useRef(null);
 
     const handleChangeIndex = React.useCallback((index) => {
-        console.log(index)
-        if (index < 0) index = imageList.length - 1
+        if (index < 0) index = images.length - 1
         setValue(index);
-    }, [imageList.length])
+    }, [images.length])
 
     React.useEffect(() => {
         const _images = images
@@ -37,21 +37,32 @@ export default function ImageCarousel(props) {
 
     }, [handleChangeIndex, images, img._id])
 
+    const getFullSizeImage = (message) => {
+        const hash = message.fileMetadata.previewHash ? message.fileMetadata.previewHash : message.fileMetadata.fullImageHash
+        console.log('loading full size image', controlMessages[hash])
+        return sbContext.SB.storage.fetchData(controlMessages[hash])
+    }
+
+
     const slideRenderer = React.useCallback(({ key, index }) => {
-        return (<ImageViewer
-            key={key}
-            image={imageList[index]}
-            sbContext={sbContext}
-            controlMessages={controlMessages}
-            inhibitSwipe={inhibitSwipe}
-            onOpen={() => {
-                props.onOpen()
-            }}
-            onClose={() => {
-                props.onClose()
-            }} />
+        const item = images[index]
+        return (
+            <ImageViewer
+                key={key}
+                focused={index === value}
+                image={item}
+                sbContext={sbContext}
+                inhibitSwipe={inhibitSwipe}
+                controlMessages={controlMessages}
+                onOpen={() => {
+                    props.onOpen()
+                }}
+                onClose={() => {
+                    props.onClose()
+                }} />
         );
-    }, [controlMessages, imageList, props, sbContext])
+    }, [getFullSizeImage, images, props, sbContext])
+
 
     const toggleShowControls = (visibility) => {
 
@@ -72,6 +83,7 @@ export default function ImageCarousel(props) {
             toggleShowControls(false)
         }, 5000)
     }
+
     return (
         <>
             <EnhancedSwipeableViews
@@ -87,32 +99,12 @@ export default function ImageCarousel(props) {
                 onChangeIndex={handleChangeIndex}
                 style={{ padding: 0, height: '100%' }}
                 disabled={!!swipeInhibiter}
-                overscanSlideAfter={3}
-                overscanSlideBefore={3}
+                // overscanSlideAfter={3}
+                // overscanSlideBefore={3}
                 slideRenderer={slideRenderer}
-                slideCount={imageList.length}
+                slideCount={images.length}
                 interval={30000}
             />
-            {/* {imageList.map((key, index) => {
-                    // console.log(JSON.stringify(imageList[index]))
-                    return (<ImageViewer
-                        key={`image-${index}`}
-                        image={imageList[index]}
-                        sbContext={sbContext}
-                        controlMessages={controlMessages}
-                        inhibitSwipe={inhibitSwipe}
-                        onOpen={() => {
-                            props.onOpen()
-                        }}
-                        onClose={() => {
-                            props.onClose()
-                        }} />
-                    );
-                })
-
-                }
-
-            </EnhancedSwipeableViews> */}
             <Grid
                 container
                 direction="row"
@@ -143,7 +135,7 @@ export default function ImageCarousel(props) {
                         >
                             <IconButton
                                 onClick={() => {
-                                    handleChangeIndex((value + 1) % imageList.length)
+                                    handleChangeIndex((value + 1) % images.length)
                                 }}
                                 aria-label="prev-image"
                                 sx={{ color: 'white' }}
@@ -178,5 +170,6 @@ export default function ImageCarousel(props) {
                 </Slide>
             </Grid>
         </>
+
     );
 }

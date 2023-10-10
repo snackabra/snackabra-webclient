@@ -67,7 +67,6 @@ const ChatRoom = observer((props) => {
   const [openFirstVisit, setOpenFirstVisit] = React.useState(false);
   const [changeUserNameProps, setChangeUserNameProps] = React.useState({});
   const [img, setImg] = React.useState('');
-  const [imgLoaded, setImgLoaded] = React.useState(false);
   const [roomId, setRoomId] = React.useState(props.roomId || 'offline');
   const [files, setFiles] = React.useState(0);
   const [images, setImages] = React.useState([]);
@@ -208,7 +207,6 @@ const ChatRoom = observer((props) => {
       setOpenFirstVisit(false);
       setChangeUserNameProps({});
       setImg('');
-      setImgLoaded(false);
       setRoomId(props.roomId || 'offline');
       setFiles(0);
       setImages([]);
@@ -331,6 +329,12 @@ const ChatRoom = observer((props) => {
 
   const handleSimpleChatMessage = (msg) => {
 
+    if(msg.hasOwnProperty('image') && msg.image.length > 0){
+      setImages(_i => {
+        return uniqBy([..._i, msg], '_id')
+      })
+    }
+
     setGiftedMessages(previousMessages => {
       if (previousMessages && msg.hasOwnProperty('sendingId') && previousMessages.some(message => message._id === msg.sendingId)) {
         return replaceMessage(msg, previousMessages)
@@ -348,22 +352,12 @@ const ChatRoom = observer((props) => {
   }
 
   const openImageOverlay = (message) => {
-
-    let _images = [];
-    for (const [key, value] of channel.messages.entries()) {
-      console.log(`MESSAGES `, key, value)
-      if (value.hasOwnProperty('image') && value.image.length > 0) {
-        _images.push(value)
-      }
-    }
     setImg(message)
     setOpenPreview(true)
-    setImages(_images)
   }
 
   const imageOverlayClosed = () => {
     setOpenPreview(false)
-    setImgLoaded(false)
   }
 
   const promptUsername = (context) => {
@@ -588,7 +582,6 @@ const ChatRoom = observer((props) => {
           open={openPreview}
           img={img}
           controlMessages={controlMessages}
-          imgLoaded={imgLoaded}
           onClose={imageOverlayClosed} />
         <ImageGallery
           sbContext={sbContext}
@@ -596,7 +589,6 @@ const ChatRoom = observer((props) => {
           open={shardRoomContext.state.openImageGallery}
           img={img}
           controlMessages={controlMessages}
-          imgLoaded={imgLoaded}
           onClose={() => {
             shardRoomContext.setOpenImageGallery(false)
           }} />

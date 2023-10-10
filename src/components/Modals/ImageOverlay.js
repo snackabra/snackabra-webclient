@@ -10,7 +10,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 
 
 export default function ImageOverlay(props) {
-
+  console.log('rendering image overlay')
   return (
 
     <Dialog

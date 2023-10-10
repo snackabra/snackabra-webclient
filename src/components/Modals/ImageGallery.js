@@ -36,7 +36,7 @@ export default function ImageGallery(props) {
 
                 {selected ?
                     <ImageViewer
-                        loadImage={true}
+                        focused={true}
                         image={selected}
                         sbContext={sbContext}
                         controlMessages={controlMessages}

@@ -17,13 +17,16 @@ module.exports = {
     },
     webpack: {
         configure: (config, { env, paths }) => {
-            config.entry['service-worker'] = './src/service-worker.js';
-            config.plugins.push(
-                new InjectManifest({
-                    swSrc: './src/service-worker.js',
-                    swDest: 'service-worker.js',
-                })
-            );
+            if(process.env.SWDEV === 'true'){
+                config.entry['service-worker'] = './src/service-worker.js';
+                config.plugins.push(
+                    new InjectManifest({
+                        swSrc: './src/service-worker.js',
+                        swDest: 'service-worker.js',
+                    })
+                );
+            }
+
             return config;
         },
     },
