@@ -5,7 +5,7 @@ import { observer } from "mobx-react"
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { isMobile } from 'react-device-detect';
 import { GiftedChat } from "react-native-gifted-chat";
-import {uniqBy} from 'lodash';
+import { uniqBy } from 'lodash';
 import RenderBubble from "./RenderBubble.js";
 import RenderAvatar from "./RenderAvatar.js";
 import RenderAttachmentIcon from "./RenderAttachmentIcon.js";
@@ -54,8 +54,8 @@ const ChatRoom = observer((props) => {
   }
   const sbContext = props.sbContext
   const channel = sbContext.channels[props.roomId];
-  let toUpload = []
-  let uploaded = []
+  let toUpload = React.useRef([])
+  let uploaded = React.useRef([])
 
   const [giftedMessages, setGiftedMessages] = React.useState([]);
   const [user, setUser] = React.useState({});
@@ -77,6 +77,7 @@ const ChatRoom = observer((props) => {
   const [inputErrored, setInputErrored] = React.useState(false);
   const [typing, setTyping] = React.useState(false);
   const [controlMessages, setControlMessages] = React.useState({});
+  const [progressBarWidth, setProgressBarWidth] = React.useState(0);
   React.useEffect(() => {
     props.messageContainerRef(giftedRef)
   }, [props])
@@ -86,7 +87,7 @@ const ChatRoom = observer((props) => {
     for (let _m in messages) {
       const m = messages[_m]
       console.warn("Received message: ", m)
-      if(!m) return;
+      if (!m) return;
       try {
 
 
@@ -109,17 +110,17 @@ const ChatRoom = observer((props) => {
               return _controlMessages
             })
             // Tracks progress
-            if (toUpload.length > 0) {
-              if (toUpload.includes(obj.hash)) {
-                uploaded.push(obj.hash)
-                // setProgressBarWidth(Math.ceil(uploaded.length / toUpload.length * 100));
+            if (toUpload.current.length > 0) {
+              if (toUpload.current.includes(obj.hash)) {
+                uploaded.current.push(obj.hash)
+                setProgressBarWidth(Math.ceil(uploaded.current.length / toUpload.current.length * 100));
               }
 
             }
-            if (uploaded.length === toUpload.length) {
+            if (uploaded.current.length === toUpload.current.length) {
               setUploading(false)
-              toUpload = []
-              uploaded = []
+              toUpload.current = []
+              uploaded.current = []
             }
             console.log('FILE_SHARD_METADATA', obj.hash, obj.handle)
             FileHelper.knownShards.set(obj.hash, obj.handle)
@@ -141,6 +142,7 @@ const ChatRoom = observer((props) => {
         console.error(e)
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   React.useEffect(() => {
@@ -197,7 +199,17 @@ const ChatRoom = observer((props) => {
     }
 
     init();
+    const setSwChannel = event => {
+      console.log('Received event.data.channel_id ', event.data);
+      if (event.data.channel_id === props.roomId) {
+        // alert('Received event.data.channel_id ' + event.data.channel_id)
+        bc.postMessage({ channel_id: props.roomId });
+      }
 
+    }
+    const bc = new BroadcastChannel('sw-messages');
+    bc.addEventListener('message', setSwChannel);
+    bc.postMessage({ channel_id: props.roomId });
     return () => {
       // setMessages(new Map());
       setOpenAdminDialog(false);
@@ -215,6 +227,8 @@ const ChatRoom = observer((props) => {
       setUser({});
       setHeight(0);
       setReplyTo(null);
+
+      bc.removeEventListener('message', setSwChannel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -229,6 +243,7 @@ const ChatRoom = observer((props) => {
     if (props.activeRoom === props.roomId) {
       connect()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.roomId, props.activeRoom])
 
   const init = () => {
@@ -244,49 +259,66 @@ const ChatRoom = observer((props) => {
     }
 
     processQueue()
-    // processSQueue()
-    subscribeToNotifications()
   }
 
-  const subscribeToNotifications = () => {
+  const registerPush = (subscription) => {
+    console.log('registerPush', user)
+    return fetch(process.env.REACT_APP_NOTIFICATION_SERVER + '/subscription', {
+      method: 'POST',
+      body: JSON.stringify({
+        pub_key: user._id,
+        channel_id: props.roomId,
+        subscription: subscription
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+  }
 
-    try {
+  const requestPushSubscription = async () => {
+    if (Notification) {
+      if (Notification.permission === 'granted') {
+        if (!window.sw_registration || !('pushManager' in window.sw_registration)) {
+          console.log('window.sw_registration', window.sw_registration)
+          console.warn('pushManager not found in registration object...')
+          return;
+        }
+        window.sw_registration.pushManager.getSubscription().then(async (subscription) => {
+          if (subscription) {
+            console.warn('Already subscribed to push notifications', subscription)
+            try {
+              // We still register the notifications because this is a global setting and we do it on a per channel basis.
+              await registerPush(subscription)
+            } catch (e) {
+              console.error(e)
+            }
+          } else {
+            console.log('registering for push subscription')
+            window.sw_registration.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: SB.base64ToArrayBuffer(process.env.REACT_APP_PUBLIC_VAPID_KEY),
+            }).then(async (subscription) => {
+              try {
+                await registerPush(subscription)
+              } catch (e) {
+                console.error(e)
+              }
+            })
+          }
+          window.addEventListener("pushsubscriptionchange", async (event) => {
+            console.log('Subscription expired... renweing');
+            const subscription = await window.sw_registration.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: SB.base64ToArrayBuffer(process.env.REACT_APP_PUBLIC_VAPID_KEY),
+            })
 
-
-      if (!window.sw_registration || !('pushManager' in window.sw_registration)) {
-        console.log('pushManager not found in registration object...')
-        return;
-      }
-
-      // if(await window.sw_registration.pushManager.getSubscription().then((subscription) => {
-      //   if (subscription) {
-      //     console.log('Already subscribed to push notifications', subscription)
-      //     return true
-      //   }
-      //   return false
-      // })) return;
-
-      console.dir(window.sw_registration)
-
-      console.log('Registering push', SB)
-      window.sw_registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: SB.base64ToArrayBuffer(process.env.REACT_APP_PUBLIC_VAPID_KEY),
-      }).then((subscription) => {
-
-        fetch(process.env.REACT_APP_NOTIFICATION_SERVER + '/subscription', {
-          method: 'POST',
-          body: JSON.stringify({
-            channel_id: props.roomId,
-            subscription: subscription
-          }),
-          headers: {
-            'Content-Type': 'application/json',
-          },
+            await registerPush(subscription)
+          });
         })
-      })
-    } catch (e) {
-      console.error(e)
+      } else {
+        console.warn('Notifications permission not granted, we will not register for push subscription.')
+      }
     }
   }
 
@@ -318,8 +350,7 @@ const ChatRoom = observer((props) => {
       if (channel.motd !== '') {
         sendSystemInfo('MOTD: ' + channel.motd)
       }
-
-
+      requestPushSubscription()
     } catch (e) {
       notify('Error connecting to channel', 'error')
       console.error(e)
@@ -329,7 +360,7 @@ const ChatRoom = observer((props) => {
 
   const handleSimpleChatMessage = (msg) => {
 
-    if(msg.hasOwnProperty('image') && msg.image.length > 0){
+    if (msg.hasOwnProperty('image') && msg.image.length > 0) {
       setImages(_i => {
         return uniqBy([..._i, msg], '_id')
       })
@@ -393,7 +424,7 @@ const ChatRoom = observer((props) => {
   }
 
   const sendFiles = async (giftedMessage) => {
-    // let toUpload = []
+    toUpload.current = []
     setFiles(0)
     setUploading(true)
     for (const [key, value] of FileHelper.finalFileList.entries()) {
@@ -437,7 +468,7 @@ const ChatRoom = observer((props) => {
       if (!buffer) {
         console.error(`**** failed to find buffer for ${fileHash} (should not happen)`)
       } else {
-        toUpload.push(fileHash)
+        toUpload.current.push(fileHash)
         FileHelper.uploadBuffer(props.roomId, buffer).then((handle) => {
           const obj = { hash: fileHash, handle: handle }
           const sbm = channel.newMessage(JSON.stringify(obj))
@@ -660,6 +691,7 @@ const ChatRoom = observer((props) => {
               incrementFiles={incrementFiles}
               decrementFiles={decrementFiles}
               uploading={uploading}
+              progressBarWidth={progressBarWidth}
               loading={loading} />
           }}
           renderBubble={(props) => {

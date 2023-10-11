@@ -1,5 +1,4 @@
 const { InjectManifest } = require('workbox-webpack-plugin');
-const path = require("path");
 
 module.exports = {
     // ...
@@ -18,10 +17,12 @@ module.exports = {
     webpack: {
         configure: (config, { env, paths }) => {
             if(process.env.SWDEV === 'true'){
+                // process.env.NODE_ENV = 'development';
                 config.entry['service-worker'] = './src/service-worker.js';
                 config.plugins.push(
                     new InjectManifest({
                         swSrc: './src/service-worker.js',
+                        maximumFileSizeToCacheInBytes: 100000000,
                         swDest: 'service-worker.js',
                     })
                 );

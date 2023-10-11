@@ -12,10 +12,11 @@ import { ExpirationPlugin } from 'workbox-expiration';
 import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
 import { StaleWhileRevalidate } from 'workbox-strategies';
-import { base64ToArrayBuffer } from 'snackabra/dist/snackabra.js'
 
 let notificationsMap = new Map();
-
+const channel = new BroadcastChannel('sw-messages');
+let focused_channel_id = null;
+let notify_timeout = null;
 setInterval(() => {
   notificationsMap = new Map();
 }, 1000 * 60 * 5)
@@ -99,10 +100,22 @@ const notify = (data) => {
   })
 }
 
-self.addEventListener('push', (event) => {
-  const data = event.data.json()
+channel.addEventListener('message', (event) => {
+  if (event.data.channel_id) {
+    console.log('we are focused on channel:', event.data.channel_id)
+    if (notify_timeout) {
+      clearTimeout(notify_timeout)
+    }
+    focused_channel_id = event.data.channel_id;
+  }
+});
 
-  console.log('Got push', data)
+self.addEventListener('push', (event) => {
+  console.log('Got push')
+  const data = event.data.json()
+  console.log(data)
+
+  console.log(self.location.href)
   const clients = self.clients;
   const channel_id = data.data.channel_id;
   data.icon = data.icon ? data.icon : "https://preview.384chat.pages.dev/android-chrome-192x192.png"
@@ -110,49 +123,37 @@ self.addEventListener('push', (event) => {
   data.body = data.body ? data.body : "You have a new message"
   console.log(clients)
   let inFocus = false;
-  event.waitUntil(clients.matchAll({ includeUncontrolled: true, type: 'all' }).then((clientList) => {
+  event.waitUntil(clients.matchAll({ includeUncontrolled: false, type: 'window' }).then((clientList) => {
     console.log('clientList', clientList)
-    if (clientList.length > 0) {
-      for (const client of clientList) {
-        console.log('client', client.url, channel_id)
-        console.log(client.url.match(channel_id))
-        if (client.url.match(channel_id)) {
-          inFocus = true;
-        }
-        if (client?.focused) {
-          inFocus = true;
-        }
-      }
-      if (!inFocus && !notificationsMap.has(data.tag)) {
+
+    // channel.postMessage({ title: 'ping', channel_id: channel_id });
+    // for (const client of clientList) {
+    //   console.log('client', client.url, channel_id)
+    //   console.log(client.url.match(channel_id))
+    //   // client.postMessage({ action: 'showNotification', channel_id: channel_id });
+    //   if (client.url.match(channel_id)) {
+    //     inFocus = true;
+    //   }
+    //   if (client?.focused) {
+    //     inFocus = true;
+    //   }
+    // }
+    // if (!inFocus && !notificationsMap.has(data.tag)) {
+    //   notify(data)
+    // }
+
+    // notify_timeout = setTimeout(() => {
+      if(focused_channel_id !== channel_id){
+        console.log('notify', focused_channel_id, channel_id)
         notify(data)
       }
 
-      return;
-    } else {
-      notify(data)
-      return;
-    }
+    // }, 2000)
+
+    return;
+
   }));
 })
-
-self.addEventListener("pushsubscriptionchange", async (event) => {
-  console.log('Subscription expired... renweing');
-  const subscription = await window.sw_registration.pushManager.subscribe({
-    userVisibleOnly: true,
-    applicationServerKey: base64ToArrayBuffer(process.env.REACT_APP_PUBLIC_VAPID_KEY),
-  })
-
-  await fetch(process.env.REACT_APP_NOTIFICATION_SERVER + '/subscribe', {
-    method: 'POST',
-    body: JSON.stringify({
-      channel_id: this.props.roomId,
-      subscription: subscription
-    }),
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  })
-});
 
 self.addEventListener('notificationclick', (event) => {
   console.log('On notification click: ', event.notification);

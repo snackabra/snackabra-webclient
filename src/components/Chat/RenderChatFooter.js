@@ -155,7 +155,7 @@ const RenderChatFooter = (props) => {
         justifyContent="center"
         alignItems="center"
         container>
-        <LinearProgress sx={{ width: '100%' }} color="success" />
+        <LinearProgress sx={{ width: '100%' }} color="success" variant='determinate' value={props.progressBarWidth} />
       </Grid>
     );
   }

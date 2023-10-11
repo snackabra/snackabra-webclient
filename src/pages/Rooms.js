@@ -25,6 +25,7 @@ import RoomMenu from "../components/Rooms/RoomMenu.js"
 import NavBarActionContext from "../contexts/NavBarActionContext.js";
 import SnackabraContext from "../contexts/SnackabraContext.js";
 import SharedRoomStateContext from "../contexts/SharedRoomState.js";
+import NotificationsPermissionDialog from '../components/Modals/NotificationsPermissionDialog.js';
 
 
 function TabPanel(props) {
@@ -56,6 +57,7 @@ const ResponsiveDrawer = observer((props) => {
 
   let { room_id } = useParams();
   console.log('room_id', room_id)
+
   const navigate = useNavigate()
   const { window } = props;
   const theme = useTheme();
@@ -68,8 +70,17 @@ const ResponsiveDrawer = observer((props) => {
   const [openJoinDialog, setOpenJoinDialog] = React.useState(false);
   const [editingRoomId, setEditingRoomId] = React.useState(false);
   const [updatedName, setUpdatedName] = React.useState(false);
-  const [swipeInhibiter, inhibitSwipe] = React.useState(0);
   const [joinRoomId, setJoinRoomId] = React.useState(false);
+  const [openNotificationDialog, setOpenNotificationDialog] = React.useState(false);
+
+  React.useEffect(() => {
+    if(Notification){
+      if (Notification.permission === 'default') {
+        setOpenNotificationDialog(true)
+      }
+    }
+
+  }, [])
 
   React.useEffect(() => {
     if (room_id && !room_id.match(/\w{64}/)) {
@@ -240,8 +251,8 @@ const ResponsiveDrawer = observer((props) => {
           const bgColor = room === roomId ? '#ff5c42' : 'inherit';
           const color = room === roomId ? '#fff' : 'inherit';
           return (
-            <ListItem key={index}  disablePadding sx={{ backgroundColor: bgColor, color: color, textAlign: "left" }}>
-              <ListItemButton onClick={()=>{
+            <ListItem key={index} disablePadding sx={{ backgroundColor: bgColor, color: color, textAlign: "left" }}>
+              <ListItemButton onClick={() => {
                 handleChangeIndex(index)
               }}>
                 <Grid container
@@ -306,6 +317,9 @@ const ResponsiveDrawer = observer((props) => {
   return (
     <div sx={{ display: 'flex', p: 0 }}>
       <CssBaseline />
+      <NotificationsPermissionDialog open={openNotificationDialog} onClose={() => {
+        setOpenNotificationDialog(false)
+      }} />
       <DataOperationsDialog open={openDataOperations} onClose={() => {
         setOpenDataOperations(false)
       }} />
@@ -398,7 +412,7 @@ const ResponsiveDrawer = observer((props) => {
               component={'div'}
               dir={theme.direction}
               className="RoomSwipable">
-              <ChatRoom 
+              <ChatRoom
                 messageContainerRef={(ref) => {
                   console.log('setting ref')
                   console.log(ref, index)

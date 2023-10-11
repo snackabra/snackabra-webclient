@@ -28,24 +28,15 @@ const ImageViewer = React.memo(function ImageViewer(props) {
     const getFullSizeImage = (message) => {
         return new Promise((resolve) => {
             const hash = message.fileMetadata.previewHash ? message.fileMetadata.previewHash : message.fileMetadata.fullImageHash
-            const imageAb = sbContext.SB.storage.fetchData(controlMessages[hash])
-            Promise.race([imageAb, cacheDb.current.getItem(hash)])
-                .then(res => {
-                    if (!res) {
-                        imageAb.then((data) => {
-                            if (data.hasOwnProperty('error')) {
-                                console.error(data['error'])
-                            } else {
-                                cacheDb.current.setItem(hash, data)
-                                resolve(data)
-                            }
-                        })
-                    } else {
-                        resolve(res)
-                    }
-                    console.log('got full size image', res)
-                })
-                .catch(_ => { /* eat any errors */ })
+            cacheDb.current.getItem(hash).then(async (data) => {
+                console.log('loading full size image from cache', data)
+                if (data) {
+                    resolve(data)
+                }else{
+                    console.log('cache miss, loading full size image from IHD')
+                    resolve(await sbContext.SB.storage.fetchData(controlMessages[hash]))
+                }
+            })
         })
     }
 
