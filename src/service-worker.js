@@ -13,6 +13,139 @@ import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
 import { StaleWhileRevalidate } from 'workbox-strategies';
 
+let readyResolver;
+const IndexedKVReadyFlag = new Promise((resolve) => {
+  readyResolver = resolve;
+});
+let DB;
+let options = {
+  db: 'sb_data',
+  table: 'cache'
+}
+let openReq = self.indexedDB.open(options.db);
+
+openReq.addEventListener('error', (e) => {
+  console.error("Database error: " + e);
+  throw new Error("Database error: " + e);
+});
+openReq.addEventListener('success', (e) => {
+  DB = e.target.result;
+  console.log('success')
+  if (typeof readyResolver !== 'undefined') {
+    readyResolver(true);
+  }
+});
+openReq.addEventListener('upgradeneeded', (e) => {
+  DB = e.target.result;
+  DB.createObjectStore(options.table, { keyPath: "key" });
+  console.log('upgradeneeded')
+
+});
+
+function openCursor(regex, callback) {
+  return new Promise((resolve, reject) => {
+
+    IndexedKVReadyFlag.then(() => {
+      if (DB) {
+        const transaction = DB.transaction([options.table], "readonly");
+        const objectStore = transaction.objectStore(options.table);
+        const request = objectStore.openCursor(null, 'next');
+        let returnArray = [];
+        request.onsuccess = function () {
+          const cursor = request.result;
+          if (cursor) {
+            if (String(cursor.key).match(regex)) {
+              returnArray.push({ value: cursor.value.value, key: cursor.value.key });
+            }
+            cursor.continue();
+          }
+          else {
+            if (callback) {
+              callback(returnArray);
+            }
+            resolve(returnArray);
+          }
+        };
+      }
+      else {
+        reject('DB is not defined');
+      }
+    })
+  });
+}
+
+function getItem(key) {
+  return new Promise(async (resolve, reject) => {
+    await IndexedKVReadyFlag
+    if (DB) {
+      const transaction = DB.transaction([options.table]);
+      const objectStore = transaction.objectStore(options.table);
+      const request = objectStore.get(key);
+      request.onerror = event => {
+        reject(event);
+      };
+      request.onsuccess = () => {
+        const data = request.result;
+        if (data?.value) {
+          resolve(data.value);
+        }
+        else {
+          resolve(null);
+        }
+      };
+    }
+    else {
+      reject(new Error('db is not defined'));
+    }
+  });
+}
+
+function addItem(key, value) {
+  return new Promise((resolve, reject) => {
+    IndexedKVReadyFlag.then(() => {
+      if (DB) {
+        const transaction = DB.transaction([options.table], "readwrite")
+        const objectStore = transaction.objectStore(options.table);
+        const request = objectStore.get(key);
+        request.onerror = event => {
+          reject(event);
+        };
+        request.onsuccess = () => {
+          const data = request.result;
+          if (data?.value) {
+            //Data exists we update the value
+            data.value = value;
+            try {
+              const requestUpdate = objectStore.put(data);
+              requestUpdate.onerror = event => {
+                reject(event);
+              };
+              requestUpdate.onsuccess = (event) => {
+                resolve(requestUpdate.result);
+              };
+            } catch (e) {
+              console.error(e);
+            }
+          }
+          else {
+            const requestAdd = objectStore.add({ key: key, value: value });
+            requestAdd.onsuccess = () => {
+              resolve(requestAdd.result);
+            };
+            requestAdd.onerror = event => {
+              console.error(event);
+              reject(event);
+            };
+          }
+        };
+      }
+      else {
+        reject(new Error('db is not defined'));
+      }
+    });
+  });
+}
+
 let notificationsMap = new Map();
 const channel = new BroadcastChannel('sw-messages');
 let focused_channel_id = null;
@@ -95,8 +228,15 @@ self.addEventListener('message', (event) => {
 
 const notify = (data) => {
   notificationsMap.set(data.tag, data)
-  self.registration.showNotification(data.title, {
-    ...data
+  getItem('sb_data_' + data.data.channel_id).then((channel) => {
+    console.log('channel notification from indexkv', channel)
+    console.log('channel notification from indexkv', data)
+    data.vibrate = [750, 100, 750]
+    data.badge = data.icon
+    data.body = 'New message in ' + channel.alias;
+    self.registration.showNotification('Snackabra', {
+      ...data
+    })
   })
 }
 
@@ -143,10 +283,10 @@ self.addEventListener('push', (event) => {
     // }
 
     // notify_timeout = setTimeout(() => {
-      if(focused_channel_id !== channel_id){
-        console.log('notify', focused_channel_id, channel_id)
-        notify(data)
-      }
+    if (focused_channel_id !== channel_id) {
+      console.log('notify', focused_channel_id, channel_id)
+      notify(data)
+    }
 
     // }, 2000)
 
