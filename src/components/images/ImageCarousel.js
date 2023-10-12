@@ -13,7 +13,8 @@ export default function ImageCarousel(props) {
     console.log('rendering image carousel')
     let mouseMoveTimeout;
     const { img, sbContext, controlMessages } = props
-    const [images, setImages] = React.useState(props.images)
+    const [images] = React.useState(props.images)
+    const [focusedIndex, setFocusedIndex] = React.useState(0)
     const [autoplay, setAutoplay] = React.useState(false);
     const [showControls, setShowControls] = React.useState(false);
     const [value, setValue] = React.useState(null);
@@ -49,7 +50,7 @@ export default function ImageCarousel(props) {
         return (
             <ImageViewer
                 key={key}
-                focused={index === value}
+                focused={focusedIndex === value}
                 image={item}
                 sbContext={sbContext}
                 inhibitSwipe={inhibitSwipe}
@@ -97,6 +98,9 @@ export default function ImageCarousel(props) {
                 resistance
                 autoplay={autoplay && !!!swipeInhibiter}
                 onChangeIndex={handleChangeIndex}
+                onTransitionEnd={() => {
+                    setFocusedIndex(value)
+                }}
                 style={{ padding: 0, height: '100%' }}
                 disabled={!!swipeInhibiter}
                 // overscanSlideAfter={3}

@@ -7,8 +7,8 @@ import NotificationContext from "../../contexts/NotificationContext.js";
 
 const useGesture = createUseGesture([dragAction, pinchAction])
 
-const ImageViewer = React.memo(function ImageViewer(props) {
-    const { image, inhibitSwipe, sbContext, controlMessages, focused } = props
+function ImageViewer(props) {
+    const { image, inhibitSwipe, sbContext, controlMessages, focused, swiping } = props
     const notify = React.useContext(NotificationContext)
     const cacheDb = React.useRef(new IndexedKV({
         db: 'sb_data_cache',
@@ -25,6 +25,7 @@ const ImageViewer = React.memo(function ImageViewer(props) {
         rotateZ: 0,
     }), [])
 
+
     const getFullSizeImage = (message) => {
         return new Promise((resolve) => {
             const hash = message.fileMetadata.previewHash ? message.fileMetadata.previewHash : message.fileMetadata.fullImageHash
@@ -32,7 +33,7 @@ const ImageViewer = React.memo(function ImageViewer(props) {
                 console.log('loading full size image from cache', data)
                 if (data) {
                     resolve(data)
-                }else{
+                } else {
                     console.log('cache miss, loading full size image from IHD')
                     resolve(await sbContext.SB.storage.fetchData(controlMessages[hash]))
                 }
@@ -96,50 +97,53 @@ const ImageViewer = React.memo(function ImageViewer(props) {
         api.start({ y: 0, x: 0, scale: 1, rotateZ: 0, reset: true, immediate: true, config: { ...config.stiff, velocity: 0 } })
         setTimeout(() => {
             props.onClose()
-        }, 50)
+        }, 100)
 
     }
 
     useGesture(
         {
             onDrag: (state) => {
-                const { pinching, offset: [x, y], last, velocity: [vy], cancel } = state
+                const { pinching, offset: [x, y], last, velocity: [vy], memo, cancel } = state
                 // if the user drags up passed a threshold, then we cancel
                 // the drag so that the sheet resets to its open position
-                // console.log(state)
-                if (pinching) {
+                if (pinching || swiping) {
                     return cancel()
                 }
+                // console.log(vy, mx, mx)
                 const s = style.scale.animation.to;
+                const width = Number((window.innerWidth * s) / 2).toFixed(0);
+                const xLimit = Math.abs(x) + (window.innerWidth / 2) >= width;
                 if (last && s === 1) {
-                    if (Math.abs(y) > height * 0.6) {
-                        setTimeout(() => {
-                            setClosing(true)
-                        }, 25)
-                        setTimeout(() => {
-                            close(vy)
-                        }, 75)
+                    console.log(vy, memo.velocity[1])
+                    if (Math.abs(y) > height * 0.65 || Math.abs(memo.velocity[1]) > 2.5) {
+                        setClosing(true)
+                        close()
                     } else {
                         open({ canceled: true })
+                        api.start({
+                            y: 0, x: 0, immediate: true
+                        })
                     }
                 } else {
                     if (s <= 1) {
                         api.start({
-                            y: y, x: 0, immediate: false
+                            y: y + vy, x: 0, immediate: true
                         })
 
                     } else {
-                        const width = Number((window.innerWidth * s) / 2).toFixed(0);
-                        const xLimit = Math.abs(x) + (window.innerWidth / 2) >= width;
+
                         if (xLimit) return
                         api.start({
-                            y: y,
+                            y: 0,
                             x: x,
                             immediate: true
                         })
                     }
 
                 }
+
+                return state
             },
             onPinch: (state) => {
                 let { origin: [ox, oy], first, movement: [ms], offset: [s], memo } = state
@@ -173,7 +177,7 @@ const ImageViewer = React.memo(function ImageViewer(props) {
         {
             target: myRef,
             drag: { from: () => [style.x.get(), style.y.get()], filterTaps: true, rubberband: true, immediate: true },
-            pinch: { scaleBounds: { min: 1, max: 20 }, pinchOnWheel: true, rubberband: false, immediate: true },
+            pinch: { scaleBounds: { min: 1, max: 25 }, pinchOnWheel: true, rubberband: true, immediate: true },
         }
     )
     return (
@@ -197,6 +201,6 @@ const ImageViewer = React.memo(function ImageViewer(props) {
 
         </a.div>
     );
-})
+}
 
 export default ImageViewer;
