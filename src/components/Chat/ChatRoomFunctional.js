@@ -110,10 +110,13 @@ const ChatRoom = observer((props) => {
               return _controlMessages
             })
             // Tracks progress
+            console.log(toUpload.current.length)
             if (toUpload.current.length > 0) {
               if (toUpload.current.includes(obj.hash)) {
                 uploaded.current.push(obj.hash)
+                setTimeout(() => {
                 setProgressBarWidth(Math.ceil(uploaded.current.length / toUpload.current.length * 100));
+                }, 250 * uploaded.current.length)
               }
 
             }
@@ -143,7 +146,7 @@ const ChatRoom = observer((props) => {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [toUpload,uploaded])
 
   React.useEffect(() => {
     receiveMessages(toJS(channel.messages))
@@ -202,7 +205,6 @@ const ChatRoom = observer((props) => {
     const setSwChannel = event => {
       console.log('Received event.data.channel_id ', event.data);
       if (event.data.channel_id === props.roomId) {
-        // alert('Received event.data.channel_id ' + event.data.channel_id)
         bc.postMessage({ channel_id: props.roomId });
       }
 

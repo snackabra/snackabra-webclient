@@ -155,7 +155,7 @@ const RenderChatFooter = (props) => {
         justifyContent="center"
         alignItems="center"
         container>
-        <LinearProgress sx={{ width: '100%' }} color="success" variant='determinate' value={props.progressBarWidth} />
+        <LinearProgress sx={{ width: '100%' }} color="success" />
       </Grid>
     );
   }
@@ -196,21 +196,25 @@ const RenderChatFooter = (props) => {
         <IconButton sx={{ position: "absolute", right: 0, top: 0 }} size={'small'} onClick={removeFiles} aria-label="close">
           <CloseIcon />
         </IconButton>
-        <Grid className='gallery-container'>
+        <Grid columns={{ xs: 12, sm: 12, md: 12, lg:12, xl:12 }} container>
           {Object.keys(files).map((key, index) => {
             const file = files[key]
             if (file.sbImage.thumbnail) {
               return (
-                <Grid key={index + 'img'} style={{ position: "relative" }} onMouseEnter={() => setIsShown(index + 'img')} onMouseLeave={() => setIsShown('')}>
+                <Grid  key={index + 'img'} style={{ position: "relative" }} onMouseEnter={() => setIsShown(index + 'img')} onMouseLeave={() => setIsShown('')}
+                xs={6} sm={6} md={4} lg={3} xl={2}
+                item>
                   <Fab onClick={() => { removeItem(index, file.uniqueShardId) }} sx={{ cursor: "pointer !important", position: 'absolute', top: 11, left: 11, opacity: isShown === index + 'img' && !isMobile ? 1 : 0 }} size="small" color="#AAA" aria-label="add">
                     <DeleteForever />
                   </Fab>
                   <TouchableOpacity style={{
                     width: "100%",
                     height: "100%",
+                    maxHeight: 200,
+                    overflow: 'hidden',
                     objectFit: "cover"
                   }} disabled={!isMobile} onPress={() => { onLongPress(index, file.uniqueShardId) }} accessibilityRole='image'>
-                    <img className='previewImage'
+                    <img
                       src={`${file.sbImage.thumbnail}`}
                       srcSet={`${file.sbImage.thumbnail}`}
                       alt='Thumbnail Preview'
