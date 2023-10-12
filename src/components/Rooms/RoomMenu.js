@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { useParams } from "react-router-dom";
 import { observer } from "mobx-react"
-import {IconButton, Menu, MenuItem, MenuList, ListItemText, ListItemIcon} from '@mui/material';
-import {IosShareOutlined as IosShareOutlinedIcon, FileDownloadOutlined as FileDownloadOutlinedIcon,  MoreVert as MoreVertIcon, Call as CallIcon, EditOutlined as EditOutlinedIcon, Collections as CollectionsIcon} from '@mui/icons-material';
+import { IconButton, Menu, MenuItem, MenuList, ListItemText, ListItemIcon } from '@mui/material';
+import { IosShareOutlined as IosShareOutlinedIcon, FileDownloadOutlined as FileDownloadOutlinedIcon, MoreVert as MoreVertIcon, Call as CallIcon, EditOutlined as EditOutlinedIcon, Collections as CollectionsIcon } from '@mui/icons-material';
 import NotificationContext from "../../contexts/NotificationContext.js";
 import ConnectionStatus from "./ConnectionStatus.js"
 import SharedRoomStateContext from "../../contexts/SharedRoomState.js";
@@ -80,7 +80,6 @@ const RoomMenu = observer((props) => {
   const closeCallWindow = () => {
     setOpenCallWindow(false)
   }
-  console.log(props.selected)
   return (
     <div style={{ position: 'relative' }}>
       <CallWindow open={openCallWindow} onClose={closeCallWindow} room={props.roomId} keys={sbContext.channels[props.roomId].key} />
@@ -161,12 +160,14 @@ const RoomMenu = observer((props) => {
           </MenuItem>
         </MenuList>
       </Menu>
-      <IconButton
-        aria-label="cancel room rename"
-        edge="end"
-      >
-        <CallIcon sx={{ color: "#fff" }} onClick={startOrJoinCall} />
-      </IconButton>
+      {((room_id === props.roomId || (!room_id && props.roomId)) && props.selected) ?
+        <IconButton
+          aria-label="cancel room rename"
+          edge="end"
+        >
+          <CallIcon sx={{ color: "#fff" }} onClick={startOrJoinCall} />
+        </IconButton> : ''
+      }
     </div>
   );
 })

@@ -4,7 +4,7 @@ import { observer } from "mobx-react"
 import { Dimensions } from "react-native";
 import { isMobile } from 'react-device-detect';
 import {
-  Box, Grid, useTheme, Tabs, Tab, IconButton, TextField, Typography,
+  Box, Grid, useTheme, IconButton, TextField, Typography,
   CssBaseline, Divider, Drawer, List, ListItem, ListItemButton, ListItemIcon,
   ListItemText, InputAdornment, Toolbar
 } from '@mui/material';
@@ -30,7 +30,6 @@ import NotificationsPermissionDialog from '../components/Modals/NotificationsPer
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
-  console.log('tab panel', value, index)
   return (
     <div
       role="tabpanel"
@@ -49,6 +48,7 @@ function TabPanel(props) {
 }
 const roomRefs = []
 const drawerWidth = 240;
+
 const ResponsiveDrawer = observer((props) => {
   const NavAppBarContext = React.useContext(NavBarActionContext)
   const sbContext = React.useContext(SnackabraContext);
@@ -56,7 +56,6 @@ const ResponsiveDrawer = observer((props) => {
   const roomState = React.useContext(SharedRoomStateContext)
 
   let { room_id } = useParams();
-  console.log('room_id', room_id)
 
   const navigate = useNavigate()
   const { window } = props;
@@ -78,6 +77,9 @@ const ResponsiveDrawer = observer((props) => {
       if (Notification.permission === 'default') {
         setOpenNotificationDialog(true)
       }
+    }
+    if(theme.breakpoints.values.sm && !room_id){
+      NavAppBarContext.setMenuOpen(true)
     }
 
   }, [])
@@ -167,18 +169,6 @@ const ResponsiveDrawer = observer((props) => {
     setUpdatedName(e.target.value)
   }
 
-  function a11yProps(index) {
-    return {
-      id: `vertical-tab-${index}`,
-      'aria-controls': `vertical-tabpanel-${index}`,
-    };
-  }
-
-  const handleChange = (event, newValue) => {
-    NavAppBarContext.setMenuOpen(false)
-    handleChangeIndex(newValue)
-  };
-
   const handleChangeIndex = (index) => {
     const to = Object.keys(sbContext.channels)[index];
     navigate('/' + to)
@@ -254,6 +244,7 @@ const ResponsiveDrawer = observer((props) => {
             <ListItem key={index} disablePadding sx={{ backgroundColor: bgColor, color: color, textAlign: "left" }}>
               <ListItemButton onClick={() => {
                 handleChangeIndex(index)
+                NavAppBarContext.setMenuOpen(false)
               }}>
                 <Grid container
                   direction="row"
@@ -353,7 +344,7 @@ const ResponsiveDrawer = observer((props) => {
           }}
           sx={{
             display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: '100%' },
           }}
         >
           {drawer}

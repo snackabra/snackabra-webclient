@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { AppBar, Avatar, Box, Grid, Hidden, IconButton, InputAdornment, TextField, Typography } from "@mui/material";
-import {AccountCircleRounded, Menu, Close } from '@mui/icons-material';
+import {AccountCircleRounded, ArrowBackIos, Close } from '@mui/icons-material';
 import { observer } from "mobx-react"
 import WhisperUserDialog from "./Modals/WhisperUserDialog.js";
 import SnackabraContext from "../contexts/SnackabraContext.js";
@@ -53,7 +53,7 @@ const NavAppBar = observer(() => {
           <Grid item>
             <Hidden smUp>
               <IconButton sx={{ width: 48, height: 48, bgcolor: 'transparent' }} onClick={openMenu} color="inherit">
-                <Menu />
+                <ArrowBackIos />
               </IconButton>
             </Hidden>
           </Grid>
