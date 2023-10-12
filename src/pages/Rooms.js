@@ -74,7 +74,7 @@ const ResponsiveDrawer = observer((props) => {
   const [openNotificationDialog, setOpenNotificationDialog] = React.useState(false);
 
   React.useEffect(() => {
-    if(Notification){
+    if(typeof Notification !== 'undefined'){
       if (Notification.permission === 'default') {
         setOpenNotificationDialog(true)
       }

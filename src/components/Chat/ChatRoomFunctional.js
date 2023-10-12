@@ -277,7 +277,7 @@ const ChatRoom = observer((props) => {
   }
 
   const requestPushSubscription = async () => {
-    if (Notification) {
+    if (typeof Notification !== 'undefined') {
       if (Notification.permission === 'granted') {
         if (!window.sw_registration || !('pushManager' in window.sw_registration)) {
           console.log('window.sw_registration', window.sw_registration)

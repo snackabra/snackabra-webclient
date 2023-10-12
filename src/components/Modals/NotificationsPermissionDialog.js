@@ -12,7 +12,7 @@ const NotificationsPermissionDialog = (props) => {
   }, [props.open])
 
   const submit = async () => {
-    if(Notification){
+    if(typeof Notification !== 'undefined' ){
       const permission = await Notification.requestPermission()
       console.log('Notification.requestPermission', Notification.permission)
       if (permission === 'granted') {
