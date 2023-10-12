@@ -58,22 +58,6 @@ function ImageViewer(props) {
         }
     }, [image, focused])
 
-    // React.useEffect(() => {
-    //     fullSizeImagePromise.then((data) => {
-    //         if (data.hasOwnProperty('error')) {
-    //             console.error(data['error'])
-    //             notify.error('Could not load full size image')
-    //         } else {
-    //             console.log('loaded full size image', data)
-    //             setFullSizeImage('data:image/jpeg;base64,' + window.SB.arrayBufferToBase64(data, 'b64'))
-    //         }
-    //     }).catch((err) => {
-    //         console.error(err)
-    //         notify.error('Could not load full size image')
-    //     })
-    // }, [fullSizeImagePromise, notify])
-
-
     React.useEffect(() => {
         const handler = (e) => e.preventDefault()
         document.addEventListener('gesturestart', handler)
@@ -116,7 +100,7 @@ function ImageViewer(props) {
                 const xLimit = Math.abs(x) + (window.innerWidth / 2) >= width;
                 if (last && s === 1) {
                     console.log(vy, memo.velocity[1])
-                    if (Math.abs(y) > height * 0.65 || Math.abs(memo.velocity[1]) > 2.5) {
+                    if (Math.abs(y) > height * 0.5 || Math.abs(memo.velocity[1]) > 1.6) {
                         setClosing(true)
                         close()
                     } else {
@@ -128,14 +112,14 @@ function ImageViewer(props) {
                 } else {
                     if (s <= 1) {
                         api.start({
-                            y: y + vy, x: 0, immediate: true
+                            y: y, x: 0, immediate: true
                         })
 
                     } else {
 
                         if (xLimit) return
                         api.start({
-                            y: 0,
+                            y: y,
                             x: x,
                             immediate: true
                         })

@@ -25,7 +25,7 @@ import RenderComposer from "./RenderComposer.js";
 import DropZone from "../DropZone.js";
 import Queue from "../../utils/Queue.js";
 import SharedRoomStateContext from "../../contexts/SharedRoomState.js";
-
+import ding from '../../assets/ding.mp3';
 
 const ChatRoom = observer((props) => {
   const shardRoomContext = React.useContext(SharedRoomStateContext)
@@ -54,6 +54,10 @@ const ChatRoom = observer((props) => {
   }
   const sbContext = props.sbContext
   const channel = sbContext.channels[props.roomId];
+  let audioPlayTimeout = null;
+  let messagesInitializedTimeout = React.useRef(null);
+  let messagesInitialized = React.useRef(false);
+  let dingAudio = React.useRef(new Audio(ding));
   let toUpload = React.useRef([])
   let uploaded = React.useRef([])
 
@@ -84,6 +88,11 @@ const ChatRoom = observer((props) => {
 
   const receiveMessages = React.useCallback((messages) => {
     console.log('______________________', messages)
+    if (messagesInitializedTimeout.current) clearTimeout(messagesInitializedTimeout.current)
+    messagesInitializedTimeout.current = setTimeout(() => {
+      // alert('messagesInitializedTimeout')
+      messagesInitialized.current = true;
+    }, 5000)
     for (let _m in messages) {
       const m = messages[_m]
       console.warn("Received message: ", m)
@@ -115,7 +124,7 @@ const ChatRoom = observer((props) => {
               if (toUpload.current.includes(obj.hash)) {
                 uploaded.current.push(obj.hash)
                 setTimeout(() => {
-                setProgressBarWidth(Math.ceil(uploaded.current.length / toUpload.current.length * 100));
+                  setProgressBarWidth(Math.ceil(uploaded.current.length / toUpload.current.length * 100));
                 }, 250 * uploaded.current.length)
               }
 
@@ -146,7 +155,7 @@ const ChatRoom = observer((props) => {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [toUpload,uploaded])
+  }, [toUpload, uploaded])
 
   React.useEffect(() => {
     receiveMessages(toJS(channel.messages))
@@ -359,6 +368,24 @@ const ChatRoom = observer((props) => {
     }
   }
 
+  // Function to play the notification sound
+  function playNotificationSound() {
+    try {
+      if (messagesInitialized.current) {
+        if (audioPlayTimeout) clearTimeout(audioPlayTimeout)
+        audioPlayTimeout = setTimeout(() => {
+          if (process.env.REACT_APP_FEATURE_FLAG_ENABLE_AUDIBLE_NOTIFICATIONS === 'true') {
+            dingAudio.current.play();
+          }
+        }, 250)
+      }
+
+    } catch (e) {
+      console.warn(e)
+    }
+
+  }
+
 
   const handleSimpleChatMessage = (msg) => {
 
@@ -367,7 +394,11 @@ const ChatRoom = observer((props) => {
         return uniqBy([..._i, msg], '_id')
       })
     }
+    if (msg.user._id !== user._id) {
 
+      playNotificationSound();
+
+    }
     setGiftedMessages(previousMessages => {
       if (previousMessages && msg.hasOwnProperty('sendingId') && previousMessages.some(message => message._id === msg.sendingId)) {
         return replaceMessage(msg, previousMessages)
@@ -565,18 +596,17 @@ const ChatRoom = observer((props) => {
   const saveUsername = (newUsername, _id) => {
     if (newUsername && _id) {
       sbContext.createContact(newUsername, _id)
-      const _m = Object.assign(giftedMessages)
-      _m.forEach((_message, i) => {
-        console.log(_message, i)
-        if (_message.user._id === _id) {
-          _message.user.name = newUsername;
-          _message.sender_username = newUsername;
-          _m[i] = _message;
+      setGiftedMessages(previousMessages => {
+        for (let i in previousMessages) {
+          if (previousMessages[i].user._id === _id) {
+            previousMessages[i].user.name = newUsername;
+            previousMessages[i].sender_username = newUsername;
+          }
         }
+        return previousMessages
       })
-      setGiftedMessages(_m)
-      channel.messages = _m
     }
+
     setOpenChangeName(false)
     setChangeUserNameProps({})
   }
@@ -585,16 +615,17 @@ const ChatRoom = observer((props) => {
     if (!ref || dzRef) return
     setDzRef(ref)
   }
-  console.log('activeRoom', props.activeRoom)
+
   return (
 
-    <SafeAreaView id={'sb_chat_area'} style={{
-      flexGrow: 1,
-      flexBasis: 'fit-content',
-      height: isMobile && !typing ? height - 36 : height,
-      width: '100%',
-      paddingTop: 48
-    }}>
+    <SafeAreaView id={'sb_chat_area'}
+      style={{
+        flexGrow: 1,
+        flexBasis: 'fit-content',
+        height: isMobile && !typing ? height - 36 : height,
+        width: '100%',
+        paddingTop: 48
+      }}>
       <DropZone notify={notify} dzRef={setDropzoneRef} showFiles={loadFiles} showLoading={(bool) => { setLoading(bool) }} openPreview={openPreview} roomId={roomId} incrementFiles={incrementFiles}>
         <AdminDialog
           roomId={roomId}
@@ -633,6 +664,7 @@ const ChatRoom = observer((props) => {
           connect(username)
         }} />
         <GiftedChat
+
           id={`sb_chat_${roomId}`}
           messageContainerRef={giftedRef}
           isKeyboardInternallyHandled={false}

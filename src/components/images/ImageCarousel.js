@@ -103,8 +103,8 @@ export default function ImageCarousel(props) {
                 }}
                 style={{ padding: 0, height: '100%' }}
                 disabled={!!swipeInhibiter}
-                // overscanSlideAfter={3}
-                // overscanSlideBefore={3}
+                overscanSlideAfter={3}
+                overscanSlideBefore={3}
                 slideRenderer={slideRenderer}
                 slideCount={images.length}
                 interval={30000}
