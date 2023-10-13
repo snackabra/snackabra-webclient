@@ -1,6 +1,6 @@
 import React from 'react';
-import {Dialog, AppBar, Toolbar, IconButton, Slide, DialogContent} from '@mui/material';
-import {Close} from '@mui/icons-material';
+import { Dialog, AppBar, Toolbar, IconButton, Slide, DialogContent } from '@mui/material';
+import { Close } from '@mui/icons-material';
 import { isMobile } from 'react-device-detect';
 import ImageCarousel from '../Images/ImageCarousel.js';
 
@@ -39,7 +39,7 @@ export default function ImageOverlay(props) {
 
       <DialogContent sx={{ p: 0, bgcolor: 'black' }} style={{ touchAction: 'none' }}>
 
-        <ImageCarousel {...props} />
+        <ImageCarousel {...props} images={props.images.reverse()} />
       </DialogContent>
 
     </Dialog>

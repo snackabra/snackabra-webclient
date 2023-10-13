@@ -6,7 +6,7 @@ import { isMobile } from 'react-device-detect';
 import {
   Box, Grid, useTheme, IconButton, TextField, Typography,
   CssBaseline, Divider, Drawer, List, ListItem, ListItemButton, ListItemIcon,
-  ListItemText, InputAdornment, Toolbar
+  ListItemText, InputAdornment, Toolbar, Hidden, AppBar
 } from '@mui/material';
 import {
   AddComment as AddCommentIcon,
@@ -183,7 +183,23 @@ const ResponsiveDrawer = observer((props) => {
 
   const drawer = (
     <div>
-      <Toolbar />
+      <Hidden smDown>
+        <Toolbar />
+      </Hidden>
+      <Hidden smUp>
+        <AppBar position="fixed" sx={{ backgroundColor: 'black', textTransform: 'none'}}>
+          <Grid
+            container
+            alignContent={'center'}
+            justifyContent="flex-end"
+            sx={{height: '48px'}}
+          >
+            <Grid item>
+              <Typography sx={{mr:4}} variant='body2'>v{process.env.REACT_APP_CLIENT_VERSION}</Typography>
+            </Grid>
+          </Grid>
+        </AppBar>
+      </Hidden>
       <Divider />
       <List>
         <ListItem disablePadding>
@@ -284,16 +300,18 @@ const ResponsiveDrawer = observer((props) => {
                     }
                   </Grid>
                   <Grid xs={5} item>
-                    <RoomMenu
-                      socket={sbContext.socket}
-                      sbContext={sbContext}
-                      selected={room === roomId}
-                      roomId={room}
-                      editRoom={() => {
-                        editRoom(room)
-                      }}
+                    <Hidden smDown>
+                      <RoomMenu
+                        socket={sbContext.socket}
+                        sbContext={sbContext}
+                        selected={room === roomId}
+                        roomId={room}
+                        editRoom={() => {
+                          editRoom(room)
+                        }}
 
-                    />
+                      />
+                    </Hidden>
                   </Grid>
                 </Grid>
               </ListItemButton>

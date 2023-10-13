@@ -92,7 +92,7 @@ export default function ImageCarousel(props) {
                 onMouseMove={showMediaControls}
                 // onMouseLeave={() => { toggleShowControls(false) }}
                 id={'image-carousel'}
-                axis={'x-reverse'}
+                axis={'x'}
                 index={value}
                 disableLazyLoading
                 resistance
