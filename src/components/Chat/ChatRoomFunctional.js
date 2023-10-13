@@ -82,9 +82,6 @@ const ChatRoom = observer((props) => {
   const [typing, setTyping] = React.useState(false);
   const [controlMessages, setControlMessages] = React.useState({});
   const [progressBarWidth, setProgressBarWidth] = React.useState(0);
-  React.useEffect(() => {
-    props.messageContainerRef(giftedRef)
-  }, [props])
 
   const receiveMessages = React.useCallback((messages) => {
     console.log('______________________', messages)
@@ -174,18 +171,28 @@ const ChatRoom = observer((props) => {
     })
   }, [])
 
+  // Updated replaceMesage to use a new array instead of mutating the previousMessages array for performance
   const replaceMessage = React.useCallback((msg, _previousMessages = null) => {
     if (_previousMessages) {
-      const updatedMessages = _previousMessages.map(message => {
-        return message._id === msg.sendingId ? msg : message
-      });
+      const updatedMessages = [];
+      for (let i in _previousMessages) {
+        if (_previousMessages[i]._id === msg.sendingId) {
+          updatedMessages[i] = msg
+        } else {
+          updatedMessages[i] = _previousMessages[i]
+        }
+      }
       return updatedMessages
     }
-    console.log('replaceMessage', msg)
     setGiftedMessages(previousMessages => {
-      const updatedMessages = previousMessages.map(message => {
-        return message._id === msg.sendingId ? msg : message
-      });
+      const updatedMessages = [];
+      for (let i in previousMessages) {
+        if (previousMessages[i]._id === msg.sendingId) {
+          updatedMessages[i] = msg
+        } else {
+          updatedMessages[i] = previousMessages[i]
+        }
+      }
       return updatedMessages
     })
   }, [])
@@ -666,7 +673,7 @@ const ChatRoom = observer((props) => {
         <GiftedChat
 
           id={`sb_chat_${roomId}`}
-          messageContainerRef={giftedRef}
+          // messageContainerRef={giftedRef}
           isKeyboardInternallyHandled={false}
           className={'sb_chat_container'}
           style={{

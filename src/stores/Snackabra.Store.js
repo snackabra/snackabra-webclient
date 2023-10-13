@@ -461,7 +461,10 @@ class ChannelStore {
             break;
           case 'getMessages':
             console.log(e)
-            this.messages = e.data.data
+            if (e.data.data.length !== this._messages.length) {
+              this.messages = e.data.data
+            }
+
             break
           default:
             console.warn('unknown worker message', data)

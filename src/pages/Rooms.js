@@ -46,7 +46,6 @@ function TabPanel(props) {
     </div>
   );
 }
-const roomRefs = []
 const drawerWidth = 240;
 
 const ResponsiveDrawer = observer((props) => {
@@ -73,12 +72,12 @@ const ResponsiveDrawer = observer((props) => {
   const [openNotificationDialog, setOpenNotificationDialog] = React.useState(false);
 
   React.useEffect(() => {
-    if(typeof Notification !== 'undefined'){
+    if (typeof Notification !== 'undefined') {
       if (Notification.permission === 'default') {
         setOpenNotificationDialog(true)
       }
     }
-    if(theme.breakpoints.values.sm && !room_id){
+    if (theme.breakpoints.values.sm && !room_id) {
       NavAppBarContext.setMenuOpen(true)
     }
 
@@ -243,7 +242,9 @@ const ResponsiveDrawer = observer((props) => {
           return (
             <ListItem key={index} disablePadding sx={{ backgroundColor: bgColor, color: color, textAlign: "left" }}>
               <ListItemButton onClick={() => {
-                handleChangeIndex(index)
+                if (index !== value) {
+                  handleChangeIndex(index)
+                }
                 NavAppBarContext.setMenuOpen(false)
               }}>
                 <Grid container
@@ -404,12 +405,6 @@ const ResponsiveDrawer = observer((props) => {
               dir={theme.direction}
               className="RoomSwipable">
               <ChatRoom
-                messageContainerRef={(ref) => {
-                  console.log('setting ref')
-                  console.log(ref, index)
-                  roomRefs[index] = ref
-                  console.log(roomRefs)
-                }}
                 activeRoom={roomState.state.activeRoom}
                 roomId={item}
                 sbContext={sbContext}
