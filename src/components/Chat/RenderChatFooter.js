@@ -10,7 +10,7 @@ const RenderChatFooter = (props) => {
   const elementId = `preview-${props.roomId}`
   const incomingFiles = props.files
   const [files, setFiles] = React.useState({})
-  const [loading, setLoading] = React.useState(props.loading)
+  // const [loading, setLoading] = React.useState(props.loading)
   const [uploading, setUploading] = React.useState(props.uploading)
   const [isShown, setIsShown] = React.useState('')
   const [toRemove, setToRemove] = React.useState({})
@@ -42,9 +42,9 @@ const RenderChatFooter = (props) => {
 
   }, [FileHelper, files.length, incomingFiles])
 
-  React.useEffect(() => {
-    setLoading(props.loading)
-  }, [props.loading])
+  // React.useEffect(() => {
+  //   setLoading(props.loading)
+  // }, [props.loading])
 
   React.useEffect(() => {
     setUploading(props.uploading)
@@ -101,8 +101,10 @@ const RenderChatFooter = (props) => {
       for (const [key, value] of Object.entries(_files)) {
         newFiles[key] = value
       }
+      console.log('newFiles', newFiles)
       return newFiles
     })
+    console.log(Object.keys(files).length)
     props.decrementFiles()
     setIsShown('')
     if (Object.keys(files).length === 0) {
@@ -175,7 +177,7 @@ const RenderChatFooter = (props) => {
           setShowConfirm(false)
         }}
         onCancel={() => {
-          setToRemove('')
+          setToRemove({})
           setShowConfirm(false)
         }}
         open={showConfirm} />

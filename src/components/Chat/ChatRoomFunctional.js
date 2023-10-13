@@ -87,7 +87,6 @@ const ChatRoom = observer((props) => {
     console.log('______________________', messages)
     if (messagesInitializedTimeout.current) clearTimeout(messagesInitializedTimeout.current)
     messagesInitializedTimeout.current = setTimeout(() => {
-      // alert('messagesInitializedTimeout')
       messagesInitialized.current = true;
     }, 5000)
     for (let _m in messages) {
@@ -456,11 +455,15 @@ const ChatRoom = observer((props) => {
   }
 
   const incrementFiles = () => {
-    setFiles(files + 1)
+    setFiles(_files => {
+      return _files + 1
+    })
   }
 
   const decrementFiles = () => {
-    setFiles(files - 1)
+    setFiles(_files => {
+      return _files - 1
+    })
   }
 
   const sendFiles = async (giftedMessage) => {
@@ -544,6 +547,7 @@ const ChatRoom = observer((props) => {
   }
 
   const sendMessages = (giftedMessage) => {
+
     if (giftedMessage[0].text === "") {
       if (files > 0) {
         sendFiles(giftedMessage)

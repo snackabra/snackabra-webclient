@@ -1,7 +1,7 @@
 import React from 'react'
 import { SBImage } from "../utils/ImageProcessorSBFileHelper.js";
 import Dropzone from 'react-dropzone/dist/es/index.js'
-import {isEvtWithFiles, allFilesAccepted, acceptPropAsAcceptAttr} from 'react-dropzone/dist/es/utils/index.js'
+import { isEvtWithFiles, allFilesAccepted, acceptPropAsAcceptAttr } from 'react-dropzone/dist/es/utils/index.js'
 import { Grid } from "@mui/material";
 import { isMobile } from 'react-device-detect';
 import { fromEvent } from "file-selector";
@@ -65,8 +65,9 @@ const DropZone = (props) => {
         // const preview = window.SBFileHelper.finalFileList.get(value.uniqueShardId)
         console.log('buffer', buffer
           , 'original.sbImage', original)
+        props.incrementFiles()
         if (buffer && !original.sbImage && !FileHelper.ignoreProcessing.has(value.uniqueShardId)) {
-          props.incrementFiles()
+
           console.log('buffer found', buffer)
           const sbImage = new SBImage(buffer, value);
           sbImage.processThumbnail()
