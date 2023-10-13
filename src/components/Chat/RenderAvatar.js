@@ -67,10 +67,11 @@ const RenderAvatar = observer((props) => {
     }
     if (props.currentMessage) {
       const avatarStyle = [
-        { height: 36, width: 36, borderRadius: 18, backgroundColor: getColorFromId(user._id) },
+        { height: 36, width: 36, borderRadius: 18, backgroundColor: getColorFromId(user._id)},
         props.imageStyle && props.imageStyle[props.position],
       ]
-      return (<GiftedAvatar avatarStyle={avatarStyle} user={user} onPress={() => { var _a; return (_a = props.onPressAvatar) === null || _a === void 0 ? void 0 : _a.call(props, props.currentMessage.user); }} onLongPress={() => { var _a; return (_a = props.onLongPressAvatar) === null || _a === void 0 ? void 0 : _a.call(props, props.currentMessage.user); }} />);
+      const textStyle = {color: '#FFF', fontWeight: '500', 'text-shadow': '1px 1px 20px rgb(0, 0, 0, 0.7)'}
+      return (<GiftedAvatar avatarStyle={avatarStyle} textStyle={textStyle} user={user} onPress={() => { var _a; return (_a = props.onPressAvatar) === null || _a === void 0 ? void 0 : _a.call(props, props.currentMessage.user); }} onLongPress={() => { var _a; return (_a = props.onLongPressAvatar) === null || _a === void 0 ? void 0 : _a.call(props, props.currentMessage.user); }} />);
     }
     return null;
   };
