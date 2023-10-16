@@ -248,12 +248,15 @@ class SnackabraStore {
       try {
         console.log('importing keys')
         console.log(importedData)
-        Object.keys(importedData.roomData).forEach((id) => {
+        for (let id in importedData.roomData) {
+          console.log(id)
           const importedChannel = importedData.roomData[id]
+          const metaData = importedData.roomMetadata[id]
           this._channels[id] = new ChannelStore(this.config, id)
-          this._channels[id].alias = importedChannel.alias ? importedChannel.alias : importedChannel.name || `Room ${Object.keys(this._channels).length}`
+          console.log(metaData)
+          this._channels[id].alias = metaData.alias ? metaData.alias : metaData.name || `Room ${Object.keys(this._channels).length}`
           this._channels[id].key = importedChannel.key
-        })
+        }
         this.contacts = Object.assign(this.contacts, importedData.contacts)
         this[save]()
         resolve(true)

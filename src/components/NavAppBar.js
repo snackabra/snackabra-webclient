@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { AppBar, Avatar, Box, Grid, Hidden, IconButton, InputAdornment, TextField, Typography } from "@mui/material";
-import {AccountCircleRounded, ArrowBackIos, Close } from '@mui/icons-material';
+import { AccountCircleRounded, ArrowBackIos, Close } from '@mui/icons-material';
 import { observer } from "mobx-react"
 import WhisperUserDialog from "./Modals/WhisperUserDialog.js";
 import SnackabraContext from "../contexts/SnackabraContext.js";
@@ -32,6 +32,7 @@ const NavAppBar = observer(() => {
   }
 
   const submitName = (e) => {
+    console.log(e.keyCode)
     if (e.keyCode === 13) {
       sbContext.channels[editingRoomId].alias = updatedName
       setEditingRoomId(false)
@@ -74,6 +75,10 @@ const NavAppBar = observer(() => {
                       inputProps={{ style: { color: "#fff" } }}
                       onFocus={() => {
                         setUpdatedName(sbContext.channels[roomState.state.activeRoom]?.alias)
+                      }}
+                      onBlur={() => {
+                        sbContext.channels[editingRoomId].alias = updatedName
+                        setEditingRoomId(false)
                       }}
                       onChange={updateName}
                       variant="standard"

@@ -151,6 +151,7 @@ const ResponsiveDrawer = observer((props) => {
   const editRoom = (roomId) => {
     setEditingRoomId(roomId)
     setTimeout(() => {
+      console.log(roomId)
       document.getElementById(roomId).focus()
     }, 250);
   }

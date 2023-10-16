@@ -31,5 +31,16 @@
       "type": "image/png",
       "sizes": "540x720"
     }
+  ],
+  "url_handlers": [
+    {
+      "origin": "https://preview.384chat.pages.dev"
+    },
+    {
+      "origin": "https://sn.ac"
+    },
+    {
+      "origin": "https://384.chat"
+    }
   ]
 }

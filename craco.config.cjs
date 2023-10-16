@@ -27,6 +27,10 @@ module.exports = {
                     })
                 );
             }
+            // Uncomment to disable minification for verbose debugging for production builds
+            // config.mode = 'development';
+            // config.devtool = 'source-map';
+            // config.optimization.minimize = false;
 
             return config;
         },

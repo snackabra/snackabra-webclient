@@ -205,10 +205,10 @@ export default () => {
         }
     }
 
-    const addMessage = async (message, args, channel_id, port) => {
+    const addMessage = (message, args, channel_id, port) => {
         try {
             message.createdAt = getDateTimeFromTimestampPrefix(message.timestampPrefix);
-            await add(message._id, message)
+            add(message._id, message)
             console.log('addMessage', message)
             port.postMessage({ error: false, status: 'ok', data: message, method: 'addMessage', args: args, channel_id: channel_id });
         } catch (e) {
