@@ -7,7 +7,7 @@ const RenderBubble = (props) => {
   const { currentMessage, previousMessage } = props
   const [isVerifiedGuest, setVerifiedGuest] = React.useState(false)
   const [newProps, setNewProps] = React.useState({})
-  const isAdmin = currentMessage.user._id.startsWith(props.keys.ownerPubKeyX)
+  const isAdmin = currentMessage.user._id.startsWith(props?.keys?.ownerPubKeyX)
 
   React.useEffect(() => {
     const init = async () => {

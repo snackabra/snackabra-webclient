@@ -8,6 +8,8 @@
   "short_name": "Snackabra",
   "name": "Snackabra",
   "description": "A truly private chat client",
+  "orientation": "portrait",
+  "lang": "en-US",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",
@@ -32,6 +34,7 @@
       "sizes": "540x720"
     }
   ],
+  
   "url_handlers": [
     {
       "origin": "https://preview.384chat.pages.dev"
@@ -43,4 +46,5 @@
       "origin": "https://384.chat"
     }
   ]
+
 }

@@ -83,7 +83,11 @@ export default function DataOperationsDialog(props) {
           <Divider sx={{ mt: 2, mb: 2 }} />
           <Typography variant={'h6'} gutterBottom>Import Keys</Typography>
           <ImportRoomKeys onDone={() => {
-            props.onClose()
+            setTimeout(() => {
+              window.location.reload()
+            }, 500)
+            // window.location.reload()
+            // props.onClose()
           }} />
         </TabPanel>
         <TabPanel value={value} index={1} dir={theme.direction}>

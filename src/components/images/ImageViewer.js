@@ -100,7 +100,7 @@ function ImageViewer(props) {
                 const xLimit = Math.abs(x) + (window.innerWidth / 2) >= width;
                 if (last && s === 1) {
                     console.log(vy, memo.velocity[1])
-                    if (Math.abs(y) > height * 0.5 || Math.abs(memo.velocity[1]) > 1.6) {
+                    if (Math.abs(y) > height * 0.4 || Math.abs(memo.velocity[1]) > 1.3) {
                         setClosing(true)
                         close()
                     } else {

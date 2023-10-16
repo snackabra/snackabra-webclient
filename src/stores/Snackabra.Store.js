@@ -251,11 +251,20 @@ class SnackabraStore {
         for (let id in importedData.roomData) {
           console.log(id)
           const importedChannel = importedData.roomData[id]
+          console.log(importedChannel)
           const metaData = importedData.roomMetadata[id]
-          this._channels[id] = new ChannelStore(this.config, id)
-          console.log(metaData)
+          let knownRoom = this._channels[id];
+          if (!knownRoom) {
+            this._channels[id] = new ChannelStore(this.config, id)
+          }
           this._channels[id].alias = metaData.alias ? metaData.alias : metaData.name || `Room ${Object.keys(this._channels).length}`
           this._channels[id].key = importedChannel.key
+          if (knownRoom) {
+            this._channels[id].messages = []
+            setTimeout(() => {
+              this._channels[id].getChannelMessages()
+            }, 1000)
+          }
         }
         this.contacts = Object.assign(this.contacts, importedData.contacts)
         this[save]()
