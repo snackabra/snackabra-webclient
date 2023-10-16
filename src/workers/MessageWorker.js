@@ -130,6 +130,7 @@ export default () => {
     }
 
     let level = process.env.NODE_ENV;
+    console.log('Message Worker: level: ', level);
     if (level === 'development') {
     }
     if (level === 'stage') {
@@ -190,44 +191,53 @@ export default () => {
         return merged.sort((a, b) => a._id > b._id ? 1 : -1);
     };
 
-    const getMessages = (channel_id) => {
+    const getMessages = (channel_id, port) => {
         try {
             let _messageValues = [];
             openCursor(new RegExp(`^${channel_id}`)).then((messages) => {
                 for (let i = 0; i < messages.length; i++) {
                     _messageValues.push(messages[i].value);
                 }
-                postMessage({ error: false, status: 'ok', data: mergeMessages([], _messageValues), method: 'getMessages', channel_id: channel_id });
+                port.postMessage({ error: false, status: 'ok', data: mergeMessages([], _messageValues), method: 'getMessages', channel_id: channel_id });
             })
         } catch (e) {
             throw new Error(`Message Worker: Error(getMessages(${channel_id}) ): ${e.message}`)
         }
     }
 
-    const addMessage = (message, args, channel_id) => {
+    const addMessage = async (message, args, channel_id, port) => {
         try {
             message.createdAt = getDateTimeFromTimestampPrefix(message.timestampPrefix);
-            add(message._id, message)
-            postMessage({ error: false, status: 'ok', data: message, method: 'addMessage', args: args, channel_id: channel_id });
+            await add(message._id, message)
+            console.log('addMessage', message)
+            port.postMessage({ error: false, status: 'ok', data: message, method: 'addMessage', args: args, channel_id: channel_id });
         } catch (e) {
             throw new Error(`Message Worker: Error(addMessage() ): ${e.message}`)
         }
     }
 
 
-    self.onmessage = (msg) => {
-        const digest = msg.data
-        switch (digest.method) {
-            case 'getMessages':
-                console.log('getMessages', digest.channel_id)
-                getMessages(digest.channel_id);
-                break;
-            case 'addMessage':
-                addMessage(digest.message, digest.args, digest.channel_id);
-                break;
-            default:
-                throw new Error(`No such message worker method (${digest.method})`);
+    self.onmessage = (event) => {
+        console.log('Message Worker: Received message from main script', event);
+        const port = event.ports[0];
+        console.log('Message Worker: port', port)
+        port.onmessage = (msg) => {
+            console.log('Message Worker: Received message from main script', msg);
+            const digest = msg.data
+            if (digest.channel_id !== undefined) {
+                switch (digest.method) {
+                    case 'getMessages':
+                        getMessages(digest.channel_id, port);
+                        break;
+                    case 'addMessage':
+                        addMessage(digest.message, digest.args, digest.channel_id, port);
+                        break;
+                    default:
+                        throw new Error(`No such message worker method (${digest.method})`);
+                }
+            } else {
+                throw new Error(`No channel_id in message worker method (${digest.method})`);
+            }
         }
-
     }
 }

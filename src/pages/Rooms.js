@@ -187,7 +187,7 @@ const ResponsiveDrawer = observer((props) => {
         <Toolbar />
       </Hidden>
       <Hidden smUp>
-        <AppBar position="fixed" sx={{ backgroundColor: 'black', textTransform: 'none'}}>
+        <AppBar position="relative" sx={{ backgroundColor: 'black', textTransform: 'none'}}>
           <Grid
             container
             alignContent={'center'}

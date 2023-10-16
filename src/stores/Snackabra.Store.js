@@ -1,10 +1,10 @@
-import { makeAutoObservable, onBecomeUnobserved, configure, toJS, computed, action, autorun } from "mobx";
+import { makeAutoObservable, onBecomeUnobserved, onBecomeObserved, configure, toJS, computed, action, autorun } from "mobx";
 import { orderBy } from 'lodash';
 import IndexedKV from "../utils/IndexedKV.js";
 import MessageWorker from "../workers/MessageWorker.js";
 import { SB } from "snackabra/dist/snackabra.js";
 const blob = new Blob([`(${MessageWorker})()`]);
-
+const messageWorker = new Worker(URL.createObjectURL(blob), { name: '384 Message Worker', writable: true, readable: true });
 console.log("=========== mobx-snackabra-store loading ===========")
 
 let cacheDb;
@@ -304,7 +304,6 @@ class ChannelStore {
   config;
 
   constructor(config, channelId = null) {
-    this.worker = new Worker(URL.createObjectURL(blob), { name: '384 Message Worker', writable: true, readable: true });
     this.config = config;
     this.config.onClose = () => {
       console.log('onClose hook called')
@@ -398,7 +397,14 @@ class ChannelStore {
       connect: action,
     });
 
-    onBecomeUnobserved(this, "messages", this[save]);
+    onBecomeUnobserved(this, "messages", () => {
+      console.log('messages unobserved')
+      this[save]()
+    });
+
+    onBecomeObserved(this, "messages", () => {
+      console.log('messages observed')
+    });
 
     document.addEventListener('visibilitychange', (e) => {
       if (document.visibilityState === 'hidden') {
@@ -443,7 +449,12 @@ class ChannelStore {
       this[getChannel](this.id);
     }
 
-    this.worker.onmessage = (e) => {
+    this.workerPort = new MessageChannel();
+    this.workerPort.port2.onmessageerror = (e) => {
+      console.error('message error', e)
+    }
+
+    this.workerPort.port2.onmessage = (e) => {
       let data;
       if (!e.error) {
         if (e.data.channel_id !== this._id) {
@@ -472,10 +483,11 @@ class ChannelStore {
       }
 
     }
+    messageWorker.postMessage({ port: this.workerPort.port1 }, [this.workerPort.port1]);
   }
 
   getChannelMessages = async () => {
-    this.worker.postMessage({ method: 'getMessages', channel_id: this._id })
+    this.workerPort.port2.postMessage({ method: 'getMessages', channel_id: this._id })
   }
 
   get id() {
@@ -719,11 +731,11 @@ class ChannelStore {
   };
 
   receiveMessage = (m, updateState = false) => {
-    console.log("==== received this message:", m)
+    console.log("==== received this message:", this._id, m)
     if (updateState) {
       this.messages = [...this._messages, m]
     }
-    this.worker.postMessage({ method: 'addMessage', channel_id: this._id, message: m, args: { updateState: updateState } })
+    this.workerPort.port2.postMessage({ method: 'addMessage', channel_id: this._id, message: m, args: { updateState: updateState } })
   };
 
 }
