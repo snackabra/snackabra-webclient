@@ -51,7 +51,7 @@ class SnackabraStore {
             channels[x] = { id: x }
           }
         }
-        cacheDb.setItem('sb_data_channels', channels)
+        await cacheDb.setItem('sb_data_channels', channels)
         return true;
       } catch (e) {
         console.warn('There was an issue saving the snackabra state.', e.message)
@@ -244,7 +244,7 @@ class SnackabraStore {
   }
 
   importKeys = (importedData) => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       try {
         console.log('importing keys')
         console.log(importedData)
@@ -253,18 +253,16 @@ class SnackabraStore {
           const importedChannel = importedData.roomData[id]
           console.log(importedChannel)
           const metaData = importedData.roomMetadata[id]
+          console.log(metaData)
           let knownRoom = this._channels[id];
+          console.log(knownRoom)
           if (!knownRoom) {
             this._channels[id] = new ChannelStore(this.config, id)
           }
+          this._channels[id].readyResolver()
           this._channels[id].alias = metaData.alias ? metaData.alias : metaData.name || `Room ${Object.keys(this._channels).length}`
           this._channels[id].key = importedChannel.key
-          if (knownRoom) {
-            this._channels[id].messages = []
-            setTimeout(() => {
-              this._channels[id].getChannelMessages()
-            }, 1000)
-          }
+
         }
         this.contacts = Object.assign(this.contacts, importedData.contacts)
         this[save]()
@@ -317,13 +315,13 @@ class ChannelStore {
 
   constructor(config, channelId = null) {
     this.config = config;
-    this.config.onClose = () => {
-      console.log('onClose hook called')
-      this.status = 'CLOSED'
-      if (this._visible) {
-        this[makeVisible]()
-      }
-    }
+    // this.config.onClose = () => {
+    //   console.log('onClose hook called')
+    //   this.status = 'CLOSED'
+    //   if (this._visible) {
+    //     this[makeVisible]()
+    //   }
+    // }
 
     this.config.onOpen = () => {
       console.log('onOpen hook called')
@@ -467,7 +465,6 @@ class ChannelStore {
     }
 
     this.workerPort.port2.onmessage = (e) => {
-      let data;
       if (!e.error) {
         if (e.data.channel_id !== this._id) {
           console.log('message not for this channel', e.data, this._id)
@@ -490,7 +487,7 @@ class ChannelStore {
 
             break
           default:
-            console.warn('unknown worker message', data)
+            console.warn('unknown worker message', e.data)
         }
       }
 

@@ -33,6 +33,7 @@ const CallWindow = (props) => {
             title={'VOIP'}
             onClose={closeCallWindow}
             open={open}
+            shpwActions
             fullScreen>
             <Grid container
                 direction="row"

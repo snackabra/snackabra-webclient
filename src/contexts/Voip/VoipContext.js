@@ -142,12 +142,22 @@ export class VoipProvider extends React.Component {
     this.myId = this.sbContext.getContact(key)._id
     this.Crypto = new window.SB.SBCrypto()
     this.channel = this.sbContext.channels[channel]
-    const originalRecieveMessage = this.channel._messageCallback
-    this.channel._messageCallback = (message) => {
-      this.receiveMessage(message)
-      originalRecieveMessage(message)
-    }
+    // const originalRecieveMessage = this.channel._messageCallback
+    // this.channel._messageCallback = (message) => {
+    //   this.receiveMessage(message)
+    //   originalRecieveMessage(message)
+    // }
     // console.log(this.channel)
+    this.channel.workerPort.port2.onmessage = (e) => {
+      console.log('asdasdlksadhfaskldfbaslkfdsaf', e)
+      switch (e.data.method) {
+        case 'addMessage':
+          this.receiveMessage(e.data.data)
+          break;
+        default:
+          console.warn('unknown worker message', e.data)
+      }
+    }
     this.worker.postMessage({
       operation: 'setCryptoKey',
       currentCryptoKey: this.channel.socket.keys,
@@ -474,11 +484,11 @@ export class VoipProvider extends React.Component {
 
   setupSenderTransform = (sender) => {
     try {
-      // if (window.RTCRtpScriptTransform) {
-      //   // eslint-disable-next-line no-param-reassign
-      //   sender.transform = new window.RTCRtpScriptTransform(this.worker, { operation: 'encode' });
-      //   return;
-      // }
+      if (window.RTCRtpScriptTransform) {
+        // eslint-disable-next-line no-param-reassign
+        sender.transform = new window.RTCRtpScriptTransform(this.worker, { operation: 'encode' });
+        return;
+      }
 
       const senderStreams = sender.createEncodedStreams();
 
@@ -496,10 +506,10 @@ export class VoipProvider extends React.Component {
 
   setupReceiverTransform = (receiver) => {
     try {
-      // if (window.RTCRtpScriptTransform) {
-      //   receiver.transform = new window.RTCRtpScriptTransform(this.worker, { operation: 'decode' });
-      //   return;
-      // }
+      if (window.RTCRtpScriptTransform) {
+        receiver.transform = new window.RTCRtpScriptTransform(this.worker, { operation: 'decode' });
+        return;
+      }
 
       const receiverStreams = receiver.createEncodedStreams();
       const { readable, writable } = receiverStreams;
@@ -629,8 +639,14 @@ export const VoipComponent = (props) => {
 
 
   const toggleShareScreen = () => {
+
     setScreenShared(!screenShared)
-    voipContext.shareScreenClick()
+    if(!screenShared){
+      voipContext.shareScreenClick()
+    }else{
+      voipContext.reInit()
+    }
+
   }
 
   const setVideoSrcObject = (id, stream) => {
@@ -755,7 +771,7 @@ export const VoipComponent = (props) => {
           <IconButton id="camera-mute" onClick={toggleMuteVideo}>
             {videoMuted ? <Videocam /> : <VideocamOff />}
           </IconButton>
-          <IconButton id="share-screen">
+          <IconButton id="share-screen" onClick={toggleShareScreen}>
             {screenShared ? <StopScreenShare /> : <ScreenShare />}
           </IconButton>
           <IconButton

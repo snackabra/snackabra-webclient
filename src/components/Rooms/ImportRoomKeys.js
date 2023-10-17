@@ -173,7 +173,7 @@ const ImportRoomKeys = observer((props) => {
       Notifications.setSeverity('success');
       Notifications.setOpen(true)
       if (typeof props.onDone === 'function') {
-        props.onDone()
+        // props.onDone()
       }
     }).catch((e) => {
       console.error(e)

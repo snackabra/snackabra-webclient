@@ -84,37 +84,37 @@ export const LogProvider = ({ children }) => {
     }
     if (process.env.REACT_APP_LOG_LEVEL && !hasParam) {
       const level = process.env.REACT_APP_LOG_LEVEL
-      if (level === 'development') {
-      }
-      if (level === 'stage') {
-        console.log = function () { }
-        console.assert = function () { }
-        console.count = function () { }
-        console.debug = function () { }
-        console.dir = function () { }
-        console.dirxml = function () { }
-        console.group = function () { }
-        console.table = function () { }
-        console.tine = function () { }
-        console.timeEnd = function () { }
-        console.timeLog = function () { }
-        console.trace = function () { }
-      }
-      if (level === 'production') {
-        console.log = function () { }
-        console.warn = function () { }
-        console.assert = function () { }
-        console.count = function () { }
-        console.debug = function () { }
-        console.dir = function () { }
-        console.dirxml = function () { }
-        console.group = function () { }
-        console.table = function () { }
-        console.tine = function () { }
-        console.timeEnd = function () { }
-        console.timeLog = function () { }
-        console.trace = function () { }
-      }
+      // if (level === 'development') {
+      // }
+      // if (level === 'stage') {
+      //   console.log = function () { }
+      //   console.assert = function () { }
+      //   console.count = function () { }
+      //   console.debug = function () { }
+      //   console.dir = function () { }
+      //   console.dirxml = function () { }
+      //   console.group = function () { }
+      //   console.table = function () { }
+      //   console.tine = function () { }
+      //   console.timeEnd = function () { }
+      //   console.timeLog = function () { }
+      //   console.trace = function () { }
+      // }
+      // if (level === 'production') {
+      //   console.log = function () { }
+      //   console.warn = function () { }
+      //   console.assert = function () { }
+      //   console.count = function () { }
+      //   console.debug = function () { }
+      //   console.dir = function () { }
+      //   console.dirxml = function () { }
+      //   console.group = function () { }
+      //   console.table = function () { }
+      //   console.tine = function () { }
+      //   console.timeEnd = function () { }
+      //   console.timeLog = function () { }
+      //   console.trace = function () { }
+      // }
       window.addEventListener('popstate', (e) => {
         e.preventDefault();
       });
