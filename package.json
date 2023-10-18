@@ -14,6 +14,7 @@
     "start": "GENERATE_SOURCEMAP=true craco start",
     "bump": "VERSION=$(node -p \"require('./package.json').version\") &&  NEW_VERSION=$(echo $VERSION | awk -F'-' 'BEGIN{OFS=\"-\"} $2~/beta/{split($2, a, \".\"); a[2]++; $2=a[1]\".\"a[2]}1') && echo $NEW_VERSION && yarn version --new-version $NEW_VERSION",
     "deploy:staging": "yarn bump && yarn build && wrangler pages publish build --project-name 384chat --branch preview",
+    "deploy:prod": "wrangler pages publish build --project-name 384chat --branch main",
     "build": "GENERATE_SOURCEMAP=true craco build",
     "test": "craco test --env=jsdom",
     "clean": "rm -rf build && rm -rf dist && rm -rf node_modules && rm yarn.lock",

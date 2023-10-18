@@ -160,7 +160,7 @@ const RoomMenu = observer((props) => {
           </MenuItem>
         </MenuList>
       </Menu>
-      {((room_id === props.roomId || (!room_id && props.roomId)) && props.selected) ?
+      {((room_id === props.roomId || (!room_id && props.roomId)) && props.selected && process.env.REACT_APP_FEATURE_FLAG_ENABLE_VIOP === 'true') ?
         <IconButton
           aria-label="cancel room rename"
           edge="end"
