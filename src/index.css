@@ -9,7 +9,6 @@ a {
 }
 
 .message-overflow {
-.message-overflow {
   overflow: visible !important;
 }
 
@@ -161,5 +160,3 @@ html {
     bottom: 47px;
   }
 }
-
-

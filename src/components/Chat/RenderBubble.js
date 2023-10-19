@@ -5,7 +5,6 @@ import { getColorFromId } from "../../utils/misc.js"
 
 const RenderBubble = (props) => {
   const { currentMessage, previousMessage } = props
-  const { currentMessage, previousMessage } = props
   const [isVerifiedGuest, setVerifiedGuest] = React.useState(false)
   const [newProps, setNewProps] = React.useState({})
   const isAdmin = currentMessage.user._id.startsWith(props?.keys?.ownerPubKeyX)
@@ -67,16 +66,13 @@ const RenderBubble = (props) => {
         both: {
           borderColor: "red",
         }
-      updateProps({
-        both: {
-          borderColor: "red",
-        }
       })
     } else if (currentMessage.user._id === 'system' || currentMessage._id.match(/^sending_/)) {
       updateProps({
         both: {
           borderColor: "gray",
         }
+      })
     } else if (currentMessage.user._id === 'system' || currentMessage._id.match(/^sending_/)) {
       updateProps({
         both: {
@@ -88,6 +84,7 @@ const RenderBubble = (props) => {
         both: {
           borderColor: "#2ECC40",
         }
+      })
     } else if (isAdmin) {
       updateProps({
         both: {
@@ -104,8 +101,6 @@ const RenderBubble = (props) => {
   }, [isVerifiedGuest, isAdmin, currentMessage, updateProps])
 
   return (
-    <Grid style={{ maxWidth: "55%" }}>
-      {(isSameUser(currentMessage, previousMessage) && isSameDay(currentMessage, previousMessage))
     <Grid style={{ maxWidth: "55%" }}>
       {(isSameUser(currentMessage, previousMessage) && isSameDay(currentMessage, previousMessage))
         ? ''

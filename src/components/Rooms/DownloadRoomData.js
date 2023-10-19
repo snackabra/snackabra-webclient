@@ -33,14 +33,15 @@ const DownloadRoomData = observer(() => {
         try {
             const room = sbContext.channels[roomId]
             const storage = []
-            for (const [key, value] of room.messages) {
+            for (let i in room.messages) {
+                const value = room.messages[i]
                 console.warn("Received message: ", JSON.parse(JSON.stringify(value)))
                 const message = JSON.parse(JSON.stringify(value))
                 if (message.messageType === 'ac9ce10755b647849d8596011979e018') {
                     const content = JSON.parse(message.contents)
                     console.log(content);
                     if (content.hasOwnProperty('hash') && content.hasOwnProperty('handle')) {
-                        console.log(`Key: ${key}, Value: `, content);
+                        console.log(`Key: ${i}, Value: `, content);
                         storage.push(content)
                     }
                 }
