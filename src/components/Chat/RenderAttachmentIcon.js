@@ -1,45 +1,27 @@
 import * as React from 'react';
+import { observer } from "mobx-react"
 import { IconButton } from "@mui/material";
-import AttachmentIcon from '@mui/icons-material/Attachment';
-import ActiveChatContext from "../../contexts/ActiveChatContext";
+import { Attachment } from '@mui/icons-material';
 
-function RenderAttachmentIcon(props) {
-  const activeChatContext = React.useContext(ActiveChatContext)
-  const [file, setFile] = React.useState('');
-
-  let fileReader;
-
-  const selectPhoto = (e) => {
-    try {
-      const photo = e.target.files[0];
-      fileReader = new FileReader();
-      fileReader.onloadend = handleFileRead;
-      fileReader.readAsText(photo);
-      activeChatContext.previewImage(photo, e.target.files[0])
-      if(typeof props.handleClose === 'function'){
-        props.handleClose()
-      }
-      setFile('')
-    } catch (e) {
-      console.log(e)
-    }
+const RenderAttachmentIcon = observer((props) => {
+  const elementId = `attach-button-${props.roomId}`
+  const openDropZone = () => {
+    props.dzRef.open()
   }
 
-  const handleFileRead = (e) => {
-    const content = fileReader.result;
-    setFile(content)
-  };
-
   return (
-    <IconButton component="label" id={'attach-menu'} aria-label="attach" size="large">
-      <AttachmentIcon />
-      <input
-        onChange={selectPhoto}
+    <IconButton disabled={!props.connected} component="label" id={elementId} aria-label="attach" size="large" onClick={openDropZone}>
+      <Attachment />
+      {/* <input
+        id="fileInput"
+        onChange={selectFiles}
         type="file"
         hidden
-      />
+        multiple
+        accept="image/*"
+      /> */}
     </IconButton>
   )
-}
+})
 
 export default RenderAttachmentIcon;

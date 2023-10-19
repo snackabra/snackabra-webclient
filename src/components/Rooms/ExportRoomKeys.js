@@ -1,67 +1,90 @@
-import * as React from "react"
+import React from "react"
+import { observer } from "mobx-react"
 import { Trans } from "@lingui/macro";
-import { FormControl, Grid, IconButton, InputAdornment, InputLabel, OutlinedInput, TextField, Typography } from "@mui/material";
-import DownloadIcon from '@mui/icons-material/Download';
-import { StyledButton } from "../../styles/Buttons";
-import { useState, useContext } from "react"
-import * as utils from '../../utils/utils';
-import RoomContext from "../../contexts/RoomContext";
+import { FormControl, Grid, IconButton, InputAdornment, InputLabel, OutlinedInput, Typography } from "@mui/material";
+import {Download as DownloadIcon, ContentCopy} from '@mui/icons-material';
+import SnackabraContext from "../../contexts/SnackabraContext.js";
+import NotificationContext from "../../contexts/NotificationContext.js";
 
-const ExportRoomKeys = (props) => {
-  const roomContext = useContext(RoomContext)
-  const [fileName, setFilename] = useState('SnackabraData');
+const ExportRoomKeys = observer((props) => {
+  const sbContext = React.useContext(SnackabraContext);
+  const Notifications = React.useContext(NotificationContext)
+  const [fileName, setFilename] = React.useState('SnackabraData');
+  const [data, setData] = React.useState(JSON.stringify({}));
 
-  const getData = (pem) => {
-    return { roomData: roomContext.rooms, contacts: roomContext.contacts, roomMetadata: roomContext.roomMetadata, pem: pem }
-  }
-
-  const exportPemKeys = async () => {
-    const _rooms = {};
-    console.log(localStorage)
-    for (let key of Object.keys(localStorage)) {
-      if (key !== 'rooms' && key !== 'contacts') {
-        const _roomName = key.slice(0, 64);
-        const _type = key.length > 64 ? key.slice(65) : 'key';
-        _rooms[_roomName] = { ..._rooms[_roomName] };
-        if (_type === 'key') {
-          _rooms[_roomName][_type] = await exportPrivateCryptoKey(
-            await window.crypto.subtle.importKey("jwk", JSON.parse(localStorage.getItem(key)), { name: 'ECDH', namedCurve: 'P-384' }, true, ["deriveKey"])
-          );
-        } else {
-          _rooms[_roomName][_type] = localStorage.getItem(key);
+  React.useEffect(() => {
+    const parseData = async () => {
+      const metadata = { roomData: {}, contacts: sbContext.contacts, roomMetadata: {} }
+      const rooms = await sbContext.channels
+      console.log(rooms)
+      for (let x in rooms) {
+        let roomId = rooms[x].id
+        metadata.roomData[roomId] = {
+          key: rooms[roomId].key,
+          lastSeenMessage: rooms[roomId].lastSeenMessage
+        }
+        console.log(rooms[roomId])
+        metadata.roomMetadata[roomId] = {
+          alias: rooms[roomId].alias,
+          lastMessageTime: rooms[roomId].lastMessageTime,
+          unread: false
         }
       }
+      metadata.pem = false;
+      console.log(metadata)
+      setData(JSON.stringify(metadata, null, 2))
     }
-    if (document.getElementById("key_export_ta") !== null) {
-      document.getElementById("key_export_ta").value = JSON.stringify(getData(true), undefined, 2)
+    parseData()
+  }, [sbContext])
+
+
+
+  const downloadKeys = () => {
+    downloadFile(data, fileName + ".txt");
+  }
+
+  const downloadFile = (text, file) => {
+    try {
+      let element = document.createElement('a');
+      element.setAttribute('href', 'data:text/plain;charset=utf-8, ' + encodeURIComponent(text));
+      element.setAttribute('download', file);
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+    } catch (error) {
+      console.log(error);
     }
   }
 
-  const exportPrivateCryptoKey = async (key) => {
-    const exported = await window.crypto.subtle.exportKey(
-      "pkcs8",
-      key
-    );
-    const exportedAsString = utils.ab2str(exported);
-    const exportedAsBase64 = utils.partition(window.btoa(exportedAsString), 64).join('\n');
-    return `-----BEGIN PRIVATE KEY-----\n${exportedAsBase64}\n-----END PRIVATE KEY-----`;
+  const copy = async () => {
+    console.log(window.location)
+    if ('clipboard' in navigator) {
+      await navigator.clipboard.writeText(data);
+    } else {
+      document.execCommand('copy', true, data);
+    }
+    Notifications.setMessage('Keys copied to clipboard!');
+    Notifications.setSeverity('success');
+    Notifications.setOpen(true)
+    if (typeof props.onDone === 'function') {
+      props.onDone()
+    }
+
   }
 
   return (
     <Grid id="key_export"
-          xs={12}
+      container
+      direction="row"
+      justifyContent="flex-start"
+      alignItems="flex-start">
+
+      {data
+        ? <Grid spacing={2}
           container
           direction="row"
           justifyContent="flex-start"
           alignItems="flex-start">
-
-      {Object.keys(roomContext.roomMetadata).length > 0 || Object.keys(roomContext.contacts).length > 0 || Object.keys(roomContext.rooms).length > 0
-        ? <Grid xs={12}
-                spacing={2}
-                container
-                direction="row"
-                justifyContent="flex-start"
-                alignItems="flex-start">
           <Grid xs={12} item>
             <label htmlFor='keyFile_name' style={{ fontSize: "16px" }}><Trans id='key export filename label'>Enter filename you want to save as</Trans></label>
           </Grid>
@@ -79,7 +102,7 @@ const ExportRoomKeys = (props) => {
                   <InputAdornment position="end">
                     <IconButton
                       aria-label="download file"
-                      onClick={() => utils.downloadFile(JSON.stringify(getData(false)), fileName + '.txt')}
+                      onClick={downloadKeys}
                       edge="end"
                     >
                       <DownloadIcon />
@@ -90,19 +113,36 @@ const ExportRoomKeys = (props) => {
               />
             </FormControl>
           </Grid>
-          <Grid xs={12} item>
-            <StyledButton variant="contained" onClick={() => exportPemKeys()}><Trans id='Convert to PEM button'>Convert to PEM</Trans></StyledButton>
-          </Grid>
+          {/* <Grid xs={12} item>
+            <StyledButton variant="contained" onClick={togglePem}>{`Convert to ${asPem ? "JWK" : "PEM"}`}</StyledButton>
+          </Grid> */}
           <Grid xs={12} item>
             <Typography variant={'body1'} gutterBottom><Trans id='copy paste ls message'>You can also copy-paste the following:</Trans></Typography>
           </Grid>
           <Grid xs={12} item>
-            <TextField
+            <OutlinedInput
               id="key_import_ta"
               fullWidth
               multiline
               rows={10}
-              value={JSON.stringify(getData(false), undefined, 2)}
+              value={data}
+              endAdornment={
+                <InputAdornment
+                  style={{
+                    position: 'absolute',
+                    right: 25,
+                    top: 35
+                  }}
+                  position="end">
+                  <IconButton
+                    aria-label="copy key text"
+                    onClick={copy}
+                    edge="end"
+                  >
+                    <ContentCopy />
+                  </IconButton>
+                </InputAdornment>
+              }
             />
           </Grid>
 
@@ -110,6 +150,6 @@ const ExportRoomKeys = (props) => {
         : <Typography variant={'body1'} gutterBottom><Trans id='key export ls empty message'>Your localstorage does not have any data to export!</Trans></Typography>}
     </Grid>
   )
-}
+})
 
 export default ExportRoomKeys

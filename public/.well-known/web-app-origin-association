@@ -1,0 +1,28 @@
+{
+    "web_apps": [
+        {
+            "manifest": "https://preview.384chat.pages.dev/manifest.json",
+            "details": {
+                "paths": [
+                    "/*"
+                ]
+            }
+        },
+        {
+            "manifest": "https://sn.ac/manifest.json",
+            "details": {
+                "paths": [
+                    "/*"
+                ]
+            }
+        },
+        {
+            "manifest": "https://384.chat/manifest.json",
+            "details": {
+                "paths": [
+                    "/*"
+                ]
+            }
+        }
+    ]
+}

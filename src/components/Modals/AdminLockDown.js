@@ -1,17 +1,15 @@
 import * as React from "react"
-import ResponsiveDialog from "../ResponsiveDialog";
-import { Grid, Typography } from "@mui/material";
-import { StyledButton } from "../../styles/Buttons";
-import { useContext, useState } from "react";
-import ActiveChatContext from "../../contexts/ActiveChatContext";
+import { Grid, Typography, Button } from "@mui/material";
+import ResponsiveDialog from "../ResponsiveDialog.js";
+import ActiveChatContext from "../../contexts/ActiveChatContext.js";
 
 
 //TODO see if we can do this in a popper
 export default function LockedInfoDialog(props) {
-  const activeChatContext = useContext(ActiveChatContext)
+  const activeChatContext = React.useContext(ActiveChatContext)
 
-  const [open, setOpen] = useState(props.open);
-  const [text, setText] = useState('');
+  const [open, setOpen] = React.useState(props.open);
+  const [text, setText] = React.useState('');
 
   React.useEffect(() => {
     setOpen(props.open)

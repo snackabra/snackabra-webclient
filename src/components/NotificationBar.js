@@ -1,9 +1,7 @@
 import * as React from 'react';
-import Button from '@mui/material/Button';
-import Snackbar, { SnackbarOrigin } from '@mui/material/Snackbar';
-import NotificationContext from "../contexts/NotificationContext";
-import { Alert } from "@mui/material";
-
+import {Snackbar, Alert} from '@mui/material';
+import { Portal } from '@mui/base';
+import NotificationContext from "../contexts/NotificationContext.js";
 
 export default function NotificationBar() {
 
@@ -14,7 +12,7 @@ export default function NotificationBar() {
   };
 
   return (
-    <div>
+    <Portal>
       <Snackbar
         anchorOrigin={{
           vertical: 'bottom',
@@ -29,6 +27,6 @@ export default function NotificationBar() {
           {context.action}
         </Alert>
       </Snackbar>
-    </div>
+    </Portal>
   );
 }
