@@ -52,6 +52,7 @@ const RenderComposer = observer((props) => {
     if (filesAttached !== attachedFiles) {
       setText('')
       onTextChanged('')
+      onTextChanged('')
     }
   }, [attachedFiles, filesAttached, onTextChanged, setText])
 

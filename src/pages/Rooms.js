@@ -325,6 +325,7 @@ const ResponsiveDrawer = observer((props) => {
 
   const container = window !== undefined ? () => window().document.body : undefined;
   const { height } = Dimensions.get('window')
+  const { height } = Dimensions.get('window')
   return (
     <div sx={{ display: 'flex', p: 0 }}>
       <CssBaseline />

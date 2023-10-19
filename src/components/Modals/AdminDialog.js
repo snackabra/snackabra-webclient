@@ -60,6 +60,11 @@ const AdminDialog = observer((props) => {
     props.sendSystemInfo(`MOTD: ${motd}`);
   }
 
+  const sendMotdMessage = () => {
+    console.log(motd)
+    props.sendSystemInfo(`MOTD: ${motd}`);
+  }
+
   return (<ResponsiveDialog
     title={'Admin Controls'}
     onClose={props.onClose}

@@ -37,6 +37,7 @@ const JoinDialog = observer((props) => {
 
   }
 
+
   const errorNotify = (message) => {
     Notifications.setMessage(message);
     Notifications.setSeverity('error');

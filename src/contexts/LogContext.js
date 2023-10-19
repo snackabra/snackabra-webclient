@@ -4,6 +4,7 @@ import BugReportIcon from "@mui/icons-material/BugReport";
 import { Fab } from "@mui/material";
 import DebugOverlay from "../components/Modals/DebugOverlay";
 import NavBarActionContext from "./NotificationContext";
+import NavBarActionContext from "./NotificationContext";
 const LogContext = React.createContext(undefined);
 
 let log = console.log;

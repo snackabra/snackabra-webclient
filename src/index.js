@@ -28,7 +28,6 @@ window.onpopstate = function (e) {
   window.history.go(1);
 }
 
-
 const localKV = new IndexedKV({ db: 'sb_files', table: 'files' })
 
 root.render(<App />);

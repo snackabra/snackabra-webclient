@@ -9,6 +9,7 @@ a {
 }
 
 .message-overflow {
+.message-overflow {
   overflow: visible !important;
 }
 
@@ -32,7 +33,9 @@ a {
   border-radius: 11px 11px 0px 0px;
 }
 
+
 /** to block safari behavior on asking to fill passowrd**/
+input::-webkit-contacts-auto-fill-button,
 input::-webkit-contacts-auto-fill-button,
 input::-webkit-credentials-auto-fill-button {
   visibility: hidden;
